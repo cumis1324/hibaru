@@ -35,6 +35,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 
+import com.google.android.ads.nativetemplates.NativeTemplateStyle;
+import com.google.android.ads.nativetemplates.TemplateView;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.MobileAds;
@@ -104,6 +106,7 @@ public class TvShowDetailsFragment extends BaseFragment {
 
     Episode nextEpisode;
     private Button saweria;
+    private TemplateView template;
 
 
     public TvShowDetailsFragment() {
@@ -124,7 +127,8 @@ public class TvShowDetailsFragment extends BaseFragment {
     public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view , savedInstanceState);
         saweria = view.findViewById(R.id.saweria);
-
+        template = view.findViewById(R.id.my_template);
+        loadNative();
 
         initWidgets(view);
         loadDetails();
@@ -153,6 +157,25 @@ public class TvShowDetailsFragment extends BaseFragment {
         addToList = view.findViewById(R.id.addToListButtonTV);
 
     }
+
+    private void loadNative() {
+        MobileAds.initialize(mActivity);
+        AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
+                .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
+                    @Override
+                    public void onNativeAdLoaded(NativeAd nativeAd) {
+                        NativeTemplateStyle styles = new
+                                NativeTemplateStyle.Builder().build();
+                        template.setStyles(styles);
+                        template.setNativeAd(nativeAd);
+                    }
+                })
+                .build();
+
+        adLoader.loadAd(new AdRequest.Builder().build());
+
+    }
+
 
     private void loadDetails(){
         try {

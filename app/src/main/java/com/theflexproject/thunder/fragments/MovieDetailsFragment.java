@@ -5,7 +5,8 @@ import static android.content.Context.DOWNLOAD_SERVICE;
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 import static com.theflexproject.thunder.fragments.EpisodeDetailsFragment.REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION;
 
-
+import com.google.android.ads.nativetemplates.NativeTemplateStyle;
+import com.google.android.ads.nativetemplates.TemplateView;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
@@ -192,6 +193,7 @@ public class MovieDetailsFragment extends BaseFragment{
     private DatabaseReference databaseReference;
     View progressOverlay;
     TextView title;
+    private TemplateView template;
 
     public MovieDetailsFragment() {
         // Required empty public constructor
@@ -231,8 +233,10 @@ public class MovieDetailsFragment extends BaseFragment{
         relativeContainer = view.findViewById(R.id.relativeContainer);
         moreMovieView = view.findViewById(R.id.recyclerEpisodes2);
         saweria = view.findViewById(R.id.saweria);
+        template = view.findViewById(R.id.my_template);
 
         MobileAds.initialize(mActivity);
+        loadNative();
         initWidgets(view);
         loadDetails();
 
@@ -303,6 +307,23 @@ public class MovieDetailsFragment extends BaseFragment{
                     }
 
                 });
+
+    }
+    private void loadNative() {
+
+        AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
+                .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
+                    @Override
+                    public void onNativeAdLoaded(NativeAd nativeAd) {
+                        NativeTemplateStyle styles = new
+                                NativeTemplateStyle.Builder().build();
+                        template.setStyles(styles);
+                        template.setNativeAd(nativeAd);
+                    }
+                })
+                .build();
+        template.setVisibility(View.VISIBLE);
+        adLoader.loadAd(new AdRequest.Builder().build());
 
     }
 

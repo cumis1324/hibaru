@@ -369,8 +369,38 @@
                     android:layout_marginHorizontal="20dp"
                     android:orientation="vertical"
                     >
-
-
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#BE1E2D"
+                        >
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true"
+                            android:layout_toLeftOf="@id/saweria"
+                            android:src="@drawable/cendol"/>
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true"
+                            android:layout_toRightOf="@id/saweria"
+                            android:src="@drawable/cendol"/>
+                        <Button
+                            android:id="@+id/saweria"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/jost_medium"
+                            android:text="Trakteer cendol disini"
+                            android:background="@color/transparent"
+                            android:textColor="@color/white"
+                            android:layout_centerHorizontal="true"
+                            android:layout_centerInParent="true"
+                            android:textSize="18sp"
+                            android:visibility="visible"/>
+                    </RelativeLayout>
                     <TextView
                         android:id="@+id/overviewtext"
                         android:layout_width="match_parent"
@@ -411,38 +441,12 @@
                         android:textSize="14sp"
                         android:visibility="visible"
                         tools:text="In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization." />
-                    <RelativeLayout
+                    <com.google.android.ads.nativetemplates.TemplateView
+                        android:id="@+id/my_template"
+                        app:gnt_template_type="@layout/gnt_medium_template_view"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="#BE1E2D"
-                        >
-                        <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_centerVertical="true"
-                            android:layout_centerHorizontal="true"
-                            android:layout_toLeftOf="@id/saweria"
-                            android:src="@drawable/cendol"/>
-                        <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_centerVertical="true"
-                            android:layout_centerHorizontal="true"
-                            android:layout_toRightOf="@id/saweria"
-                            android:src="@drawable/cendol"/>
-                        <Button
-                            android:id="@+id/saweria"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/jost_medium"
-                            android:text="Trakteer cendol disini"
-                            android:background="@color/transparent"
-                            android:textColor="@color/white"
-                            android:layout_centerHorizontal="true"
-                            android:layout_centerInParent="true"
-                            android:textSize="18sp"
-                            android:visibility="visible"/>
-                    </RelativeLayout>
+                        android:layout_height="match_parent" />
+
                     <TextView
                         android:id="@+id/SeasonRecyclerTitle"
                         android:layout_width="match_parent"

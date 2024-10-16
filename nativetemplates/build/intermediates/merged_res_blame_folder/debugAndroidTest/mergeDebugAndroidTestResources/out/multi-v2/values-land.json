@@ -4,7 +4,7 @@
             "outputFile": "com.google.android.ads.nativetemplates.test.nativetemplates-mergeDebugAndroidTestResources-17:/values-land/values-land.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\sepuj\\.gradle\\caches\\transforms-4\\de7e373797afefb3ffb0852817731bb6\\transformed\\appcompat-1.2.0\\res\\values-land\\values-land.xml",
+                    "source": "C:\\Users\\cumis\\.gradle\\caches\\transforms-4\\de7e373797afefb3ffb0852817731bb6\\transformed\\appcompat-1.2.0\\res\\values-land\\values-land.xml",
                     "from": {
                         "startLines": "2,3,4",
                         "startColumns": "4,4,4",

@@ -6,16 +6,16 @@ android {
     namespace 'com.google.android.ads.nativetemplates'
     
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 34
-
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pgcfg'
             consumerProguardFiles 'proguard-rules.pgcfg'
         }
@@ -37,4 +37,5 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:22.6.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.google.errorprone:error_prone_annotations:2.16'
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
