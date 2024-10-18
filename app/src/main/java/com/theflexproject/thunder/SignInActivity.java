@@ -118,7 +118,7 @@ public class SignInActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(SignInActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                            startActivity(new Intent(SignInActivity.this, LoadingActivity.class));
                         } else {
                             Toast.makeText(SignInActivity.this, "Sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
@@ -170,7 +170,7 @@ public class SignInActivity extends AppCompatActivity {
 
                             userReference.setValue(userMap);
                             Toast.makeText(SignInActivity.this, "Google sign in successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                            startActivity(new Intent(SignInActivity.this, LoadingActivity.class));
                         } else {
                             Toast.makeText(SignInActivity.this, "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }

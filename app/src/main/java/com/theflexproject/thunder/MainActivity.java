@@ -1,83 +1,54 @@
 package com.theflexproject.thunder;
 
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestGDIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestGoIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestMapleIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestSimpleProgramIndex;
-import static com.theflexproject.thunder.utils.UpdateUtils.checkForUpdates;
-
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.room.Index;
-import androidx.room.Room;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
+import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
 
-import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MediaAspectRatio;
-import com.google.android.gms.ads.appopen.AppOpenAd;
-import com.google.android.gms.ads.nativead.NativeAdOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.play.core.appupdate.AppUpdateInfo;
-
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.theflexproject.thunder.database.AppDatabase;
-import com.theflexproject.thunder.database.DatabaseClient;
-import com.theflexproject.thunder.fragments.AddNewIndexFragment;
 import com.theflexproject.thunder.fragments.HomeFragment;
 import com.theflexproject.thunder.fragments.HomeNewFragment;
 import com.theflexproject.thunder.fragments.LibraryFragment;
-import com.theflexproject.thunder.fragments.MovieDetailsFragment;
 import com.theflexproject.thunder.fragments.SearchFragment;
 import com.theflexproject.thunder.fragments.SettingsFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
-import com.theflexproject.thunder.model.IndexLink;
-import com.theflexproject.thunder.MyApplication;
-import com.theflexproject.thunder.utils.RefreshWorker;
-import com.xcode.onboarding.MaterialOnBoarding;
-import com.xcode.onboarding.OnBoardingPage;
-import com.xcode.onboarding.OnFinishLastPage;
 
-
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import eightbitlab.com.blurview.BlurView;
@@ -89,11 +60,9 @@ public class MainActivity extends AppCompatActivity {
     BottomNavigationView bottomNavigationView;
     HomeNewFragment homeFragment = new HomeNewFragment();
     HomeFragment    homeVerif = new HomeFragment();
-    MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment();
     SearchFragment searchFragment = new SearchFragment();
     LibraryFragment libraryFragment = new LibraryFragment();
     SettingsFragment settingsFragment = new SettingsFragment();
-    AddNewIndexFragment scanFragment = new AddNewIndexFragment();
 
     BlurView blurView;
     ViewGroup rootView;
@@ -101,17 +70,14 @@ public class MainActivity extends AppCompatActivity {
     FirebaseManager firebaseManager;
 
     public static Context context;
-    private static final String LOG_TAG = "AppOpenAdSample";
-    private AppOpenAd appOpenAd;
-    private HomeFragment home;
-    private long loadTime = 0;
+
     private FirebaseAnalytics mFirebaseAnalytics;
     private static final int UPDATE_REQUEST_CODE = 123;
     Button scanButton;
     Button seriesButton;
     ProgressBar loadingScan;
     FrameLayout scanContainer;
-    FirebaseUser currentUser;
+    static FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,123 +88,54 @@ public class MainActivity extends AppCompatActivity {
         currentUser = firebaseManager.getCurrentUser();
         loadAd();
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        if (appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)) {
-            showAdIfAvailable();
-        } else {
-            Log.d(LOG_TAG, "Will not show ad. Ad is either not loaded or it's been less than 4 hours since last load.");
-            loadAd();
-        }
         // Check if the user is signed in
+        handleSignIn();
+        File dbFile = getApplicationContext().getDatabasePath("MyToDos");
+        if (!dbFile.exists()) {
+            startActivity(new Intent(MainActivity.this, LoadingActivity.class));
+        }
+
+    }
+
+    private void handleSignIn(){
         if (currentUser != null) {
             checkForAppUpdate();
             Intent intent = getIntent();
             Uri data = intent.getData();
-            // User is signed in
-            currentUser.getUid();
-            currentUser.getEmail();
-            currentUser.getIdToken(true).toString();
             setContentView(R.layout.activity_main);
             initWidgets();
             setUpBottomNavigationView();
-            if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.container, homeVerif).commit();
-            } else {
-                getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
-            }
-            AppDatabase db = Room.databaseBuilder(getApplicationContext() ,
-                            AppDatabase.class , "MyToDos")
-                    .build();
-            scanButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    AddNewIndexFragment nextFrag= new AddNewIndexFragment();
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .add(R.id.container, nextFrag)
-                            .addToBackStack(null)
-                            .commit();
-                }
-            });
-            //refresh index if set
-            SharedPreferences sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE);
-            boolean savedREF = sharedPreferences.getBoolean("REFRESH_SETTING", false);
-            int savedTime = sharedPreferences.getInt("REFRESH_TIME", 0);
-            if(savedREF){
-                scheduleWork(savedTime,0);
-            }
-
-
-
-        } else {
+            handleDemoUser();
+            // Mulai proses restore dengan WorkManager
+            MainActivity.RestoreDatabaseWorker.scheduleDailyRestore(this);
+            //AppDatabase db = Room.databaseBuilder(getApplicationContext() ,
+                           // AppDatabase.class , "MyToDos")
+                    //.build();
+        }
+        else {
             startActivity(new Intent(MainActivity.this, SignInActivity.class));
 
         }
-
     }
-
-
-    private void handleDynamicLinkData(Bundle arguments) {
-        if (arguments != null) {
-            Uri dynamicLinkData = arguments.getParcelable("dynamicLinkData");
-            if (dynamicLinkData != null) {
-                String itemId = dynamicLinkData.getQueryParameter("itemId");
-                if (itemId != null) {
-                    navigateToItem(itemId);
-                }
-            }
+    private void handleDemoUser() {
+        // User is signed in
+        currentUser.getUid();
+        currentUser.getEmail();
+        currentUser.getIdToken(true).toString();
+        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, homeVerif).commit();
+        }
+        else {
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
         }
     }
 
-    private void navigateToItem(String itemId) {
-        // Use the itemId to navigate to the appropriate screen or perform other actions
-        // For example, you can start a new Fragment or Activity
-        Bundle args = new Bundle();
-        args.putString("itemId", itemId);
 
-        movieDetailsFragment.setArguments(args);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, movieDetailsFragment)
-                .commit();
-    }
     private void loadAd() {
         MyApplication myApplication = (MyApplication) getApplication();
         myApplication.loadAd();
     }
 
-
-    private void showAdIfAvailable() {
-        if (appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)) {
-            FullScreenContentCallback fullScreenContentCallback =
-                    new FullScreenContentCallback() {
-                        @Override
-                        public void onAdDismissedFullScreenContent() {
-                            // Set the reference to null so isAdAvailable() returns false.
-                            appOpenAd = null;
-                        }
-
-                        @Override
-                        public void onAdFailedToShowFullScreenContent(AdError adError) {
-                            // Handle the error
-                        }
-
-                        @Override
-                        public void onAdShowedFullScreenContent() {
-                            // Ad showed successfully.
-                        }
-                    };
-
-            appOpenAd.show(this);
-        } else {
-            Log.d(LOG_TAG, "Can not show ad. Ad is not available.");
-            loadAd();
-        }
-    }
-
-    private boolean wasLoadTimeLessThanNHoursAgo(long numHours) {
-        long currentTime = new Date().getTime();
-        return (currentTime - loadTime) < (numHours * 3600000); // Convert hours to milliseconds
-    }
 
 
     @Override
@@ -355,35 +252,129 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void scheduleWork(int hour, int minute) {
-        Calendar calendar = Calendar.getInstance();
-        long nowMillis = calendar.getTimeInMillis();
+    private static String getBackupFileUrl() {
+        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
+            return "https://drive3.nfgplusmirror.workers.dev/0:/database/demo.db";
+        }
+        return "https://drive3.nfgplusmirror.workers.dev/0:/database/nfg.db";
+    }
+    public static class RestoreDatabaseWorker extends Worker {
 
-        if(calendar.get(Calendar.HOUR_OF_DAY) > hour ||
-                (calendar.get(Calendar.HOUR_OF_DAY) == hour && calendar.get(Calendar.MINUTE)+1 >= minute)) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        public RestoreDatabaseWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+            super(context, workerParams);
         }
 
-        calendar.set(Calendar.HOUR_OF_DAY,hour);
-        calendar.set(Calendar.MINUTE,minute);
+        @NonNull
+        @Override
+        public Result doWork() {
+            try {
+                // Ambil URL dari InputData
+                String backupFileUrl = getInputData().getString("backup_file_url");
 
-        calendar.set(Calendar.SECOND,0);
-        calendar.set(Calendar.MILLISECOND,0);
-        long diff = calendar.getTimeInMillis() - nowMillis;
+                // Download file dari URL dan restore database
+                File downloadedFile = downloadFileFromUrl(backupFileUrl);
 
-        WorkManager mWorkManager = WorkManager.getInstance(context);
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        mWorkManager.cancelAllWork();
-        OneTimeWorkRequest mRequest = new OneTimeWorkRequest.Builder(RefreshWorker.class)
-                .setConstraints(constraints)
-                .setInitialDelay(diff,TimeUnit.MILLISECONDS)
-                .build();
-        mWorkManager.enqueue(mRequest);
+                if (downloadedFile != null) {
+                    restoreDatabase(downloadedFile);
+                    return Result.success();
+                } else {
+                    return Result.failure();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return Result.failure();
+            }
+        }
 
+        // Method untuk mendownload file dari URL ke penyimpanan lokal
+        private File downloadFileFromUrl(String fileUrl) throws IOException {
+            URL url = new URL(fileUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Failed to download file: " + connection.getResponseMessage());
+            }
+
+            // Simpan file ke penyimpanan lokal
+            File localFile = new File(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "demo.db");
+            try (InputStream inputStream = connection.getInputStream();
+                 OutputStream outputStream = new FileOutputStream(localFile)) {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                int totalBytesRead = 0;
+                int fileLength = connection.getContentLength();
+
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
+                    // Update progress
+                    int progress = (int) ((totalBytesRead / (float) fileLength) * 100);
+                }
+            }
+
+            connection.disconnect();
+            return localFile;
+        }
+
+        // Method untuk restore database dari file lokal
+        private void restoreDatabase(File file) throws IOException {
+            File dbFile = getApplicationContext().getDatabasePath("MyToDos");
+
+            // Hapus database lama jika ada
+            if (dbFile.exists()) {
+                dbFile.delete();
+            }
+
+            if (!dbFile.exists()) {
+                dbFile.getParentFile().mkdirs();
+                dbFile.createNewFile();
+            }
+
+            // Salin database baru dari file lokal ke database aplikasi
+            try (InputStream is = new FileInputStream(file);
+                 OutputStream os = new FileOutputStream(dbFile)) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) > 0) {
+                    os.write(buffer, 0, length);
+                }
+            }
+        }
+
+        public static void scheduleDailyRestore(Context context) {
+            Data inputData = new Data.Builder()
+                    .putString("backup_file_url", getBackupFileUrl()) // Pastikan untuk mengubah ini sesuai kebutuhan
+                    .build();
+
+            PeriodicWorkRequest restoreRequest = new PeriodicWorkRequest.Builder(MainActivity.RestoreDatabaseWorker.class, 1, TimeUnit.DAYS)
+                    .setInputData(inputData)
+                    .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS) // Mengatur penundaan awal
+                    .build();
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                    "daily_restore", // Nama unik untuk pekerjaan ini
+                    ExistingPeriodicWorkPolicy.KEEP, // Menghindari duplikat pekerjaan
+                    restoreRequest
+            );
+
+        }
+        private static long calculateInitialDelay() {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            // Set jam dan menit ke 12 malam
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            // Jika waktu sekarang sudah lewat dari 12 malam, tambahkan satu hari
+            if (System.currentTimeMillis() >= calendar.getTimeInMillis()) {
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+            }
+            return calendar.getTimeInMillis() - System.currentTimeMillis();
+        }
     }
-
 }
 
 
