@@ -368,8 +368,6 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Intent workIntent = new Intent(getContext(), RefreshJobService.class);
-                RefreshJobService.enqueueWork(getContext(), workIntent);
                 trending = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()

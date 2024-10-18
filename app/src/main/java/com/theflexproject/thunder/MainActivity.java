@@ -1,12 +1,18 @@
 package com.theflexproject.thunder;
 
+import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
@@ -14,9 +20,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
@@ -90,11 +98,44 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         // Check if the user is signed in
         handleSignIn();
-        File dbFile = getApplicationContext().getDatabasePath("MyToDos");
-        if (!dbFile.exists()) {
-            startActivity(new Intent(MainActivity.this, LoadingActivity.class));
+        if (!isNotificationEnabled()) {
+            showNotificationPermissionDialog();
+        } else {
+            Toast.makeText(this, "Notifikasi diizinkan!", Toast.LENGTH_SHORT).show();
         }
 
+    }
+    private boolean isNotificationEnabled() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            return notificationManager != null && notificationManager.getImportance() != NotificationManager.IMPORTANCE_NONE;
+        }
+        return true; // Di bawah Android O, dianggap sudah diizinkan
+    }
+
+    private void showNotificationPermissionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Izinkan Notifikasi")
+                .setMessage("Kami membutuhkan izin Anda untuk mengirim notifikasi.")
+                .setPositiveButton("Izinkan", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Arahkan pengguna ke pengaturan aplikasi untuk mengizinkan notifikasi
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                        intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton("Tolak", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss(); // Menutup dialog
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void handleSignIn(){
@@ -260,28 +301,40 @@ public class MainActivity extends AppCompatActivity {
     }
     public static class RestoreDatabaseWorker extends Worker {
 
+        private static final String CHANNEL_ID = "syncing_channel";
+        private NotificationManager notificationManager;
+        private NotificationCompat.Builder notificationBuilder;
+        private static final int NOTIFICATION_ID = 1;
+
         public RestoreDatabaseWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
             super(context, workerParams);
+            notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            createNotificationChannel();
         }
 
         @NonNull
         @Override
         public Result doWork() {
+            String backupFileUrl = getInputData().getString("backup_file_url");
+
             try {
-                // Ambil URL dari InputData
-                String backupFileUrl = getInputData().getString("backup_file_url");
+                // Mulai progress di notifikasi
+                showProgressNotification(0);
 
-                // Download file dari URL dan restore database
                 File downloadedFile = downloadFileFromUrl(backupFileUrl);
-
                 if (downloadedFile != null) {
                     restoreDatabase(downloadedFile);
+                    // Sukses, tampilkan notifikasi selesai
+                    showCompletedNotification();
                     return Result.success();
                 } else {
+                    // Gagal, tampilkan notifikasi error
+                    showFailureNotification();
                     return Result.failure();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                showFailureNotification();
                 return Result.failure();
             }
         }
@@ -297,7 +350,6 @@ public class MainActivity extends AppCompatActivity {
                 throw new IOException("Failed to download file: " + connection.getResponseMessage());
             }
 
-            // Simpan file ke penyimpanan lokal
             File localFile = new File(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "demo.db");
             try (InputStream inputStream = connection.getInputStream();
                  OutputStream outputStream = new FileOutputStream(localFile)) {
@@ -306,18 +358,20 @@ public class MainActivity extends AppCompatActivity {
                 int totalBytesRead = 0;
                 int fileLength = connection.getContentLength();
 
+                // Update progress selama proses download
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
                     totalBytesRead += bytesRead;
-                    // Update progress
+
+                    // Hitung progress dan update notifikasi
                     int progress = (int) ((totalBytesRead / (float) fileLength) * 100);
+                    showProgressNotification(progress);
                 }
             }
 
             connection.disconnect();
             return localFile;
         }
-
         // Method untuk restore database dari file lokal
         private void restoreDatabase(File file) throws IOException {
             File dbFile = getApplicationContext().getDatabasePath("MyToDos");
@@ -343,22 +397,63 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // Method untuk membuat notification channel
+        private void createNotificationChannel() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                CharSequence name = "Sync Database Channel";
+                String description = "Channel for database Syncing notifications";
+                int importance = NotificationManager.IMPORTANCE_LOW;
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+                channel.setDescription(description);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    notificationManager.createNotificationChannel(channel);
+                }
+            }
+        }
+
+        // Method untuk menampilkan notifikasi progress
+        private void showProgressNotification(int progress) {
+            notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                    .setContentTitle("Syncing Database")
+                    .setContentText("Progress: " + progress + "%")
+                    .setSmallIcon(R.drawable.ic_launcher_round)
+                    .setProgress(100, progress, false)
+                    .setOngoing(true); // Notifikasi tidak bisa di-swipe
+
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        }
+
+        // Method untuk menampilkan notifikasi saat selesai
+        private void showCompletedNotification() {
+            notificationBuilder.setContentText("Restore Completed")
+                    .setProgress(0, 0, false)
+                    .setOngoing(false); // Notifikasi bisa di-swipe
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        }
+
+        // Method untuk menampilkan notifikasi jika terjadi error
+        private void showFailureNotification() {
+            notificationBuilder.setContentText("Restore Failed")
+                    .setProgress(0, 0, false)
+                    .setOngoing(false); // Notifikasi bisa di-swipe
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        }
+
         public static void scheduleDailyRestore(Context context) {
             Data inputData = new Data.Builder()
-                    .putString("backup_file_url", getBackupFileUrl()) // Pastikan untuk mengubah ini sesuai kebutuhan
+                    .putString("backup_file_url", getBackupFileUrl()) // URL backup file
                     .build();
 
-            PeriodicWorkRequest restoreRequest = new PeriodicWorkRequest.Builder(MainActivity.RestoreDatabaseWorker.class, 1, TimeUnit.DAYS)
+            PeriodicWorkRequest restoreRequest = new PeriodicWorkRequest.Builder(RestoreDatabaseWorker.class, 1, TimeUnit.DAYS)
                     .setInputData(inputData)
-                    .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS) // Mengatur penundaan awal
+                    .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
                     .build();
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                    "daily_restore", // Nama unik untuk pekerjaan ini
-                    ExistingPeriodicWorkPolicy.KEEP, // Menghindari duplikat pekerjaan
+                    "daily_restore",
+                    ExistingPeriodicWorkPolicy.KEEP,
                     restoreRequest
             );
-
         }
         private static long calculateInitialDelay() {
             Calendar calendar = Calendar.getInstance();
@@ -375,6 +470,7 @@ public class MainActivity extends AppCompatActivity {
             return calendar.getTimeInMillis() - System.currentTimeMillis();
         }
     }
+
 }
 
 
