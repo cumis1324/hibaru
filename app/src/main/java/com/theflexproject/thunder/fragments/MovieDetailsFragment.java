@@ -196,7 +196,7 @@ public class MovieDetailsFragment extends BaseFragment{
     private TemplateView template;
 
     public MovieDetailsFragment() {
-        // Required empty public constructor
+
     }
     public MovieDetailsFragment(int id){
         this.movieId =id;
