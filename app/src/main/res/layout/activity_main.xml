@@ -35,7 +35,7 @@
             android:layout_gravity="bottom|right"
             android:layout_marginEnd="25dp"
             android:layout_marginBottom="100dp"
-            android:visibility="visible"
+            android:visibility="gone"
             tools:ignore="RelativeOverlap,RtlHardcoded">
             <Button
                 android:id="@+id/floating_scan"
@@ -47,7 +47,7 @@
                 android:text="@string/scan"
                 android:textColor="@color/white"
                 android:textSize="11sp"
-                android:visibility="visible"/>
+                android:visibility="gone"/>
             <Button
                 android:id="@+id/scanSeries"
                 android:layout_width="wrap_content"
@@ -58,7 +58,7 @@
                 android:text="@string/scan"
                 android:textColor="@color/white"
                 android:textSize="11sp"
-                android:visibility="invisible"/>
+                android:visibility="gone"/>
             <ProgressBar
                 android:id="@+id/loadingScan"
                 android:layout_marginTop="8dp"

@@ -3,24 +3,24 @@
 3    package="com.google.android.ads.nativetemplates.test" >
 4
 5    <uses-sdk
-5-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:5:5-74
+5-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:5:5-74
 6        android:minSdkVersion="19"
-6-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:5:15-41
+6-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:5:15-41
 7        android:targetSdkVersion="34" />
-7-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:5:42-71
+7-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:5:42-71
 8
 9    <instrumentation
-9-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:11:5-15:93
+9-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:11:5-15:93
 10        android:name="androidx.test.runner.AndroidJUnitRunner"
-10-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:11:22-76
+10-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:11:22-76
 11        android:functionalTest="false"
-11-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:14:22-52
+11-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:14:22-52
 12        android:handleProfiling="false"
-12-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:13:22-53
+12-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:13:22-53
 13        android:label="Tests for com.google.android.ads.nativetemplates.test"
-13-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:15:22-91
+13-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:15:22-91
 14        android:targetPackage="com.google.android.ads.nativetemplates.test" />
-14-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:12:22-89
+14-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:12:22-89
 15    <!-- Include required permissions for Google Mobile Ads to run -->
 16    <uses-permission android:name="android.permission.INTERNET" />
 16-->[com.google.android.gms:play-services-ads-lite:22.6.0] C:\Users\cumis\.gradle\caches\transforms-4\64035cdb21b31cce2e02c2d664564964\transformed\play-services-ads-lite-22.6.0\AndroidManifest.xml:24:5-67
@@ -77,7 +77,7 @@
 41-->[androidx.work:work-runtime:2.7.0] C:\Users\cumis\.gradle\caches\transforms-4\af53f828a81eddcb71db5d7857cdf2d1\transformed\work-runtime-2.7.0\AndroidManifest.xml:28:22-74
 42
 43    <application
-43-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:7:5-9:19
+43-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:7:5-9:19
 44        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 44-->[androidx.core:core:1.8.0] C:\Users\cumis\.gradle\caches\transforms-4\835a772b0e4a465b98bd7c5d62d8a644\transformed\core-1.8.0\AndroidManifest.xml:24:18-86
 45        android:debuggable="true"
@@ -85,8 +85,8 @@
 47        android:supportsRtl="true" >
 47-->[:nativetemplates] C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:7:18-44
 48        <uses-library android:name="android.test.runner" />
-48-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:8:9-60
-48-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest12120584785738550754.xml:8:23-57
+48-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:8:9-60
+48-->C:\dev\nfgplus android\hibaru\nativetemplates\build\intermediates\tmp\manifest\androidTest\debug\tempFile1ProcessTestManifest4934834667318591442.xml:8:23-57
 49        <!-- Include the AdActivity and InAppPurchaseActivity configChanges and themes. -->
 50        <activity
 50-->[com.google.android.gms:play-services-ads-lite:22.6.0] C:\Users\cumis\.gradle\caches\transforms-4\64035cdb21b31cce2e02c2d664564964\transformed\play-services-ads-lite-22.6.0\AndroidManifest.xml:56:9-61:43

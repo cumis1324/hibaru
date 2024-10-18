@@ -1,4 +1,4 @@
-#Fri Oct 18 13:40:10 ICT 2024
+#Fri Oct 18 19:17:23 ICT 2024
 base.0=C\:\\dev\\nfgplus android\\hibaru\\nativetemplates\\build\\intermediates\\dex\\debugAndroidTest\\mergeDexDebugAndroidTest\\classes.dex
 base.1=C\:\\dev\\nfgplus android\\hibaru\\nativetemplates\\build\\intermediates\\dex\\debugAndroidTest\\mergeDexDebugAndroidTest\\classes2.dex
 base.2=C\:\\dev\\nfgplus android\\hibaru\\nativetemplates\\build\\intermediates\\dex\\debugAndroidTest\\mergeDexDebugAndroidTest\\classes3.dex

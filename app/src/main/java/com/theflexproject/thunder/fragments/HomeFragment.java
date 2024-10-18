@@ -107,8 +107,7 @@ public class HomeFragment extends BaseFragment {
     MediaAdapter.OnItemClickListener watchlistListener;
     MediaAdapter.OnItemClickListener topRatedShowsListener;
     MediaAdapter.OnItemClickListener newSeasonListener;
-    FrameLayout floatingActionButton;
-    Button scanButton;
+
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -145,8 +144,6 @@ public class HomeFragment extends BaseFragment {
         if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
             verifTitle.setVisibility(View.VISIBLE);
         }
-        floatingActionButton = mActivity.findViewById(R.id.scanContainer);
-        scanButton = mActivity.findViewById(R.id.floating_scan);
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler);
         trendingRecyclerView = view.findViewById(R.id.trendingRecycler);
         recentlyAddedRecyclerView = view.findViewById(R.id.recentlyAddedRecycler);
@@ -382,7 +379,6 @@ public class HomeFragment extends BaseFragment {
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            floatingActionButton.setVisibility(View.GONE);
                             ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             trendingTitle.setVisibility(View.VISIBLE);
