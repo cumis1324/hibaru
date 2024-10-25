@@ -1,5 +1,6 @@
 package com.theflexproject.thunder;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.room.Room;
@@ -30,6 +32,8 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -51,9 +55,12 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class LoadingActivity extends AppCompatActivity {
 
@@ -100,15 +107,6 @@ public class LoadingActivity extends AppCompatActivity {
         }
     };
 
-    public void loginDulu(){
-        if (currentUser != null) {
-            // Daftarkan receiver untuk menerima pembaruan progress
-
-
-        }else {
-            startActivity(new Intent(LoadingActivity.this, SignInActivity.class));
-        }
-    }
 
     @Override
     protected void onDestroy() {
@@ -242,8 +240,8 @@ public class LoadingActivity extends AppCompatActivity {
 
     public static class ModifiedCheckWorker extends Worker {
 
-        private static final String LAST_MODIFIED_KEY = "last_modified_key";
-        private static final String USER_ID = currentUser.getUid(); // Ganti dengan user ID yang sesuai
+        private static final String LAST_MODIFIED_PREF = "last_modified_pref";
+        private static final String LAST_MODIFIED_KEY = "last_modified_key"; // Ganti dengan user ID yang sesuai
         private static final String TAG = "ModifiedCheckWorker";
 
         public ModifiedCheckWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -254,97 +252,91 @@ public class LoadingActivity extends AppCompatActivity {
         @Override
         public Result doWork() {
             try {
-                // Ambil URL dari InputData
                 String backupFileUrl = getInputData().getString("backup_file_url");
                 Log.d(TAG, "Backup file URL: " + backupFileUrl);
 
-                // Cek Last-Modified header
-                String lastModified = getLastModifiedFromUrl(backupFileUrl);
+                // Ambil lastModified secara sinkron
+                String lastModified = getLastModifiedFromUrl();
+                if (lastModified == null) {
+                    Log.e(TAG, "Failed to get last modified from Firebase.");
+                    return Result.failure();
+                }
+
                 Log.d(TAG, "Last modified from URL: " + lastModified);
+                SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+                String lastModifiedSaved = prefs.getString(LAST_MODIFIED_KEY, "");
 
-                DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference("Data").child(USER_ID).child("lastModified");
-
-                // Menggunakan CountDownLatch untuk menunggu pengambilan nilai dari Firebase selesai
-                final CountDownLatch latch = new CountDownLatch(1);
-                final String[] lastModifiedSaved = {""};
-
-                databaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (snapshot.exists()) {
-                            lastModifiedSaved[0] = snapshot.getValue(String.class);
-                            Log.d(TAG, "Last modified saved in Firebase: " + lastModifiedSaved[0]);
-                        }
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.e(TAG, "Failed to read last modified from Firebase", error.toException());
-                        latch.countDown();
-                    }
-                });
-
-                // Tunggu hingga pengambilan nilai selesai
-                latch.await();
-
-                // Jika lastModifiedSaved kosong, artinya aplikasi baru diinstall atau tidak pernah menyimpan Last-Modified sebelumnya
-                if (lastModifiedSaved[0].isEmpty() || !lastModified.equals(lastModifiedSaved[0])) {
-                    // Last-Modified berubah atau pertama kali dijalankan, simpan nilai Last-Modified baru
-                    Log.d(TAG, "Saving new last modified to Firebase: " + lastModified);
-                    databaseRef.setValue(lastModified);
-
-                    // Panggil RestoreDatabaseWorker
+                if (lastModifiedSaved.isEmpty() || !lastModified.equals(lastModifiedSaved)) {
+                    prefs.edit().putString(LAST_MODIFIED_KEY, lastModified).apply();
+                    Log.d(TAG, "Saving new last modified to Pref: " + lastModified);
                     RestoreDatabaseWorker.enqueueWork(getApplicationContext(), getInputData());
+                } else {
+                    // Menggunakan Handler untuk memastikan eksekusi pada thread utama
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        Context context = getApplicationContext();
+                        // Memastikan bahwa aplikasi berada di latar depan sebelum membuka Activity
+                        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+                        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+                        if (appProcesses != null) {
+                            for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+                                if (appProcess.processName.equals(context.getPackageName()) &&
+                                        appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+
+                                    // Jika aplikasi berada di latar depan, buka MainActivity
+                                    Intent intent = new Intent(context, MainActivity.class);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    context.startActivity(intent);
+                                    break;
+                                }
+                            }
+                        }
+                    });
                 }
 
                 return Result.success();
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 Log.e(TAG, "Error in doWork", e);
                 return Result.failure();
             }
         }
 
-        // Method untuk mendapatkan Last-Modified header dari URL
-        @NonNull
-        private String getLastModifiedFromUrl(String fileUrl) throws IOException {
-            URL url = new URL(fileUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.connect();
+        @Nullable
+        private String getLastModifiedFromUrl() throws IOException {
+            DatabaseReference database = FirebaseDatabase.getInstance().getReference("Data").child("nfgdb").child("lastModified");
+            final TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
 
-            // Tambahkan log untuk memeriksa status koneksi
-            int responseCode = connection.getResponseCode();
-            Log.d(TAG, "Response code: " + responseCode);
+            database.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        String lastMod = snapshot.getValue(String.class);
+                        taskCompletionSource.setResult(lastMod);
+                    } else {
+                        taskCompletionSource.setResult(null);
+                    }
+                }
 
-            // Jika response OK, ambil header
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                String eTag = connection.getHeaderField("ETag");
-                String contentType = connection.getHeaderField("Content-Type");
-                String contentLength = connection.getHeaderField("Content-Length");
-                String lastModified = connection.getHeaderField("Last-Modified");
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    taskCompletionSource.setException(new IOException("Failed to retrieve last modified date"));
+                }
+            });
 
-                // Logging metadata yang diperoleh
-                Log.d(TAG, "ETag: " + eTag);
-                Log.d(TAG, "Content-Type: " + contentType);
-                Log.d(TAG, "Content-Length: " + contentLength);
-                Log.d(TAG, "Last-Modified: " + lastModified);
-
-                // Anda bisa menyimpan atau mengembalikan data ini sesuai kebutuhan
-                // Misalnya, bisa mengembalikan ETag jika diperlukan
-                return lastModified != null ? lastModified : "";
-            } else {
-                Log.d(TAG, "Failed to fetch metadata: " + responseCode);
-                return ""; // Kembalikan string kosong jika permintaan gagal
+            try {
+                // Tunggu hasil dari Firebase (maksimum 5 detik)
+                return Tasks.await(taskCompletionSource.getTask(), 5, TimeUnit.SECONDS);
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                Log.e(TAG, "Error fetching last modified date", e);
+                return null;
             }
         }
 
-
         public static void enqueueWork(Context context, Data inputData) {
-            // Penjadwalan pengecekan modifikasi menggunakan WorkManager dengan InputData
             PeriodicWorkRequest checkRequest = new PeriodicWorkRequest.Builder(ModifiedCheckWorker.class, 12, TimeUnit.HOURS)
                     .setInputData(inputData)
                     .build();
             WorkManager.getInstance(context).enqueueUniquePeriodicWork("ModifiedCheckWork", ExistingPeriodicWorkPolicy.REPLACE, checkRequest);
         }
     }
+
 }
