@@ -135,7 +135,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
             String tmdbId = String.valueOf(episode.getId());
             String userId = manager.getCurrentUser().getUid();
             databaseReference = FirebaseDatabase.getInstance().getReference("History");
-            DatabaseReference userReference = databaseReference.child(tmdbId + "/" + userId);
+            DatabaseReference userReference = databaseReference.child("/" + userId + tmdbId);
             DatabaseReference p = userReference.child("lastPosition");
 
             p.addListenerForSingleValueEvent(new ValueEventListener() {

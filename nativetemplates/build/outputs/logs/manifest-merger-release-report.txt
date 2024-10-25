@@ -3,7 +3,6 @@ manifest
 ADDED from C:\dev\nfgplus android\hibaru\nativetemplates\src\main\AndroidManifest.xml:1:1-8:12
 INJECTED from C:\dev\nfgplus android\hibaru\nativetemplates\src\main\AndroidManifest.xml:1:1-8:12
 	package
-		ADDED from C:\dev\nfgplus android\hibaru\nativetemplates\src\main\AndroidManifest.xml:2:3-51
 		INJECTED from C:\dev\nfgplus android\hibaru\nativetemplates\src\main\AndroidManifest.xml
 	xmlns:android
 		ADDED from C:\dev\nfgplus android\hibaru\nativetemplates\src\main\AndroidManifest.xml:1:11-69

@@ -30,4 +30,9 @@ public class DatabaseClient {
     public AppDatabase getAppDatabase() {
         return appDatabase;
     }
+    public void closeDatabase(){
+        if (appDatabase.isOpen()){
+            appDatabase.close();
+        }
+    }
 }

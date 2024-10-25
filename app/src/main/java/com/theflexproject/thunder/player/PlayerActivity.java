@@ -114,7 +114,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         intent = getIntent();
         manager = new FirebaseManager();
         String tmdbId = intent.getStringExtra("tmdbId");
-        databaseReference = FirebaseDatabase.getInstance().getReference("History/"+tmdbId);
+        databaseReference = FirebaseDatabase.getInstance().getReference("History/");
         decorView = getWindow().getDecorView();
 
 
@@ -268,7 +268,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         // Check if device orientation is landscape
         if (newConfig.orientation != Configuration.ORIENTATION_LANDSCAPE) {
             // Show rewarded ad if loaded
-            loadReward();
         }
     }
     @Override
@@ -449,7 +448,8 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
         }
         String userId = manager.getCurrentUser().getUid();
-        DatabaseReference userReference = databaseReference.child(userId).child("lastPosition");
+        String tmdbId = intent.getStringExtra("tmdbId");
+        DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -480,6 +480,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
         player.setMediaItem(mediaItem, /* resetPosition= */ !haveStartPosition);
         player.prepare();
+        loadReward();
 
         return true;
     }
@@ -526,9 +527,10 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             startItemIndex = player.getCurrentMediaItemIndex();
             startPosition = Math.max(0, player.getContentPosition());
             String userId = manager.getCurrentUser().getUid();
+            String tmdbId = intent.getStringExtra("tmdbId");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-            DatabaseReference userReference = databaseReference.child(userId);
+            DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("lastPosition", startPosition);
             userMap.put("lastPlayed", currentDateTime);

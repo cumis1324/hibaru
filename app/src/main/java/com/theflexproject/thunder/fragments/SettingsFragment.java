@@ -9,15 +9,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,7 +28,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,24 +36,20 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.theflexproject.thunder.MainActivity;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.FirebaseManager;
-import com.theflexproject.thunder.model.GitHubResponse;
+import com.theflexproject.thunder.model.HistoryEntry;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
-import com.theflexproject.thunder.utils.CheckForUpdates;
 import com.theflexproject.thunder.utils.SettingsManager;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 public class SettingsFragment extends BaseFragment {
 
@@ -100,6 +94,7 @@ public class SettingsFragment extends BaseFragment {
     private DatabaseReference databaseReference;
     private StorageReference storageReference;
     private SwipeRefreshLayout swipeRefreshLayout;
+    List<String> itemIds = new ArrayList<>();
     public SettingsFragment() {}
 
     @Override
@@ -125,12 +120,13 @@ public class SettingsFragment extends BaseFragment {
         storageReference = FirebaseStorage.getInstance().getReference("profile_images");
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler2);
         lastPlayedMoviesRecyclerView = view.findViewById(R.id.lastPlayedMoviesRecycler2);
+        getHistoryFb();
         updateUI();
         initWidgets();
         setStatesOfToggleSwitches();
         setMyOnClickListeners();
         loadWatchlist();
-        loadLastPlayedMovies();
+        loadLastPlayedMovies(itemIds);
         setOnClickListner();
 
 
@@ -381,7 +377,7 @@ public class SettingsFragment extends BaseFragment {
         }
     }
 
-    private void loadLastPlayedMovies() {
+    private void loadLastPlayedMovies(List<String> itemIds) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -391,7 +387,7 @@ public class SettingsFragment extends BaseFragment {
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .movieDao()
-                        .getPlayed();
+                        .loadAllByIds(itemIds);
 
                 if(lastPlayedList!=null && lastPlayedList.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
@@ -481,5 +477,35 @@ public class SettingsFragment extends BaseFragment {
             }
         };
     }
+
+
+    private void getHistoryFb() {
+
+        String userId = currentUser.getUid();
+        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference("History").child(userId);
+        List<String> itemIds = new ArrayList<>();
+
+        historyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    for (DataSnapshot item : dataSnapshot.getChildren()){
+                    String itemId = item.getKey();
+                    itemIds.add(itemId);
+                    Log.d("item", itemId);
+                    loadLastPlayedMovies(itemIds);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle possible errors.
+            }
+        });
+    }
+
+
 
 }

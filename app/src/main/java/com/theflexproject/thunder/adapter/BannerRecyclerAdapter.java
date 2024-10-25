@@ -96,9 +96,9 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         String tmdbId = String.valueOf(mediaList.get(position).getId());
         String userId = manager.getCurrentUser().getUid();
         databaseReference = FirebaseDatabase.getInstance().getReference("History");
-        DatabaseReference userReference = databaseReference.child(tmdbId + "/" + userId);
+        DatabaseReference userReference = databaseReference.child( "/" + userId + tmdbId );
         DatabaseReference p = userReference.child("lastPosition");
-        DatabaseReference lastP = databaseReference.child(userId).child("lastPlayed");
+        DatabaseReference lastP = databaseReference.child(userId).child(tmdbId).child("lastPlayed");
 
         lastP.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

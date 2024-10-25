@@ -395,10 +395,10 @@ public class MovieDetailsFragment extends BaseFragment{
                                //    quality.setText(qualityStr);
                                //}
                                String tmdbId = String.valueOf(movieDetails.getId());
-                               databaseReference = FirebaseDatabase.getInstance().getReference("History/"+tmdbId);
+                               databaseReference = FirebaseDatabase.getInstance().getReference("History/");
                                String userId = manager.getCurrentUser().getUid();
-                               DatabaseReference userReference = databaseReference.child(userId).child("lastPosition");
-                               DatabaseReference lastP = databaseReference.child(userId).child("lastPlayed");
+                               DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
+                               DatabaseReference lastP = databaseReference.child(userId).child(tmdbId).child("lastPlayed");
 
 // Listener for lastPosition
                                userReference.addListenerForSingleValueEvent(new ValueEventListener() {

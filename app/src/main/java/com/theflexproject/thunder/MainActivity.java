@@ -3,9 +3,12 @@ package com.theflexproject.thunder;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -25,8 +28,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.room.Room;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
@@ -41,6 +47,8 @@ import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseUser;
+import com.theflexproject.thunder.database.AppDatabase;
+import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.fragments.HomeFragment;
 import com.theflexproject.thunder.fragments.HomeNewFragment;
 import com.theflexproject.thunder.fragments.LibraryFragment;
@@ -56,7 +64,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import eightbitlab.com.blurview.BlurView;
@@ -86,10 +97,12 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar loadingScan;
     FrameLayout scanContainer;
     static FirebaseUser currentUser;
+    AppDatabase dbs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         requestWindowFeature(1);
         FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
@@ -103,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Notifikasi diizinkan!", Toast.LENGTH_SHORT).show();
         }
+        // Daftarkan receiver untuk menerima pembaruan dari ModifiedCheckWorker
+
 
     }
     private boolean isNotificationEnabled() {
@@ -140,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleSignIn(){
         if (currentUser != null) {
+            dbs = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase();
             checkForAppUpdate();
             Intent intent = getIntent();
             Uri data = intent.getData();
@@ -148,10 +164,10 @@ public class MainActivity extends AppCompatActivity {
             setUpBottomNavigationView();
             handleDemoUser();
             // Mulai proses restore dengan WorkManager
-            MainActivity.RestoreDatabaseWorker.scheduleDailyRestore(this);
             //AppDatabase db = Room.databaseBuilder(getApplicationContext() ,
                            // AppDatabase.class , "MyToDos")
                     //.build();
+
         }
         else {
             startActivity(new Intent(MainActivity.this, SignInActivity.class));
@@ -299,178 +315,13 @@ public class MainActivity extends AppCompatActivity {
         }
         return "https://drive3.nfgplusmirror.workers.dev/0:/database/nfg.db";
     }
-    public static class RestoreDatabaseWorker extends Worker {
 
-        private static final String CHANNEL_ID = "syncing_channel";
-        private NotificationManager notificationManager;
-        private NotificationCompat.Builder notificationBuilder;
-        private static final int NOTIFICATION_ID = 1;
 
-        public RestoreDatabaseWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
-            super(context, workerParams);
-            notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            createNotificationChannel();
-        }
-
-        @NonNull
-        @Override
-        public Result doWork() {
-            String backupFileUrl = getInputData().getString("backup_file_url");
-
-            try {
-                // Mulai progress di notifikasi
-                showProgressNotification(0);
-
-                File downloadedFile = downloadFileFromUrl(backupFileUrl);
-                if (downloadedFile != null) {
-                    restoreDatabase(downloadedFile);
-                    // Sukses, tampilkan notifikasi selesai
-                    showCompletedNotification();
-                    return Result.success();
-                } else {
-                    // Gagal, tampilkan notifikasi error
-                    showFailureNotification();
-                    return Result.failure();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                showFailureNotification();
-                return Result.failure();
-            }
-        }
-
-        // Method untuk mendownload file dari URL ke penyimpanan lokal
-        private File downloadFileFromUrl(String fileUrl) throws IOException {
-            URL url = new URL(fileUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.connect();
-
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Failed to download file: " + connection.getResponseMessage());
-            }
-
-            File localFile = new File(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "demo.db");
-            try (InputStream inputStream = connection.getInputStream();
-                 OutputStream outputStream = new FileOutputStream(localFile)) {
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                int totalBytesRead = 0;
-                int fileLength = connection.getContentLength();
-
-                // Update progress selama proses download
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                    totalBytesRead += bytesRead;
-
-                    // Hitung progress dan update notifikasi
-                    int progress = (int) ((totalBytesRead / (float) fileLength) * 100);
-                    showProgressNotification(progress);
-                }
-            }
-
-            connection.disconnect();
-            return localFile;
-        }
-        // Method untuk restore database dari file lokal
-        private void restoreDatabase(File file) throws IOException {
-            File dbFile = getApplicationContext().getDatabasePath("MyToDos");
-
-            // Hapus database lama jika ada
-            if (dbFile.exists()) {
-                dbFile.delete();
-            }
-
-            if (!dbFile.exists()) {
-                dbFile.getParentFile().mkdirs();
-                dbFile.createNewFile();
-            }
-
-            // Salin database baru dari file lokal ke database aplikasi
-            try (InputStream is = new FileInputStream(file);
-                 OutputStream os = new FileOutputStream(dbFile)) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, length);
-                }
-            }
-        }
-
-        // Method untuk membuat notification channel
-        private void createNotificationChannel() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                CharSequence name = "Sync Database Channel";
-                String description = "Channel for database Syncing notifications";
-                int importance = NotificationManager.IMPORTANCE_LOW;
-                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-                channel.setDescription(description);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    notificationManager.createNotificationChannel(channel);
-                }
-            }
-        }
-
-        // Method untuk menampilkan notifikasi progress
-        private void showProgressNotification(int progress) {
-            notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                    .setContentTitle("Syncing Database")
-                    .setContentText("Progress: " + progress + "%")
-                    .setSmallIcon(R.drawable.ic_launcher_round)
-                    .setProgress(100, progress, false)
-                    .setOngoing(true); // Notifikasi tidak bisa di-swipe
-
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
-        }
-
-        // Method untuk menampilkan notifikasi saat selesai
-        private void showCompletedNotification() {
-            notificationBuilder.setContentText("Restore Completed")
-                    .setProgress(0, 0, false)
-                    .setOngoing(false); // Notifikasi bisa di-swipe
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
-        }
-
-        // Method untuk menampilkan notifikasi jika terjadi error
-        private void showFailureNotification() {
-            notificationBuilder.setContentText("Restore Failed")
-                    .setProgress(0, 0, false)
-                    .setOngoing(false); // Notifikasi bisa di-swipe
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
-        }
-
-        public static void scheduleDailyRestore(Context context) {
-            Data inputData = new Data.Builder()
-                    .putString("backup_file_url", getBackupFileUrl()) // URL backup file
-                    .build();
-
-            PeriodicWorkRequest restoreRequest = new PeriodicWorkRequest.Builder(RestoreDatabaseWorker.class, 1, TimeUnit.DAYS)
-                    .setInputData(inputData)
-                    .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
-                    .build();
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                    "daily_restore",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    restoreRequest
-            );
-        }
-        private static long calculateInitialDelay() {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            // Set jam dan menit ke 12 malam
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
-            // Jika waktu sekarang sudah lewat dari 12 malam, tambahkan satu hari
-            if (System.currentTimeMillis() >= calendar.getTimeInMillis()) {
-                calendar.add(Calendar.DAY_OF_MONTH, 1);
-            }
-            return calendar.getTimeInMillis() - System.currentTimeMillis();
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        DatabaseClient.getInstance(getApplicationContext()).closeDatabase();
     }
-
 }
 
 
