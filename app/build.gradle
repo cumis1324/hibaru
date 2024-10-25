@@ -12,8 +12,8 @@ android {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 34
-        versionCode 43
-        versionName "Pancacaturimsati"
+        versionCode 44
+        versionName "Catracaturimsati"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
