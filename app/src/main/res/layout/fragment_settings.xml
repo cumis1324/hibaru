@@ -104,7 +104,7 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="History"
-                android:visibility="gone"
+                android:visibility="visible"
                 android:layout_marginTop="10dp"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
@@ -131,7 +131,7 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="Your Watchlist"
-                android:visibility="gone"
+                android:visibility="visible"
                 android:layout_marginTop="10dp"
                 android:textColor="@color/white"
                 android:textSize="16sp" />

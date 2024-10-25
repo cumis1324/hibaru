@@ -14,6 +14,8 @@ import java.util.List;
 public interface TVShowDao {
     @Query("SELECT  * FROM TVShow")
     List<TVShow> getAll();
+    @Query("SELECT * FROM TVShow WHERE id IN (:itemIds)")
+    List<TVShow> loadAllByIds(List<String> itemIds);
 
     @Query("SELECT * FROM TVShow WHERE poster_path IS NOT NULL GROUP BY id ORDER BY name ASC")
     List<TVShow> getAllByTitles();

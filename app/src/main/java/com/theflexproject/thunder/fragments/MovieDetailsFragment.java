@@ -24,6 +24,8 @@ import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd;
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -762,35 +764,44 @@ public class MovieDetailsFragment extends BaseFragment{
         addToList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(movieDetails.getAddToList()!=1){
+                String tmdbId = String.valueOf(movieDetails.getId());
+                String userId = manager.getCurrentUser().getUid();
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference value = userReference.child("value");
+                value.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(!snapshot.exists()){
 
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            DatabaseClient
-                                    .getInstance(mActivity)
-                                    .getAppDatabase()
-                                    .movieDao()
-                                    .updateAddToList(movieDetails.getId());
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("value", 1);
+                            userReference.setValue(userMap);
+
+                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+
+                        }else{
+                            userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()){
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                    else {
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                }
+                            });
+
+                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
                         }
-                    }).start();
+                    }
 
-                    Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
-                }
-                else{
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            DatabaseClient
-                                    .getInstance(mActivity)
-                                    .getAppDatabase()
-                                    .movieDao()
-                                    .updateRemoveFromList(movieId);
-                        }
-                    }).start();
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
 
-                    Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
-                }
+                    }
+                });
+
 
             }
         });

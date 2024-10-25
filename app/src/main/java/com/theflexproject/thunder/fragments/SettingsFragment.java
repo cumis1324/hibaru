@@ -41,7 +41,6 @@ import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.FirebaseManager;
-import com.theflexproject.thunder.model.HistoryEntry;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
@@ -121,12 +120,11 @@ public class SettingsFragment extends BaseFragment {
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler2);
         lastPlayedMoviesRecyclerView = view.findViewById(R.id.lastPlayedMoviesRecycler2);
         getHistoryFb();
+        getFavorit();
         updateUI();
         initWidgets();
         setStatesOfToggleSwitches();
         setMyOnClickListeners();
-        loadWatchlist();
-        loadLastPlayedMovies(itemIds);
         setOnClickListner();
 
 
@@ -407,7 +405,7 @@ public class SettingsFragment extends BaseFragment {
             }});
         thread.start();
     }
-    private void loadWatchlist() {
+    private void loadWatchlist(List<String> itemIds) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -415,13 +413,13 @@ public class SettingsFragment extends BaseFragment {
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .movieDao()
-                        .getWatchlisted();
+                        .loadAllByIds(itemIds);
 
                 List<TVShow> watchlistShows = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .tvShowDao()
-                        .getWatchlisted();
+                        .loadAllByIds(itemIds);
 
                 watchlist = new ArrayList<>();
                 watchlist.addAll(watchlistMovies);
@@ -476,6 +474,32 @@ public class SettingsFragment extends BaseFragment {
 
             }
         };
+    }
+    private void getFavorit() {
+
+        String userId = currentUser.getUid();
+        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference("Favorit").child(userId);
+        List<String> itemIds = new ArrayList<>();
+
+        historyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    for (DataSnapshot item : dataSnapshot.getChildren()){
+                        String itemId = item.getKey();
+                        itemIds.add(itemId);
+                        Log.d("item", itemId);
+                        loadWatchlist(itemIds);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle possible errors.
+            }
+        });
     }
 
 

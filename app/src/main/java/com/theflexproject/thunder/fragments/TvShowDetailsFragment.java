@@ -41,9 +41,17 @@ import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.nativead.NativeAd;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Genre;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
@@ -54,8 +62,11 @@ import com.theflexproject.thunder.player.PlayerActivity;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class TvShowDetailsFragment extends BaseFragment {
 
@@ -107,6 +118,8 @@ public class TvShowDetailsFragment extends BaseFragment {
     Episode nextEpisode;
     private Button saweria;
     private TemplateView template;
+    FirebaseManager manager;
+    DatabaseReference databaseReference;
 
 
     public TvShowDetailsFragment() {
@@ -128,6 +141,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         super.onViewCreated(view , savedInstanceState);
         saweria = view.findViewById(R.id.saweria);
         template = view.findViewById(R.id.my_template);
+        manager = new FirebaseManager();
         loadNative();
 
         initWidgets(view);
@@ -398,36 +412,47 @@ public class TvShowDetailsFragment extends BaseFragment {
         saweria.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
 
         addToList.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
-                if(tvShowDetails.getAddToList()!=1){
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            DatabaseClient
-                                    .getInstance(mActivity)
-                                    .getAppDatabase()
-                                    .tvShowDao()
-                                    .updateAddToList(tvShowId);
+                String tmdbId = String.valueOf(tvShowId);
+                String userId = manager.getCurrentUser().getUid();
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference value = userReference.child("value");
+                value.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(!snapshot.exists()){
+
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("value", 1);
+                            userReference.setValue(userMap);
+
+                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+
+                        }else{
+                            userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()){
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                    else {
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                }
+                            });
+
+                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
                         }
-                    }).start();
+                    }
 
-                    Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
 
-                }else{
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            DatabaseClient
-                                    .getInstance(mActivity)
-                                    .getAppDatabase()
-                                    .tvShowDao()
-                                    .updateRemoveFromList(tvShowId);
-                        }
-                    }).start();
+                    }
+                });
 
-                    Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
-                }
 
             }
         });
