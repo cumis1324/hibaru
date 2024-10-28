@@ -95,9 +95,8 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
 
         String tmdbId = String.valueOf(mediaList.get(position).getId());
         String userId = manager.getCurrentUser().getUid();
-        databaseReference = FirebaseDatabase.getInstance().getReference("History");
-        DatabaseReference userReference = databaseReference.child( "/" + userId + tmdbId );
-        DatabaseReference p = userReference.child("lastPosition");
+        databaseReference = FirebaseDatabase.getInstance().getReference("History/");
+        DatabaseReference p = databaseReference.child(userId).child(tmdbId).child("lastPosition");
         DatabaseReference lastP = databaseReference.child(userId).child(tmdbId).child("lastPlayed");
 
         lastP.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -162,7 +161,7 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         public MovieViewHolder(@NonNull View itemView) {
             super(itemView);
             progressOverlay = itemView.findViewById(R.id.progress_overlay2);
-            logo = itemView.findViewById(R.id.movieLogo);
+            logo = itemView.findViewById(R.id.movieLogo1);
             name = itemView.findViewById(R.id.textView4);
             poster = itemView.findViewById(R.id.moviePoster);
             itemView.setOnClickListener(this);

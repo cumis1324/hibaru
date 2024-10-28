@@ -86,7 +86,7 @@ public class DrakorBannerAdapter extends RecyclerView.Adapter<DrakorBannerAdapte
 
         public MovieViewHolder(@NonNull View itemView) {
             super(itemView);
-            logo = itemView.findViewById(R.id.movieLogo);
+            logo = itemView.findViewById(R.id.movieLogo1);
             name = itemView.findViewById(R.id.textView4);
             poster= itemView.findViewById(R.id.moviePoster);
             itemView.setOnClickListener(this);

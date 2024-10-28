@@ -47,7 +47,7 @@
             android:textColor="@color/white"
             app:layout_constraintTop_toBottomOf="@+id/moviePoster" />
         <ImageView
-            android:id="@+id/movieLogo"
+            android:id="@+id/movieLogo1"
             android:layout_width="150dp"
             android:layout_height="50dp"
             android:layout_alignStart="@+id/moviePoster"
