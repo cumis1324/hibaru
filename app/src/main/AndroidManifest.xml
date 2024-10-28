@@ -71,6 +71,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+
             </intent-filter>
         </activity>
         <activity
@@ -98,16 +99,13 @@
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="true"
             android:hardwareAccelerated="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
+            <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:host="nfgplus.page.link"
-                    android:pathPrefix="/share"
-                    android:scheme="https" />
+                <data android:scheme="https" android:host="nfgplus.my.id" android:pathPrefix="/reviews.html" />
             </intent-filter>
         </activity>
         <activity

@@ -81,6 +81,7 @@ public class TvShowDetailsFragment extends BaseFragment {
     ImageButton play;
 
     ImageButton addToList;
+    ImageButton share;
 
 
 
@@ -169,6 +170,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         ratingsText = view.findViewById(R.id.ratingsTVText);
         play = view.findViewById(R.id.playInTVShowDetails);
         addToList = view.findViewById(R.id.addToListButtonTV);
+        share = view.findViewById(R.id.shareButton);
 
     }
 
@@ -456,6 +458,12 @@ public class TvShowDetailsFragment extends BaseFragment {
 
             }
         });
+        share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                shareIt();
+            }
+        });
 
 
 
@@ -467,5 +475,31 @@ public class TvShowDetailsFragment extends BaseFragment {
                     .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                     .add(R.id.container,seasonDetailsFragment).addToBackStack(null).commit();
         };
+    }
+
+    private void shareIt() {
+        String title = tvShowDetails.getName();
+        String originalTitle = tvShowDetails.getOriginal_name();
+        String overview = tvShowDetails.getOverview();
+        String posterPath = "https://image.tmdb.org/t/p/w500" + tvShowDetails.getPoster_path();
+        String movieId = String.valueOf(tvShowDetails.getId());
+
+        // Tautan deep link lengkap
+        String deepLink = "https://nfgplus.my.id/reviews.html?id=" + movieId + "&type=tv";
+
+        // Menyusun teks yang ingin dibagikan
+        String shareText = title + "\n" +
+                "Judul Asli: " + originalTitle + "\n" +
+                "Deskripsi: " + overview + "\n" +
+                deepLink + "\n" ;
+
+        // Membuat Intent untuk membagikan konten
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain"); // Menggunakan teks biasa
+
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+
+        startActivity(Intent.createChooser(shareIntent, "Bagikan " + title));
     }
 }

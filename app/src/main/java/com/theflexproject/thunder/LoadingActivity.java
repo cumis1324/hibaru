@@ -13,11 +13,9 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -52,12 +50,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -86,11 +79,14 @@ public class LoadingActivity extends AppCompatActivity {
 
         // Ambil URL backup dan masukkan ke dalam WorkManager
         String backupFileUrl = getBackupFileUrl();
+        Uri deepLinkData = getIntent().getData();
 
         // Kirim URL melalui InputData ke Worker
         Data inputData = new Data.Builder()
                 .putString("backup_file_url", backupFileUrl)
+                .putString("deeplink", String.valueOf(deepLinkData))
                 .build();
+
 
         // Mulai pengecekan modifikasi dengan WorkManager
         ModifiedCheckWorker.enqueueWork(this, inputData);
@@ -135,13 +131,14 @@ public class LoadingActivity extends AppCompatActivity {
             try {
                 // Ambil URL dari InputData
                 String backupFileUrl = getInputData().getString("backup_file_url");
+                Uri deepLinkData = Uri.parse(getInputData().getString("deeplink"));
 
                 // Download file dari URL dan restore database
                 File downloadedFile = downloadFileFromUrl(backupFileUrl);
 
                 if (downloadedFile != null) {
                     restoreDatabase(downloadedFile);
-                    launchMainActivity();
+                    launchMainActivity(deepLinkData);
                     return Result.success();
                 } else {
                     return Result.failure();
@@ -213,11 +210,14 @@ public class LoadingActivity extends AppCompatActivity {
             Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
         }
 
-        private void launchMainActivity() {
+        private void launchMainActivity(Uri deepLinkData) {
             // Gunakan Handler untuk beralih ke UI thread
             new Handler(Looper.getMainLooper()).post(() -> {
                 Context context = getApplicationContext();
                 Intent intent = new Intent(context, MainActivity.class);
+                if (deepLinkData != null) {
+                    intent.setData(deepLinkData);
+                }
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
             });
@@ -253,6 +253,7 @@ public class LoadingActivity extends AppCompatActivity {
         public Result doWork() {
             try {
                 String backupFileUrl = getInputData().getString("backup_file_url");
+                Uri deepLinkData = Uri.parse(getInputData().getString("deeplink"));
                 Log.d(TAG, "Backup file URL: " + backupFileUrl);
 
                 // Ambil lastModified secara sinkron
@@ -284,6 +285,9 @@ public class LoadingActivity extends AppCompatActivity {
 
                                     // Jika aplikasi berada di latar depan, buka MainActivity
                                     Intent intent = new Intent(context, MainActivity.class);
+                                    if (deepLinkData != null) {
+                                        intent.setData(deepLinkData);
+                                    }
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);
                                     break;

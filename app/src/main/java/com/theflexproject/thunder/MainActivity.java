@@ -52,6 +52,7 @@ import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.fragments.HomeFragment;
 import com.theflexproject.thunder.fragments.HomeNewFragment;
 import com.theflexproject.thunder.fragments.LibraryFragment;
+import com.theflexproject.thunder.fragments.MovieDetailsFragment;
 import com.theflexproject.thunder.fragments.SearchFragment;
 import com.theflexproject.thunder.fragments.SettingsFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
@@ -68,6 +69,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import eightbitlab.com.blurview.BlurView;
@@ -157,12 +159,12 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser != null) {
             dbs = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase();
             checkForAppUpdate();
-            Intent intent = getIntent();
-            Uri data = intent.getData();
+
             setContentView(R.layout.activity_main);
             initWidgets();
             setUpBottomNavigationView();
             handleDemoUser();
+
             // Mulai proses restore dengan WorkManager
             //AppDatabase db = Room.databaseBuilder(getApplicationContext() ,
                            // AppDatabase.class , "MyToDos")
@@ -174,6 +176,33 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+    private void bukaIntent() {
+        if (getIntent().getData() != null) {
+            Uri data = getIntent().getData();
+            String itemId = data.getQueryParameter("id");
+            String itemType = data.getQueryParameter("type");
+
+            if (itemId != null && itemType != null) {
+                openFragmentBasedOnType(itemId, itemType);
+            }else {
+                getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
+            }
+        }else {
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
+        }
+    }
+
+    private void openFragmentBasedOnType(String itemId, String itemType) {
+        if (Objects.equals(itemType, "movie")){
+            int id = Integer.parseInt(itemId);
+            MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(id);
+            getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                    .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+        }
+    }
+
     private void handleDemoUser() {
         // User is signed in
         currentUser.getUid();
@@ -183,7 +212,8 @@ public class MainActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, homeVerif).commit();
         }
         else {
-            getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
+            bukaIntent();
+
         }
     }
 
@@ -309,12 +339,6 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private static String getBackupFileUrl() {
-        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
-            return "https://drive3.nfgplusmirror.workers.dev/0:/database/demo.db";
-        }
-        return "https://drive3.nfgplusmirror.workers.dev/0:/database/nfg.db";
-    }
 
 
     @Override

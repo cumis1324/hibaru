@@ -52,6 +52,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
+import android.text.Html;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -892,21 +893,30 @@ public class MovieDetailsFragment extends BaseFragment{
     // Method to share the dynamic link
     private void shareDynamicLink(String dynamicLink) {
         // Create a share intent
+        String title = movieDetails.getTitle();
+        String originalTitle = movieDetails.getOriginal_title();
+        String overview = movieDetails.getOverview();
+        String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPoster_path();
+        String movieId = String.valueOf(movieDetails.getId());
+
+        // Tautan deep link lengkap
+        String deepLink = "https://nfgplus.my.id/reviews.html?id=" + movieId + "&type=movie";
+
+        // Menyusun teks yang ingin dibagikan
+        String shareText = title + "\n" +
+                "Judul Asli: " + originalTitle + "\n" +
+                "Deskripsi: " + overview + "\n" +
+                 deepLink + "\n" ;
+
+        // Membuat Intent untuk membagikan konten
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
+        shareIntent.setType("text/plain"); // Menggunakan teks biasa
 
-        // Include movie details in the share text
-        String shareText =
-                movieDetails.getTitle()
-                        + "\n \n Watch this movie in your app "
-                        + "\n \n Overview: " + movieDetails.getOverview()
-                        + "\n \n" + dynamicLink;
-
-        // Set the share text as the data
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
 
-        // Start the share activity
-        startActivity(Intent.createChooser(shareIntent, "Share This Movie"));
+        startActivity(Intent.createChooser(shareIntent, "Bagikan " + title));
+
     }
 
 
