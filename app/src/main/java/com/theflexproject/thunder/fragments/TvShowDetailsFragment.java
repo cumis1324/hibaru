@@ -43,6 +43,7 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -121,6 +122,7 @@ public class TvShowDetailsFragment extends BaseFragment {
     private TemplateView template;
     FirebaseManager manager;
     DatabaseReference databaseReference;
+    BottomNavigationView botnav;
 
 
     public TvShowDetailsFragment() {
@@ -142,11 +144,19 @@ public class TvShowDetailsFragment extends BaseFragment {
         super.onViewCreated(view , savedInstanceState);
         saweria = view.findViewById(R.id.saweria);
         template = view.findViewById(R.id.my_template);
+        botnav = mActivity.findViewById(R.id.bottom_navigation);
+        botnav.setVisibility(View.GONE);
         manager = new FirebaseManager();
         loadNative();
 
         initWidgets(view);
         loadDetails();
+    }
+
+    @Override
+    public void onDestroyView() {
+        botnav.setVisibility(View.VISIBLE);
+        super.onDestroyView();
     }
 
     private void initWidgets(View view) {

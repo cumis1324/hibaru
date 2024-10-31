@@ -10,6 +10,10 @@
         android:icon="@drawable/ic_search"
         android:title="Search" />
     <item
+        android:id="@+id/downloadFragment"
+        android:icon="@drawable/ic_download"
+        android:title="Download" />
+    <item
         android:id="@+id/libraryFragment"
         android:icon="@drawable/ic_library"
         android:title="Library" />

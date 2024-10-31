@@ -7,6 +7,8 @@ import android.content.Intent;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
+import com.theflexproject.thunder.model.MediaItem;
+
 public abstract class BaseFragment extends Fragment {
 
     protected FragmentActivity mActivity;
@@ -22,4 +24,5 @@ public abstract class BaseFragment extends Fragment {
 
     protected void onNewIntent(Intent intent) {
     }
+
 }

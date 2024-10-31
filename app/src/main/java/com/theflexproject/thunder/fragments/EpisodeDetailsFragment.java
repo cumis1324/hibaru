@@ -82,7 +82,7 @@ import java.util.Objects;
 public class EpisodeDetailsFragment extends BaseFragment {
 
 
-    static final int REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION = 0;
+    public static final int REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION = 0;
     TextView showName;
     TextView episodeName;
     ImageView episodeStill;

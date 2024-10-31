@@ -3,6 +3,7 @@ package com.theflexproject.thunder.player;
 
 import static android.content.ContentValues.TAG;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PictureInPictureParams;
 import android.content.Intent;
@@ -107,12 +108,14 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private RewardedAd rewardedAd;
     FirebaseManager manager;
     private DatabaseReference databaseReference;
+    String offline;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         intent = getIntent();
         manager = new FirebaseManager();
+        offline = "offline";
         String tmdbId = intent.getStringExtra("tmdbId");
         databaseReference = FirebaseDatabase.getInstance().getReference("History/");
         decorView = getWindow().getDecorView();
@@ -238,6 +241,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 });
 
     }
+    @SuppressLint("SetTextI18n")
     private void loadTitle(){
         String titleString = intent.getStringExtra("title");
         String yearString = intent.getStringExtra("year");
@@ -245,9 +249,14 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         String epsnumString = intent.getStringExtra("number");
         String titleEpisode = intent.getStringExtra("episode");
         if (yearString!=null) {
-            playerTitle.setText(titleString + " (" + yearString + ")");
-            playerEpsTitle.setVisibility(View.GONE);
-        }else {
+            if (yearString.equals(offline)) {
+                playerTitle.setText(titleString);
+                playerEpsTitle.setVisibility(View.GONE);
+            }else {
+                playerTitle.setText(titleString + " (" + yearString + ")");
+                playerEpsTitle.setVisibility(View.GONE);
+            }
+        } else {
             playerTitle.setText(titleString);
             playerEpsTitle.setText("Season " + seasonString + " Episode " + epsnumString + " : " + titleEpisode);
             playerEpsTitle.setVisibility(View.VISIBLE);
@@ -396,6 +405,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
         // Update the played field in your local database asynchronously
+        if (!Objects.equals(tmdbId, "offline")){
         AsyncTask.execute(() -> {
             String yearString = intent.getStringExtra("year");
             if(yearString!=null) {
@@ -404,6 +414,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().episodeDao().updatePlayed(tmdbId, currentDateTime + " added");
             }
         });
+        }
     }
 
     private String formatDuration(long milliseconds) {
@@ -449,8 +460,10 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
         String userId = manager.getCurrentUser().getUid();
         String tmdbId = intent.getStringExtra("tmdbId");
-        DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
-        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        if (tmdbId != null) {
+            if (!tmdbId.equals(offline)){
+            DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
+            userReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
@@ -472,7 +485,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 public void onCancelled(@NonNull DatabaseError databaseError) {
                     // Handle onCancelled event
                 }
-        });
+            });
+            }
+        }
 
         boolean haveStartPosition = startItemIndex != C.INDEX_UNSET;
         if (haveStartPosition) {
@@ -522,7 +537,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     private void updateStartPosition() {
         if (player != null) {
-            addToPlayed();
             startAutoPlay = player.getPlayWhenReady();
             startItemIndex = player.getCurrentMediaItemIndex();
             startPosition = Math.max(0, player.getContentPosition());
@@ -530,11 +544,15 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             String tmdbId = intent.getStringExtra("tmdbId");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
+            if (tmdbId != null){
+                if (!tmdbId.equals(offline)){
             DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
             Map<String, Object> userMap = new HashMap<>();
             userMap.put("lastPosition", startPosition);
             userMap.put("lastPlayed", currentDateTime);
             userReference.setValue(userMap);
+                }
+            }
 
 
         }

@@ -26,6 +26,7 @@ import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd;
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -180,6 +181,7 @@ public class MovieDetailsFragment extends BaseFragment{
     FileItemAdapter.OnItemClickListener listenerFileItem;
     Movie largestFile;
     Movie selectedFile;
+    BottomNavigationView botnav;
 
 
     //adview
@@ -223,6 +225,8 @@ public class MovieDetailsFragment extends BaseFragment{
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        botnav = mActivity.findViewById(R.id.bottom_navigation);
+        botnav.setVisibility(View.GONE);
         manager = new FirebaseManager();
         WebView webView = view.findViewById(R.id.webview);
         WebSettings webSettings = webView.getSettings();
@@ -244,6 +248,12 @@ public class MovieDetailsFragment extends BaseFragment{
         loadDetails();
 
 
+    }
+
+    @Override
+    public void onDestroyView() {
+        botnav.setVisibility(View.VISIBLE);
+        super.onDestroyView();
     }
 
     private void loadReward(){

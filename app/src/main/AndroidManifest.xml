@@ -19,9 +19,11 @@
         android:maxSdkVersion="32"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:ignore="SelectedPhotoAccess" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:ignore="SelectedPhotoAccess" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <application
@@ -106,6 +108,8 @@
             <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="https" android:host="nfgplus.my.id" android:pathPrefix="/reviews.html" />
+                <data android:scheme="https" android:host="www.nfgplus.my.id" android:pathPrefix="/reviews.html" />
+                <data android:scheme="https" android:host="web.nfgplus.my.id" android:pathPrefix="/reviews.html" />
             </intent-filter>
         </activity>
         <activity

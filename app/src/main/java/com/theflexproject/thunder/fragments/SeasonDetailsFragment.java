@@ -336,10 +336,7 @@ public class SeasonDetailsFragment extends BaseFragment {
         listener = new EpisodeAdapter.OnItemClickListener() {
             @Override
             public void onClick(View view , int position) {
-                EpisodeDetailsFragment episodeDetailsFragment = new EpisodeDetailsFragment(tvShow , tvShowSeasonDetails , episodes.get(position));
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in , R.anim.fade_out , R.anim.fade_in , R.anim.fade_out)
-                        .add(R.id.container , episodeDetailsFragment).addToBackStack(null).commit();
+
             }
         };
     }

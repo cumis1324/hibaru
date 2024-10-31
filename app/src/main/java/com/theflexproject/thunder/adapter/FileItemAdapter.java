@@ -87,8 +87,10 @@ public class FileItemAdapter extends RecyclerView.Adapter<FileItemAdapter.FileIt
             holder.play.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    holder.playMedia(((Movie)mediaList.get(position)).getUrlString());
-                    addToLastPlayed();
+                    String url = ((Movie)mediaList.get(position)).getUrlString();
+                    String title = ((Movie)mediaList.get(position)).getFileName();
+                    holder.playMedia(url, title);
+
 
                 }
                 private void addToLastPlayed() {
@@ -137,8 +139,10 @@ public class FileItemAdapter extends RecyclerView.Adapter<FileItemAdapter.FileIt
             holder.play.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    holder.playMedia(((Episode)mediaList.get(position)).getUrlString());
-                    addToLastPlayed();
+                    String url = ((Episode)mediaList.get(position)).getUrlString();
+                    String title = ((Episode)mediaList.get(position)).getFileName();
+                    holder.playMedia(url, title);
+
                 }
                 private void addToLastPlayed() {
                     Thread thread = new Thread(new Runnable() {
@@ -220,7 +224,7 @@ public class FileItemAdapter extends RecyclerView.Adapter<FileItemAdapter.FileIt
             }
 
 
-            private void playMedia(String url) {
+            private void playMedia(String url, String title) {
                 if (savedEXT) {
                     //External Player
                     Intent intent = new Intent(Intent.ACTION_VIEW , Uri.parse(url));
@@ -230,6 +234,9 @@ public class FileItemAdapter extends RecyclerView.Adapter<FileItemAdapter.FileIt
                     //Play video
                     Intent in = new Intent(context , PlayerActivity.class);
                     in.putExtra("url" , (url));
+                    in.putExtra("tmdbId", "offline");
+                    in.putExtra("year", "offline");
+                    in.putExtra("title", title);
                     context.startActivity(in);
                     Toast.makeText(context , "Play" , Toast.LENGTH_LONG).show();
                 }

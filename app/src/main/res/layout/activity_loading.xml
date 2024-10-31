@@ -24,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Updating database resource, please wait..."
+        android:text="Connecting to server"
         android:textSize="16sp"
         android:textColor="@android:color/white" />
 </LinearLayout>

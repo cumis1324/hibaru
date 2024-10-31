@@ -49,6 +49,7 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseUser;
 import com.theflexproject.thunder.database.AppDatabase;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.fragments.DownloadFragment;
 import com.theflexproject.thunder.fragments.HomeFragment;
 import com.theflexproject.thunder.fragments.HomeNewFragment;
 import com.theflexproject.thunder.fragments.LibraryFragment;
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
     SearchFragment searchFragment = new SearchFragment();
     LibraryFragment libraryFragment = new LibraryFragment();
     SettingsFragment settingsFragment = new SettingsFragment();
+    DownloadFragment downloadFragment = new DownloadFragment();
 
     BlurView blurView;
     ViewGroup rootView;
@@ -267,6 +269,13 @@ public class MainActivity extends AppCompatActivity {
                         .beginTransaction()
                         .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
                         .replace(R.id.container , searchFragment)
+                        .commit();
+                return true;
+            }else if(item.getItemId()==R.id.downloadFragment){
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
+                        .replace(R.id.container , downloadFragment)
                         .commit();
                 return true;
             }else if(item.getItemId()==R.id.libraryFragment){

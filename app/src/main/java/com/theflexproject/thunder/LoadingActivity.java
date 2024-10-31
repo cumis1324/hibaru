@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -61,6 +63,9 @@ public class LoadingActivity extends AppCompatActivity {
     private static FirebaseUser currentUser;
     private ViewGroup rootView;
     private ProgressBar progressBar;
+    private static final String LAST_MODIFIED_PREF = "last_modified_pref";
+    private static final String LAST_MODIFIED_KEY = "last_modified_key";
+    private TextView pesan;
 
 
     @Override
@@ -73,6 +78,7 @@ public class LoadingActivity extends AppCompatActivity {
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
         progressBar = findViewById(R.id.progress_datar);
+        pesan = findViewById(R.id.loading_message);
         // Pastikan ada ProgressBar di layout Anda
 
         LocalBroadcastManager.getInstance(this).registerReceiver(progressReceiver, new IntentFilter("PROGRESS_UPDATE"));
@@ -99,7 +105,9 @@ public class LoadingActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             int progress = intent.getIntExtra("progress", 0);
+            String pesanIntent = intent.getStringExtra("pesan");
             progressBar.setProgress(progress);
+            pesan.setText(pesanIntent);
         }
     };
 
@@ -141,9 +149,13 @@ public class LoadingActivity extends AppCompatActivity {
                     launchMainActivity(deepLinkData);
                     return Result.success();
                 } else {
+
                     return Result.failure();
                 }
             } catch (IOException e) {
+                SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+                prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
+                doWork();
                 e.printStackTrace();
                 return Result.failure();
             }
@@ -176,9 +188,14 @@ public class LoadingActivity extends AppCompatActivity {
                     int progress = (int) ((totalBytesRead / (float) fileLength) * 100);
                     updateProgressBar(progress);
                 }
+            }catch (IOException e) {
+                // Set lastModifiedSaved to empty if download is interrupted or canceled
+                SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+                prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
+                throw e;
+            } finally {
+                connection.disconnect();
             }
-
-            connection.disconnect();
             return localFile;
         }
 
@@ -233,6 +250,8 @@ public class LoadingActivity extends AppCompatActivity {
 
         private void updateProgressBar(int progress) {
             Intent intent = new Intent("PROGRESS_UPDATE");
+            String pesan = "Updating database, please wait ....";
+            intent.putExtra("pesan", pesan);
             intent.putExtra("progress", progress);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
@@ -253,7 +272,7 @@ public class LoadingActivity extends AppCompatActivity {
         public Result doWork() {
             try {
                 String backupFileUrl = getInputData().getString("backup_file_url");
-                Uri deepLinkData = Uri.parse(getInputData().getString("deeplink"));
+
                 Log.d(TAG, "Backup file URL: " + backupFileUrl);
 
                 // Ambil lastModified secara sinkron
@@ -268,10 +287,62 @@ public class LoadingActivity extends AppCompatActivity {
                 String lastModifiedSaved = prefs.getString(LAST_MODIFIED_KEY, "");
 
                 if (lastModifiedSaved.isEmpty() || !lastModified.equals(lastModifiedSaved)) {
+                    Intent intent = new Intent("PROGRESS_UPDATE");
+                    String pesan = "Updated database found";
+                    int progress = 100;
+                    intent.putExtra("pesan", pesan);
+                    intent.putExtra("progress", progress);
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
                     prefs.edit().putString(LAST_MODIFIED_KEY, lastModified).apply();
                     Log.d(TAG, "Saving new last modified to Pref: " + lastModified);
                     RestoreDatabaseWorker.enqueueWork(getApplicationContext(), getInputData());
                 } else {
+                    Intent intent = new Intent("PROGRESS_UPDATE");
+                    String pesan = "Loading database, please wait ....";
+                    int progress = 50;
+                    intent.putExtra("pesan", pesan);
+                    intent.putExtra("progress", progress);
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                    isDatabaseCorrupt();
+
+                }
+
+                return Result.success();
+            } catch (IOException e) {
+                Log.e(TAG, "Error in doWork", e);
+                return Result.failure();
+            }
+        }
+
+        private boolean isDatabaseCorrupt() {
+            AppDatabase db = null;
+            try {
+                // Inisialisasi database Room
+                db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos")
+                        .allowMainThreadQueries() // Hanya untuk testing, hindari di thread utama dalam produksi
+                        .build();
+
+                // Coba melakukan query sederhana pada tabel
+                db.indexLinksDao().getAll();
+
+                // Jika query berhasil, maka database tidak corrupt
+                return false;
+            } catch (SQLiteException e) {
+                if (e instanceof android.database.sqlite.SQLiteDatabaseCorruptException) {
+                    Log.e(TAG, "Database is corrupt!", e);
+                    RestoreDatabaseWorker.enqueueWork(getApplicationContext(), getInputData());
+                    return true; // Database corrupt
+                } else {
+                    Log.e(TAG, "Database error", e);
+                }
+            } finally {
+                if (db != null) {
+                    Intent intent = new Intent("PROGRESS_UPDATE");
+                    String pesan = "Loading database, please wait ....";
+                    int progress = 100;
+                    intent.putExtra("pesan", pesan);
+                    intent.putExtra("progress", progress);
+                    Uri deepLinkData = Uri.parse(getInputData().getString("deeplink"));
                     // Menggunakan Handler untuk memastikan eksekusi pada thread utama
                     new Handler(Looper.getMainLooper()).post(() -> {
                         Context context = getApplicationContext();
@@ -284,24 +355,21 @@ public class LoadingActivity extends AppCompatActivity {
                                         appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
 
                                     // Jika aplikasi berada di latar depan, buka MainActivity
-                                    Intent intent = new Intent(context, MainActivity.class);
+                                    Intent intnt = new Intent(context, MainActivity.class);
                                     if (deepLinkData != null) {
-                                        intent.setData(deepLinkData);
+                                        intnt.setData(deepLinkData);
                                     }
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    context.startActivity(intent);
+                                    intnt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    context.startActivity(intnt);
                                     break;
                                 }
                             }
                         }
                     });
+                    db.close(); // Tutup koneksi database
                 }
-
-                return Result.success();
-            } catch (IOException e) {
-                Log.e(TAG, "Error in doWork", e);
-                return Result.failure();
             }
+            return false;
         }
 
         @Nullable
@@ -327,6 +395,12 @@ public class LoadingActivity extends AppCompatActivity {
             });
 
             try {
+                Intent intent = new Intent("PROGRESS_UPDATE");
+                String pesan = "Finding updated database";
+                int progress = 20;
+                intent.putExtra("pesan", pesan);
+                intent.putExtra("progress", progress);
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
                 // Tunggu hasil dari Firebase (maksimum 5 detik)
                 return Tasks.await(taskCompletionSource.getTask(), 5, TimeUnit.SECONDS);
             } catch (ExecutionException | InterruptedException | TimeoutException e) {

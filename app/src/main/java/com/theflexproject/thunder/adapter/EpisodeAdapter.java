@@ -1,17 +1,24 @@
 package com.theflexproject.thunder.adapter;
 
 import static android.content.ContentValues.TAG;
+import static android.content.Context.DOWNLOAD_SERVICE;
 
+import static com.theflexproject.thunder.fragments.EpisodeDetailsFragment.REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION;
+
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Bundle;
+import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +34,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -50,7 +59,6 @@ import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.player.PlayerActivity;
-import com.theflexproject.thunder.player.VideoPlayer;
 import com.theflexproject.thunder.utils.StringUtils;
 
 import java.time.ZonedDateTime;
@@ -131,6 +139,29 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
             }
 
             holder.play.setOnClickListener(view -> holder.playEpisode(episode));
+            holder.download.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (Build.VERSION.SDK_INT < 32) {
+                        // Check if the app has the WRITE_EXTERNAL_STORAGE permission
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            // Request the permission if it is not granted
+                            ActivityCompat.requestPermissions(((Activity) context),
+                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION);
+
+                        } else {
+                            // Permission is already granted, proceed with the download
+                            holder.startDownload(episode);
+                        }
+                    }else {
+                        holder.startDownload(episode);
+                    }
+                }
+
+
+            });
 
             String tmdbId = String.valueOf(episode.getId());
             String userId = manager.getCurrentUser().getUid();
@@ -171,6 +202,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
         setAnimation(holder.itemView, position);
     }
 
+
     @Override
     public int getItemCount() {
         return episodeList.size();
@@ -187,7 +219,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
         TextView episodeNumber;
         TextView runtime;
         TextView overview;
-        Button play;
+        Button play, download;
         TextView watched;
         View progressOverlay;
 
@@ -206,6 +238,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
             overview = itemView.findViewById(R.id.overviewDescInItem);
             watched = itemView.findViewById(R.id.markWatchedEpisode);
             play = itemView.findViewById(R.id.playInEpisodeItem);
+            download = itemView.findViewById(R.id.downloadEpisode);
 
             blurBottom();
 
@@ -291,6 +324,17 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                 itemView.getContext().startActivity(in);
                 Toast.makeText(itemView.getContext(), "Play", Toast.LENGTH_LONG).show();
             }
+        }
+        private void startDownload(Episode episode) {
+            String customFolderPath = "/nfgplus/series/";
+            DownloadManager manager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(episode.getUrlString());
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + episode.getFileName());
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                    .setDescription("Downloading");
+            long reference = manager.enqueue(request);
+            Toast.makeText(context, "Download Started", Toast.LENGTH_LONG).show();
         }
 
         private void addToLastPlayed(int id) {
