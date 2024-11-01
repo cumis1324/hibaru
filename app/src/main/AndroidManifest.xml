@@ -63,11 +63,16 @@
         <service
             android:name=".RefreshJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service
+            android:name=".utils.LoadingForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
         <activity
             android:name=".SplashScreenActivity"
             android:exported="true"
-            android:theme="@style/SplashTheme">
+            android:theme="@style/SplashTheme"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -75,12 +80,23 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
 
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" android:host="nfgplus.my.id" android:pathPrefix="/reviews.html" />
+                <data android:scheme="https" android:host="www.nfgplus.my.id" android:pathPrefix="/reviews.html" />
+                <data android:scheme="https" android:host="web.nfgplus.my.id" android:pathPrefix="/reviews.html" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".LoadingActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:enabled="true"
             android:exported="true" />
+
+
         <activity
             android:name=".OnboardActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
@@ -101,16 +117,7 @@
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="true"
             android:hardwareAccelerated="true">
-            <intent-filter android:autoVerify="true">
-            <action android:name="android.intent.action.VIEW" />
 
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="https" android:host="nfgplus.my.id" android:pathPrefix="/reviews.html" />
-                <data android:scheme="https" android:host="www.nfgplus.my.id" android:pathPrefix="/reviews.html" />
-                <data android:scheme="https" android:host="web.nfgplus.my.id" android:pathPrefix="/reviews.html" />
-            </intent-filter>
         </activity>
         <activity
             android:name=".player.PlayerActivity"

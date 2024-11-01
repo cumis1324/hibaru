@@ -1,6 +1,7 @@
 package com.theflexproject.thunder;
 
 import android.app.ActivityManager;
+import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,7 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -22,10 +24,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.room.Room;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ForegroundInfo;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -43,6 +47,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.database.AppDatabase;
 import com.theflexproject.thunder.model.FirebaseManager;
+import com.theflexproject.thunder.utils.LoadingForegroundService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -65,6 +70,7 @@ public class LoadingActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private static final String LAST_MODIFIED_PREF = "last_modified_pref";
     private static final String LAST_MODIFIED_KEY = "last_modified_key";
+    private static final String TAG = "loading";
     private TextView pesan;
 
 
@@ -74,6 +80,9 @@ public class LoadingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_loading);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, LoadingForegroundService.class));
+        }
         FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
@@ -137,6 +146,7 @@ public class LoadingActivity extends AppCompatActivity {
         @Override
         public Result doWork() {
             try {
+                setForegroundAsync(createForegroundInfo("Updating database..."));
                 // Ambil URL dari InputData
                 String backupFileUrl = getInputData().getString("backup_file_url");
                 Uri deepLinkData = Uri.parse(getInputData().getString("deeplink"));
@@ -144,12 +154,15 @@ public class LoadingActivity extends AppCompatActivity {
                 // Download file dari URL dan restore database
                 File downloadedFile = downloadFileFromUrl(backupFileUrl);
 
+
                 if (downloadedFile != null) {
-                    restoreDatabase(downloadedFile);
-                    launchMainActivity(deepLinkData);
+                    restoreDatabase(downloadedFile, deepLinkData);
                     return Result.success();
                 } else {
-
+                    // Set lastModifiedSaved to empty if download is interrupted or canceled
+                    SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+                    prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
+                    doWork();
                     return Result.failure();
                 }
             } catch (IOException e) {
@@ -189,6 +202,7 @@ public class LoadingActivity extends AppCompatActivity {
                     updateProgressBar(progress);
                 }
             }catch (IOException e) {
+                localFile.delete();
                 // Set lastModifiedSaved to empty if download is interrupted or canceled
                 SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
                 prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
@@ -198,9 +212,15 @@ public class LoadingActivity extends AppCompatActivity {
             }
             return localFile;
         }
+        @Override
+        public void onStopped(){
+            super.onStopped();
+            SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+            prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
+        }
 
         // Method untuk restore database dari file lokal
-        private void restoreDatabase(File file) throws IOException {
+        private void restoreDatabase(File file, Uri deepLinkData) throws IOException {
             AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
             db.close();
             File dbFile = getApplicationContext().getDatabasePath("MyToDos");
@@ -225,18 +245,31 @@ public class LoadingActivity extends AppCompatActivity {
                 }
             }
             Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
+            launchMainActivity(deepLinkData);
         }
 
         private void launchMainActivity(Uri deepLinkData) {
-            // Gunakan Handler untuk beralih ke UI thread
             new Handler(Looper.getMainLooper()).post(() -> {
                 Context context = getApplicationContext();
-                Intent intent = new Intent(context, MainActivity.class);
-                if (deepLinkData != null) {
-                    intent.setData(deepLinkData);
+                // Memastikan bahwa aplikasi berada di latar depan sebelum membuka Activity
+                ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+                List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+                if (appProcesses != null) {
+                    for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+                        if (appProcess.processName.equals(context.getPackageName()) &&
+                                appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+
+                            // Jika aplikasi berada di latar depan, buka MainActivity
+                            Intent intnt = new Intent(context, MainActivity.class);
+                            if (deepLinkData != null) {
+                                intnt.setData(deepLinkData);
+                            }
+                            intnt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intnt);
+                            break;
+                        }
+                    }
                 }
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
             });
         }
 
@@ -250,10 +283,23 @@ public class LoadingActivity extends AppCompatActivity {
 
         private void updateProgressBar(int progress) {
             Intent intent = new Intent("PROGRESS_UPDATE");
-            String pesan = "Updating database, please wait ....";
+            if (progress <= 50){
+                String pesan1 = "Updating database, please wait ....";
+                intent.putExtra("pesan", pesan1);
+                intent.putExtra("progress", progress);
+            }
+            String pesan = "Updating, Do not close the app....";
             intent.putExtra("pesan", pesan);
             intent.putExtra("progress", progress);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        }
+        private ForegroundInfo createForegroundInfo(String message) {
+            Notification notification = new NotificationCompat.Builder(getApplicationContext(), "loading_channel")
+                    .setContentTitle("Database Restoration")
+                    .setContentText(message)
+                    .setSmallIcon(R.drawable.ic_import_export)
+                    .build();
+            return new ForegroundInfo(1, notification);
         }
     }
 
@@ -271,17 +317,16 @@ public class LoadingActivity extends AppCompatActivity {
         @Override
         public Result doWork() {
             try {
+                setForegroundAsync(createForegroundInfo("Finding Database Update"));
                 String backupFileUrl = getInputData().getString("backup_file_url");
 
                 Log.d(TAG, "Backup file URL: " + backupFileUrl);
-
                 // Ambil lastModified secara sinkron
                 String lastModified = getLastModifiedFromUrl();
                 if (lastModified == null) {
                     Log.e(TAG, "Failed to get last modified from Firebase.");
                     return Result.failure();
                 }
-
                 Log.d(TAG, "Last modified from URL: " + lastModified);
                 SharedPreferences prefs = getApplicationContext().getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
                 String lastModifiedSaved = prefs.getString(LAST_MODIFIED_KEY, "");
@@ -324,16 +369,19 @@ public class LoadingActivity extends AppCompatActivity {
 
                 // Coba melakukan query sederhana pada tabel
                 db.indexLinksDao().getAll();
-
+                Log.i(TAG, "DB Aman!");
                 // Jika query berhasil, maka database tidak corrupt
                 return false;
             } catch (SQLiteException e) {
                 if (e instanceof android.database.sqlite.SQLiteDatabaseCorruptException) {
                     Log.e(TAG, "Database is corrupt!", e);
                     RestoreDatabaseWorker.enqueueWork(getApplicationContext(), getInputData());
+                    Log.d(TAG, "mendownload ulang");
                     return true; // Database corrupt
                 } else {
-                    Log.e(TAG, "Database error", e);
+                    Log.e(TAG, "Database is corrupt!", e);
+                    RestoreDatabaseWorker.enqueueWork(getApplicationContext(), getInputData());
+                    Log.d(TAG, "mendownload ulang");
                 }
             } finally {
                 if (db != null) {
@@ -367,9 +415,21 @@ public class LoadingActivity extends AppCompatActivity {
                         }
                     });
                     db.close(); // Tutup koneksi database
+                }else{
+
+                    RestoreDatabaseWorker.enqueueWork(getApplicationContext(), getInputData());
+                    Log.d(TAG, "mendownload ulang");
                 }
             }
             return false;
+        }
+        private ForegroundInfo createForegroundInfo(String message) {
+            Notification notification = new NotificationCompat.Builder(getApplicationContext(), "loading_channel")
+                    .setContentTitle("Database Restoration")
+                    .setContentText(message)
+                    .setSmallIcon(R.drawable.ic_import_export)
+                    .build();
+            return new ForegroundInfo(1, notification);
         }
 
         @Nullable

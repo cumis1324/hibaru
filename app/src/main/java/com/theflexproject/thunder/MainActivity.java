@@ -56,6 +56,7 @@ import com.theflexproject.thunder.fragments.LibraryFragment;
 import com.theflexproject.thunder.fragments.MovieDetailsFragment;
 import com.theflexproject.thunder.fragments.SearchFragment;
 import com.theflexproject.thunder.fragments.SettingsFragment;
+import com.theflexproject.thunder.fragments.TvShowDetailsFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
 
 import java.io.File;
@@ -196,12 +197,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openFragmentBasedOnType(String itemId, String itemType) {
+        int id = Integer.parseInt(itemId);
         if (Objects.equals(itemType, "movie")){
-            int id = Integer.parseInt(itemId);
             MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(id);
             getSupportFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                     .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+        }else {
+                TvShowDetailsFragment tvDetailsFragment = new TvShowDetailsFragment(id);
+                getSupportFragmentManager().beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                        .add(R.id.container,tvDetailsFragment).addToBackStack(null).commit();
         }
     }
 
