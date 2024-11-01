@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.DownloadRecyAdapter;
@@ -43,7 +44,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
     private DownloadRecyAdapter mediaAdapter;
     private List<MediaItem> mediaList = new ArrayList<>();
     private TextView teksDownload;
-    private FloatingActionButton fabAddFile;
+
 
 
     @Nullable
@@ -59,14 +60,11 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
         recyclerView = view.findViewById(R.id.recyclerDownload);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         teksDownload = view.findViewById(R.id.teksDownload);
-        fabAddFile = view.findViewById(R.id.fabAddFile);
-        fabAddFile.setOnClickListener(v -> openFileChooser());
-
         if (mediaList.isEmpty()) {
             checkPermisi();
             Log.d(TAG, "Checking storage permissions...");
         }else{
-            mediaAdapter = new DownloadRecyAdapter(mediaList, getContext());
+            mediaAdapter = new DownloadRecyAdapter(mediaList, getContext(), this);
             recyclerView.setAdapter(mediaAdapter);
         }
 
@@ -105,7 +103,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
             teksDownload.setText("You Are Not Download Anything");
             Log.i(TAG, "Tidak ada media yang ditemukan di direktori.");;
         }else {
-            mediaAdapter = new DownloadRecyAdapter(mediaList, getContext());
+            mediaAdapter = new DownloadRecyAdapter(mediaList, getContext(), this);
             recyclerView.setAdapter(mediaAdapter);
         }
     }
@@ -153,7 +151,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
     public void onItemDelete(MediaItem mediaItem){
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity)
                 .setTitle("Delete File")
-                .setMessage("Are you sure want to delete this "+mediaItem.getFName()+"?")
+                .setMessage("Are you sure want to delete this "+mediaItem.getFName()+" permanently?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -183,40 +181,5 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
     public void onDestroyView() {
         mediaList.clear();
         super.onDestroyView();
-    }
-    private void openFileChooser() {
-        if (Build.VERSION.SDK_INT < 32) {
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(requireActivity(),
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        STORAGE_PERMISSION_CODE);
-                Log.d(TAG, "Permission not granted. Requesting storage permissions...");
-            } else {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("video/*"); // Untuk memilih semua jenis file
-                startActivityForResult(Intent.createChooser(intent, "Pilih file"), FILE_SELECT_CODE);
-            }
-        }else{
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("video/*"); // Untuk memilih semua jenis file
-            startActivityForResult(Intent.createChooser(intent, "Pilih file"), FILE_SELECT_CODE);
-        }
-
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_SELECT_CODE && resultCode == Activity.RESULT_OK) {
-            if (data != null) {
-                Uri uri = data.getData();
-                String path = uri.getPath();
-                // Tambahkan file ke mediaList
-                if (path != null) {
-                    mediaList.add(new MediaItem(new File(path).getName(), path));
-                    mediaAdapter.notifyItemInserted(mediaList.size() - 1);
-                }
-            }
-        }
     }
 }

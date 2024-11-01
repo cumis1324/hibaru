@@ -29,7 +29,7 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
     }
 
 
-    public DownloadRecyAdapter(List<MediaItem> mediaList, Context context) {
+    public DownloadRecyAdapter(List<MediaItem> mediaList, Context context, OnItemDeleteListener onItemDeleteListener) {
         this.mediaList = mediaList;
         this.context = context;
         this.onItemDeleteListener = onItemDeleteListener;
@@ -75,7 +75,7 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
         TextView fileNameTextView, path;
         Button play;
-        Button download, hapus;
+        Button hapus;
 
         public MediaViewHolder(@NonNull View itemView) {
             super(itemView);

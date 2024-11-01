@@ -264,7 +264,7 @@ public class LoadingActivity extends AppCompatActivity {
                             if (deepLinkData != null) {
                                 intnt.setData(deepLinkData);
                             }
-                            intnt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intnt.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
                             context.startActivity(intnt);
                             break;
                         }
@@ -407,7 +407,7 @@ public class LoadingActivity extends AppCompatActivity {
                                     if (deepLinkData != null) {
                                         intnt.setData(deepLinkData);
                                     }
-                                    intnt.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    intnt.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intnt);
                                     break;
                                 }

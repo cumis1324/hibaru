@@ -2,6 +2,7 @@ package com.theflexproject.thunder;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.WindowManager;
@@ -19,28 +20,34 @@ public class SplashScreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Uri data = getIntent().getData();
         setContentView(R.layout.activity_splash);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
-
         currentUser = firebaseManager.getCurrentUser();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                handleSignIn();
+                handleSignIn(data);
             }
         }, 4000);
 
     }
-    private void handleSignIn(){
+    private void handleSignIn(Uri data){
+        Intent intent;
         if (currentUser != null) {
-            startActivity(new Intent(SplashScreenActivity.this, LoadingActivity.class));
-            finish();
-        }else {
-            startActivity(new Intent(SplashScreenActivity.this, SignInActivity.class));
-            finish();
+            intent = new Intent(SplashScreenActivity.this, LoadingActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (data != null) {
+                intent.setData(data);  // Tambahkan URI ke Intent
+            }
+        } else {
+            intent = new Intent(SplashScreenActivity.this, SignInActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
         }
+        startActivity(intent);
+        finish();
     }
 }

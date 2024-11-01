@@ -9,18 +9,7 @@
     android:background="@color/black"
     android:orientation="vertical">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddFile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
-        app:backgroundTint="@color/white"
-        app:tint="@color/blue"
-    android:contentDescription="Browse"/>
+
     <TextView
         android:id="@+id/downloadTitle"
         android:layout_width="wrap_content"
