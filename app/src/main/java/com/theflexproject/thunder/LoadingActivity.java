@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
@@ -80,9 +81,7 @@ public class LoadingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_loading);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(this, LoadingForegroundService.class));
-        }
+
         FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
@@ -146,7 +145,7 @@ public class LoadingActivity extends AppCompatActivity {
         @Override
         public Result doWork() {
             try {
-                setForegroundAsync(createForegroundInfo("Updating database..."));
+
                 // Ambil URL dari InputData
                 String backupFileUrl = getInputData().getString("backup_file_url");
                 Uri deepLinkData = Uri.parse(getInputData().getString("deeplink"));
@@ -246,6 +245,7 @@ public class LoadingActivity extends AppCompatActivity {
             }
             Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
             launchMainActivity(deepLinkData);
+
         }
 
         private void launchMainActivity(Uri deepLinkData) {
@@ -293,14 +293,7 @@ public class LoadingActivity extends AppCompatActivity {
             intent.putExtra("progress", progress);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
-        private ForegroundInfo createForegroundInfo(String message) {
-            Notification notification = new NotificationCompat.Builder(getApplicationContext(), "loading_channel")
-                    .setContentTitle("Database Restoration")
-                    .setContentText(message)
-                    .setSmallIcon(R.drawable.ic_import_export)
-                    .build();
-            return new ForegroundInfo(1, notification);
-        }
+
     }
 
     public static class ModifiedCheckWorker extends Worker {
@@ -317,7 +310,7 @@ public class LoadingActivity extends AppCompatActivity {
         @Override
         public Result doWork() {
             try {
-                setForegroundAsync(createForegroundInfo("Finding Database Update"));
+
                 String backupFileUrl = getInputData().getString("backup_file_url");
 
                 Log.d(TAG, "Backup file URL: " + backupFileUrl);
@@ -334,6 +327,7 @@ public class LoadingActivity extends AppCompatActivity {
                 if (lastModifiedSaved.isEmpty() || !lastModified.equals(lastModifiedSaved)) {
                     Intent intent = new Intent("PROGRESS_UPDATE");
                     String pesan = "Updated database found";
+
                     int progress = 100;
                     intent.putExtra("pesan", pesan);
                     intent.putExtra("progress", progress);
@@ -344,6 +338,7 @@ public class LoadingActivity extends AppCompatActivity {
                 } else {
                     Intent intent = new Intent("PROGRESS_UPDATE");
                     String pesan = "Loading database, please wait ....";
+
                     int progress = 50;
                     intent.putExtra("pesan", pesan);
                     intent.putExtra("progress", progress);
@@ -385,6 +380,7 @@ public class LoadingActivity extends AppCompatActivity {
                 }
             } finally {
                 if (db != null) {
+
                     Intent intent = new Intent("PROGRESS_UPDATE");
                     String pesan = "Loading database, please wait ....";
                     int progress = 100;
@@ -423,14 +419,7 @@ public class LoadingActivity extends AppCompatActivity {
             }
             return false;
         }
-        private ForegroundInfo createForegroundInfo(String message) {
-            Notification notification = new NotificationCompat.Builder(getApplicationContext(), "loading_channel")
-                    .setContentTitle("Database Restoration")
-                    .setContentText(message)
-                    .setSmallIcon(R.drawable.ic_import_export)
-                    .build();
-            return new ForegroundInfo(1, notification);
-        }
+
 
         @Nullable
         private String getLastModifiedFromUrl() throws IOException {
@@ -455,6 +444,7 @@ public class LoadingActivity extends AppCompatActivity {
             });
 
             try {
+
                 Intent intent = new Intent("PROGRESS_UPDATE");
                 String pesan = "Finding updated database";
                 int progress = 20;

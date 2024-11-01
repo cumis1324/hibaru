@@ -96,6 +96,7 @@ import com.theflexproject.thunder.adapter.FileItemAdapter;
 import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.model.DownloadItem;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Genre;
 import com.theflexproject.thunder.model.Movie;
@@ -764,7 +765,9 @@ public class MovieDetailsFragment extends BaseFragment{
                         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
                         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                                 .setDescription("Downloading " + selectedFile.getTitle() + " " + huntu);
-                        long reference = manager.enqueue(request);
+                        long downloadId = manager.enqueue(request);
+                        List<DownloadItem> downloadItems = new ArrayList<>();
+                        downloadItems.add(new DownloadItem(selectedFile.getFileName(), downloadId));
                         Toast.makeText(getContext(), "Download Started", Toast.LENGTH_LONG).show();
                     }
                 };

@@ -1,18 +1,22 @@
 package com.theflexproject.thunder.fragments;
 
+import static android.content.Context.DOWNLOAD_SERVICE;
+
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,13 +30,16 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.adapter.DownloadAdapter;
 import com.theflexproject.thunder.adapter.DownloadRecyAdapter;
+import com.theflexproject.thunder.model.DownloadItem;
 import com.theflexproject.thunder.model.MediaItem;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,10 +47,13 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
     private static final int STORAGE_PERMISSION_CODE = 1;
     private static final String TAG = "DownloadFragment";
     private static final int FILE_SELECT_CODE = 0;
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerView, downloadingRecy;
     private DownloadRecyAdapter mediaAdapter;
     private List<MediaItem> mediaList = new ArrayList<>();
     private TextView teksDownload;
+    private DownloadManager downloadManager;
+    private DownloadAdapter downloadAdapter;
+    private List<DownloadItem> downloadItems = new ArrayList<>();
 
 
 
@@ -57,6 +67,13 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        downloadManager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
+        downloadingRecy = view.findViewById(R.id.recyclerDownloading);
+        downloadingRecy.setLayoutManager(new LinearLayoutManager(getContext()));
+        downloadAdapter = new DownloadAdapter(downloadItems, getContext());
+        checkDownloadProgress();
+        downloadingRecy.setAdapter(downloadAdapter);
+
         recyclerView = view.findViewById(R.id.recyclerDownload);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         teksDownload = view.findViewById(R.id.teksDownload);
@@ -68,7 +85,60 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
             recyclerView.setAdapter(mediaAdapter);
         }
 
+
     }
+    private void checkDownloadProgress() {
+        final Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                DownloadManager.Query query = new DownloadManager.Query();
+                query.setFilterByStatus(DownloadManager.STATUS_RUNNING | DownloadManager.STATUS_PAUSED | DownloadManager.STATUS_PENDING | DownloadManager.STATUS_SUCCESSFUL | DownloadManager.STATUS_FAILED);
+                Cursor cursor = downloadManager.query(query);
+
+                if (cursor != null && cursor.moveToFirst()) {
+                    do {
+                        int downloadIdIndex = cursor.getColumnIndex(DownloadManager.COLUMN_ID);
+                        int statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                        int bytesDownloadedIndex = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR);
+                        int bytesTotalIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES);
+
+                        long downloadId = cursor.getLong(downloadIdIndex);
+                        int status = cursor.getInt(statusIndex);
+                        int bytesDownloaded = cursor.getInt(bytesDownloadedIndex);
+                        int bytesTotal = cursor.getInt(bytesTotalIndex);
+
+                        if (status == DownloadManager.STATUS_RUNNING && bytesTotal > 0) {
+                            final int progress = (int) ((bytesDownloaded * 100L) / bytesTotal);
+                            mActivity.runOnUiThread(() -> downloadAdapter.updateProgress(downloadId, progress));
+                        } else if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                            mActivity.runOnUiThread(() -> removeDownloadItem(downloadId));
+                        }
+                    } while (cursor.moveToNext());
+
+                    cursor.close();
+                }
+
+                // Schedule next update
+                handler.postDelayed(this, 1000); // Update every second
+            }
+        };
+
+        handler.post(runnable);
+    }
+
+    private void removeDownloadItem(long downloadId) {
+        for (int i = 0; i < downloadItems.size(); i++) {
+            if (downloadItems.get(i).getDownloadId() == downloadId) {
+                downloadItems.remove(i);
+                downloadAdapter.notifyItemRemoved(i);
+                downloadAdapter.notifyItemRangeChanged(i, downloadItems.size());
+                break;
+            }
+        }
+    }
+
+
 
     private void checkPermisi() {
         if (Build.VERSION.SDK_INT < 32) {
@@ -91,24 +161,43 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
         File movieDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "nfgplus/movies");
         File seriesDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "nfgplus/series");
 
+        // Membuat direktori jika tidak ada
+        if (!movieDir.exists() || !movieDir.isDirectory()) {
+            if (movieDir.mkdirs()) {
+                Log.d(TAG, "Direktori berhasil dibuat: " + movieDir.getAbsolutePath());
+            } else {
+                Log.w(TAG, "Gagal membuat direktori: " + movieDir.getAbsolutePath());
+            }
+        } else {
+            Log.d(TAG, "Direktori sudah ada: " + movieDir.getAbsolutePath());
+        }
+
+        // Cek direktori series
+        if (!seriesDir.exists() || !seriesDir.isDirectory()) {
+            if (seriesDir.mkdirs()) {
+                Log.d(TAG, "Direktori berhasil dibuat: " + seriesDir.getAbsolutePath());
+            } else {
+                Log.w(TAG, "Gagal membuat direktori: " + seriesDir.getAbsolutePath());
+            }
+        } else {
+            Log.d(TAG, "Direktori sudah ada: " + seriesDir.getAbsolutePath());
+        }
+
         Log.d(TAG, "Memuat file media dari direktori: " + movieDir.getAbsolutePath());
-        addFilesFromDirectory(movieDir);
-
-        Log.d(TAG, "Memuat file media dari direktori: " + seriesDir.getAbsolutePath());
-        addFilesFromDirectory(seriesDir);
-
-
+        addFilesFromDirectory(movieDir, "movies");
+        addFilesFromDirectory(seriesDir, "series");
 
         if (mediaList.isEmpty()) {
             teksDownload.setText("You Are Not Download Anything");
-            Log.i(TAG, "Tidak ada media yang ditemukan di direktori.");;
-        }else {
+            Log.i(TAG, "Tidak ada media yang ditemukan di direktori.");
+        } else {
             mediaAdapter = new DownloadRecyAdapter(mediaList, getContext(), this);
             recyclerView.setAdapter(mediaAdapter);
         }
     }
 
-    private void addFilesFromDirectory(File directory) {
+
+    private void addFilesFromDirectory(File directory, String dirType) {
         if (directory.exists() && directory.isDirectory()) {
             File[] files = directory.listFiles();
             if (files != null) {
@@ -116,7 +205,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
                 for (File file : files) {
                     if (file.isFile()) {
                         Log.d(TAG, "Menambahkan file: " + file.getName());
-                        scanWithMediaStore(file);
+
                         mediaList.add(new MediaItem(file.getName(), file.getAbsolutePath()));
                     }
                 }
@@ -125,16 +214,6 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
             }
         }else {
             Log.w(TAG, "Direktori tidak ditemukan atau bukan direktori: " + directory.getAbsolutePath());
-        }
-    }
-
-    private void scanWithMediaStore(File file) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            ContentValues values = new ContentValues();
-            values.put(MediaStore.MediaColumns.DATA, file.getAbsolutePath());
-            mActivity.getContentResolver().insert(MediaStore.Files.getContentUri("external"), values);
-        }else {
-            mActivity.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
         }
     }
 

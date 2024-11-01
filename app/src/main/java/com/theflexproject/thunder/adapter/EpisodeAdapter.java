@@ -55,6 +55,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.Constants;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.model.DownloadItem;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
@@ -63,6 +64,7 @@ import com.theflexproject.thunder.utils.StringUtils;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -333,7 +335,9 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + episode.getFileName());
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                     .setDescription("Downloading");
-            long reference = manager.enqueue(request);
+            long downloadId = manager.enqueue(request);
+            List<DownloadItem> downloadItems = new ArrayList<>();
+            downloadItems.add(new DownloadItem(episode.getFileName(), downloadId));
             Toast.makeText(context, "Download Started", Toast.LENGTH_LONG).show();
         }
 

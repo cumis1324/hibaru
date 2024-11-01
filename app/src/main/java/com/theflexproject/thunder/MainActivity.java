@@ -112,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
-        loadAd();
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         // Check if the user is signed in
         handleSignIn();
@@ -226,10 +225,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void loadAd() {
-        MyApplication myApplication = (MyApplication) getApplication();
-        myApplication.loadAd();
-    }
+
 
 
 

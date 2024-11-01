@@ -32,63 +32,7 @@ public class MyApplication extends Application {
         FirebaseAnalytics.getInstance(this);
 
         // Enable In-App Messaging
-        FirebaseInAppMessaging.getInstance().setAutomaticDataCollectionEnabled(true);
-
-        // Add click listener for in-app messages
-        FirebaseInAppMessaging.getInstance().addClickListener(new FirebaseInAppMessagingClickListener() {
-            @Override
-            public void messageClicked(InAppMessage inAppMessage, Action action) {
-                // Handle in-app message click
-                String actionUrl = action.getActionUrl(); // Get the URL associated with the click
-                // Implement your logic to handle the click action (e.g., open a specific activity or URL)
-            }
-        });
-
-        // Add impression listener for in-app messages
-        FirebaseInAppMessaging.getInstance().addImpressionListener(new FirebaseInAppMessagingImpressionListener() {
-            @Override
-            public void impressionDetected(InAppMessage inAppMessage) {
-                // Handle in-app message impression
-                // Implement your logic to handle the impression event (e.g., log analytics)
-            }
-        });
-
-        if (shouldLoadAd()) {
-            loadAd();
-        }
     }
 
-    public static AppOpenAd getAppOpenAd() {
-        return appOpenAd;
-    }
 
-    public static void setAppOpenAd(AppOpenAd ad) {
-        appOpenAd = ad;
-    }
-
-    private boolean shouldLoadAd() {
-        long currentTime = new Date().getTime();
-        return (currentTime - loadTime) > 3600000; // 1 hour
-    }
-
-    public void loadAd() {
-        AdRequest request = new AdRequest.Builder().build();
-        AppOpenAd.load(
-                this,
-                "ca-app-pub-5906976337228746/8963496548",
-                request,
-                AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT,
-                new AppOpenAd.AppOpenAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(AppOpenAd ad) {
-                        appOpenAd = ad;
-                        loadTime = new Date().getTime();
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(LoadAdError error) {
-                        // Handle the error
-                    }
-                });
-    }
 }
