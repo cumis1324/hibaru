@@ -48,7 +48,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.database.AppDatabase;
 import com.theflexproject.thunder.model.FirebaseManager;
-import com.theflexproject.thunder.utils.LoadingForegroundService;
 
 import java.io.File;
 import java.io.FileInputStream;
