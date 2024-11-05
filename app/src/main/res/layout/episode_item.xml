@@ -11,6 +11,8 @@
     app:cardCornerRadius="15dp"
     android:focusable="true"
     android:clickable="true"
+    android:focusableInTouchMode="true"
+    android:background="@drawable/button_selector"
     app:cardBackgroundColor="@color/episode_item_bg_color">
 
     <eightbitlab.com.blurview.BlurView

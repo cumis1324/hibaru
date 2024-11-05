@@ -33,6 +33,10 @@
             android:layout_height="wrap_content"
             android:text="Movies"
             android:id="@+id/movieTab2"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="@drawable/button_selector"
+            android:nextFocusRight="@id/seriesTab"
             />
 
         <com.google.android.material.tabs.TabItem
@@ -40,6 +44,10 @@
             android:layout_height="wrap_content"
             android:text="Series"
             android:id="@+id/seriesTab"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="@drawable/button_selector"
+            android:nextFocusLeft="@id/movieTab2"
             />
 
 
@@ -48,7 +56,10 @@
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/homePagerLibrary"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@drawable/button_selector"/>
 
 
 

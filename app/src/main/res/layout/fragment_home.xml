@@ -42,7 +42,6 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/jost_medium"
                 android:layout_marginTop="10dp"
-                android:visibility="gone"
                 android:paddingStart="20dp"
                 android:text="@string/on_trending"
                 android:textColor="@color/white"
@@ -54,6 +53,10 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:scrollbars="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:background="@drawable/button_selector"
+                android:nextFocusDown="@id/trendingRecycler"
                 android:layout_marginTop="14dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/movie_item_banner" />
@@ -64,8 +67,6 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="Recently Added"
-                android:visibility="gone"
-
                 android:textColor="@color/white"
                 android:layout_marginTop="10dp"
                 android:textSize="16sp" />
@@ -74,8 +75,13 @@
                 android:id="@+id/trendingRecycler"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@id/recentlyAdded"
+                android:nextFocusDown="@id/recentlyReleasedMoviesRecycler"
                 android:layout_marginTop="14dp"
-                android:scrollbars="horizontal" />
+                android:scrollbars="horizontal"
+                android:background="@drawable/button_selector"/>
             <TextView
                 android:id="@+id/newReleasesMovies"
                 android:layout_width="wrap_content"
@@ -83,8 +89,6 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="New Released"
-                android:visibility="invisible"
-
                 android:textColor="@color/white"
                 android:layout_marginTop="10dp"
                 android:textSize="16sp" />
@@ -93,8 +97,13 @@
                 android:id="@+id/recentlyReleasedMoviesRecycler"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@id/trendingRecycler"
+                android:nextFocusDown="@id/topRatedMoviesRecycler"
                 android:layout_marginTop="14dp"
-                android:scrollbars="horizontal" />
+                android:scrollbars="horizontal"
+                android:background="@drawable/button_selector"/>
 
             <TextView
                 android:id="@+id/topRatedMovies"
@@ -104,7 +113,6 @@
                 android:layout_marginTop="10dp"
                 android:paddingStart="20dp"
                 android:text="@string/top_rated_movies"
-                android:visibility="gone"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
 
@@ -114,9 +122,14 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:scrollbars="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@id/recentlyReleasedMoviesRecycler"
+                android:nextFocusDown="@id/lastPlayedMoviesRecycler"
                 android:layout_marginTop="14dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/movie_item_banner" />
+                tools:listitem="@layout/movie_item_banner"
+                android:background="@drawable/button_selector"/>
 
             <TextView
                 android:id="@+id/lastPlayedMovies2"
@@ -125,7 +138,6 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="Some Recommendation"
-                android:visibility="gone"
                 android:layout_marginTop="10dp"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
@@ -136,6 +148,11 @@
                 android:layout_height="wrap_content"
                 android:scrollbars="horizontal"
                 android:layout_marginTop="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:nextFocusUp="@id/topRatedMoviesRecycler"
+                android:nextFocusDown="@id/watchListMediaRecycler"
+                android:background="@drawable/button_selector"
                  />
 
             <TextView
@@ -145,7 +162,6 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="Old Gold Movies"
-                android:visibility="gone"
                 android:layout_marginTop="10dp"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
@@ -156,6 +172,11 @@
                 android:layout_height="wrap_content"
                 android:scrollbars="horizontal"
                 android:layout_marginTop="14dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@id/lastPlayedMoviesRecycler"
+                android:nextFocusDown= "@id/filmIndoRecycler"
+                android:background="@drawable/button_selector"
                  />
 
             <TextView
@@ -166,7 +187,6 @@
                 android:fontFamily="@font/jost_medium"
                 android:paddingStart="20dp"
                 android:text="@string/film_indo"
-                android:visibility="gone"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 />
@@ -176,7 +196,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:scrollbars="horizontal" />
+                android:nextFocusUp="@id/watchListMediaRecycler"
+                android:scrollbars="horizontal"
+                android:background="@drawable/button_selector"/>
 
         </LinearLayout>
 

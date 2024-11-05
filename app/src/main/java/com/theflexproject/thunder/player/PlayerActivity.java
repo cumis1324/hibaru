@@ -109,10 +109,14 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     FirebaseManager manager;
     private DatabaseReference databaseReference;
     String offline;
+    private boolean ad25;
+    private boolean ad50;
+    private boolean ad75;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_player);
         intent = getIntent();
         manager = new FirebaseManager();
         offline = "offline";
@@ -134,7 +138,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
         dataSourceFactory = DemoUtil.getDataSourceFactory(/* context= */ this);
 
-        setContentView();
 
         playerView = findViewById(R.id.player_view);
         playerTitle = findViewById(R.id.playerTitle);
@@ -428,9 +431,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     // Internal methods
 
-    protected void setContentView() {
-        setContentView(R.layout.activity_player);
-    }
+
 
     /**
      * @return Whether initialization was successful.
@@ -495,7 +496,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
         player.setMediaItem(mediaItem, /* resetPosition= */ !haveStartPosition);
         player.prepare();
-        loadReward();
+
 
         return true;
     }
@@ -525,7 +526,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             player.release();
             player = null;
             playerView.setPlayer(/* player= */ null);
-
+            loadReward();
         }
     }
 
@@ -582,6 +583,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         public void onPlaybackStateChanged(@Player.State int playbackState) {
             playerView.onPause();
+            if (playbackState == Player.STATE_READY){
+                load3ads();
+            }
             if (playbackState == Player.STATE_ENDED) {
                 showControls();
             }
@@ -598,5 +602,26 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             }
         }
 
+    }
+
+    private void load3ads() {
+        if (player != null){
+            long cp = player.getCurrentPosition();
+            long tp = player.getDuration();
+            if (tp > 0){
+                if (!ad25 && cp >= tp * 0.25){
+                    loadReward();
+                    ad25 = true;
+                }
+                if (!ad50 && cp >= tp * 0.50){
+                    loadReward();
+                    ad50 = true;
+                }
+                if (!ad75 && cp >= tp * 0.75){
+                    loadReward();
+                    ad75 = true;
+                }
+            }
+        }
     }
 }

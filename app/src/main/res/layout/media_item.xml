@@ -8,6 +8,9 @@
     android:layout_height="wrap_content"
     android:layout_margin="10dp"
     android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:clickable="true"
+    android:background="@drawable/button_selector"
     app:cardBackgroundColor="@color/media_item_bg_color"
     app:cardCornerRadius="12sp">
 
