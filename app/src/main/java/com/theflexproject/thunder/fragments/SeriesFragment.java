@@ -26,6 +26,7 @@ import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,11 +131,13 @@ public class SeriesFragment extends BaseFragment{
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                tmdbTrending tvTrending = new tmdbTrending();
+                List<String> trendingIds = tvTrending.getSeriesTrending();
                 seriesTrending = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .tvShowDao()
-                        .getTrending();
+                        .loadAllByIds(trendingIds);
                 if(seriesTrending!=null && seriesTrending.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override

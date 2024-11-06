@@ -53,6 +53,7 @@ public class LibraryFragment extends BaseFragment {
         initWidgets();
         tabLayout = mActivity.findViewById(R.id.tabLayout);
         moviesTab = mActivity.findViewById(R.id.movieTab);
+        moviesTab.requestFocus();
         tvTab = mActivity.findViewById(R.id.tvTab);
         filesTab = mActivity.findViewById(R.id.filesTab);
 //        tabLayout.addTab(moviesTab);

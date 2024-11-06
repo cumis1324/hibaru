@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
+
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerTVGenre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:listitem="@layout/item_genre"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerLibraryTVShows"
@@ -12,4 +19,4 @@
             android:paddingBottom="85dp"
             android:clipToPadding="false"
             tools:listitem="@layout/media_item" />
-</RelativeLayout>
+</LinearLayout>

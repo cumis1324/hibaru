@@ -32,6 +32,7 @@ import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -282,11 +283,13 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                tmdbTrending movieTrending = new tmdbTrending();
+                List<String> trendingIds = movieTrending.getMovieTrending();
                 recentlyAddedMovies = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .movieDao()
-                        .getTrending();
+                        .loadAllByIds(trendingIds);
                 if(recentlyAddedMovies!=null && recentlyAddedMovies.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override

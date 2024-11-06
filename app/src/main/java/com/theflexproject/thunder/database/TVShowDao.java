@@ -12,9 +12,11 @@ import java.util.List;
 
 @Dao
 public interface TVShowDao {
+    @Query("SELECT * FROM TVShow WHERE genres LIKE '%' || :genreId || '%' GROUP BY id")
+    List<TVShow> getTvSeriesByGenreId(String genreId);
     @Query("SELECT  * FROM TVShow")
     List<TVShow> getAll();
-    @Query("SELECT * FROM TVShow WHERE id IN (:itemIds)")
+    @Query("SELECT * FROM TVShow WHERE id IN (:itemIds) GROUP BY id")
     List<TVShow> loadAllByIds(List<String> itemIds);
 
     @Query("SELECT * FROM TVShow WHERE poster_path IS NOT NULL GROUP BY id ORDER BY name ASC")

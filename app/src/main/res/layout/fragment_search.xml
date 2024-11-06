@@ -43,7 +43,7 @@
             android:clickable="true"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:background="@color/media_item_bg_color"
+            android:background="@color/text_field_color"
             android:fontFamily="@font/jost_regular"
             android:hint="@string/search_for_a_movie_or_a_show"
             android:gravity="start|center_vertical"

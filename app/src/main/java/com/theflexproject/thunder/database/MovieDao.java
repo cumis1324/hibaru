@@ -11,13 +11,18 @@ import java.util.List;
 
 @Dao
 public interface MovieDao {
+    @Query("SELECT * FROM Movie WHERE genres LIKE '%' || :genreId || '%' and disabled=0 GROUP BY id")
+    List<Movie> getMoviesByGenre(String genreId);
+
+
+
     @Query("SELECT * FROM Movie WHERE title is not null and disabled=0 GROUP BY id ")
     List<Movie> getAll();
 
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0")
     Movie byId(int id);
 
-    @Query("SELECT * FROM Movie WHERE id IN (:itemIds) and disabled=0")
+    @Query("SELECT * FROM Movie WHERE id IN (:itemIds) and disabled=0 GROUP BY id")
     List<Movie> loadAllByIds(List<String> itemIds);
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0")
     List<Movie> getAllById(int id);
