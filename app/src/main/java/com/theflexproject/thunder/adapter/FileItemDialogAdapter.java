@@ -32,6 +32,7 @@ public class FileItemDialogAdapter extends RecyclerView.Adapter<FileItemDialogAd
     @Override
     public FileItemDialogAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.dialog_filename_item, parent, false);
+        view.requestFocus();
         return new FileItemDialogAdapterViewHolder(view);
     }
 

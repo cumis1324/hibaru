@@ -356,6 +356,7 @@ public class MovieDetailsFragment extends BaseFragment{
         dot1 = view.findViewById(R.id.dot);
         ratingsText = view.findViewById(R.id.ratingsText);
         play = view.findViewById(R.id.play);
+        play.requestFocus();
         download = view.findViewById(R.id.downloadButton);
         shareButton = view.findViewById(R.id.shareButton);
         addToList = view.findViewById(R.id.addToListButton);

@@ -2,6 +2,7 @@ package com.theflexproject.thunder.adapter;
 
 import static com.theflexproject.thunder.Constants.TMDB_IMAGE_BASE_URL;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -43,10 +44,12 @@ public class DrakorBannerAdapter extends RecyclerView.Adapter<DrakorBannerAdapte
         return new MovieViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
         if(mediaList.get(position).getBackdrop_path()!=null){
-            holder.name.setText(mediaList.get(position).getName());
+            String year = mediaList.get(position).getFirst_air_date().substring(0,4);
+            holder.name.setText(mediaList.get(position).getName() + " (" + year + ")");
             Glide.with(context)
                     .load(TMDB_IMAGE_BASE_URL +mediaList.get(position).getBackdrop_path())
                     .placeholder(new ColorDrawable(Color.BLACK))
@@ -55,7 +58,6 @@ public class DrakorBannerAdapter extends RecyclerView.Adapter<DrakorBannerAdapte
 
             if(mediaList.get(position).getLogo_path()!=null){
                 holder.logo.setVisibility(View.VISIBLE);
-                holder.name.setVisibility(View.GONE);
                 Glide.with(context)
                         .load(TMDB_IMAGE_BASE_URL +mediaList.get(position).getLogo_path())
                         .apply(new RequestOptions()
@@ -64,10 +66,6 @@ public class DrakorBannerAdapter extends RecyclerView.Adapter<DrakorBannerAdapte
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .placeholder(new ColorDrawable(Color.TRANSPARENT))
                         .into(holder.logo);
-            }
-            if(mediaList.get(position).getLogo_path()==null){
-                holder.name.setText(mediaList.get(position).getName());
-                holder.name.setVisibility(View.VISIBLE);
             }
         }
 

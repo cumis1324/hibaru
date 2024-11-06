@@ -179,7 +179,7 @@ public class LoadingActivity extends AppCompatActivity {
                 outputStream.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
                 int progress = (int) ((totalBytesRead / (float) fileLength) * 100);
-                updateProgressBar(progress, "Updating database, do not close the app ....");
+                updateProgressBar(progress, "Updating database, do not close the app .... " + progress + "%");
             }
         } catch (IOException e) {
             localFile.delete();

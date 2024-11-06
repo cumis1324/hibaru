@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginVertical="10dp"
-    android:nextFocusLeft="@id/playInEpisodeItem"
+    android:nextFocusDown="@id/playInEpisodeItem"
     app:cardCornerRadius="15dp"
     android:focusable="true"
     android:clickable="true"

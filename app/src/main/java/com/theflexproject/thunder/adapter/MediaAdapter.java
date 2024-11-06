@@ -32,6 +32,7 @@ import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
+import com.theflexproject.thunder.model.TVShowInfo.Season;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 
@@ -66,12 +67,13 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
 
         if(mediaList.get(position) instanceof Movie) {
             Movie movie = ((Movie)mediaList.get(position));
-           // if(movie.getTitle()==null){
-            //    holder.name.setText(movie.getFileName());
-            //} else holder.name.setText(movie.getTitle());
-            //if(movie.getPlayed()!=0){
-               // holder.watched.setVisibility(View.VISIBLE);
-            //}
+           if(movie.getTitle()==null){
+            holder.name.setText(movie.getFileName());
+            } else {
+               String year = movie.getRelease_date().substring(0,4);
+               holder.name.setText(movie.getTitle() + " (" + year + ")");
+           }
+
             if(movie.getVote_average()!=0){
                 // holder.star.setVisibility(View.VISIBLE);
                 holder.textStar.setVisibility(View.VISIBLE);
@@ -93,7 +95,8 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
         if(mediaList.get(position) instanceof TVShow){
             TVShow tvShow = ((TVShow)mediaList.get(position));
             if(tvShow.getName()!=null){
-              //  holder.name.setText(tvShow.getName());
+                String year = tvShow.getFirst_air_date().substring(0,4);
+              holder.name.setText(tvShow.getName() + " (" + year + ")");
                 Glide.with(context)
                         .load(Constants.TMDB_IMAGE_BASE_URL+tvShow.getPoster_path())
                         .placeholder(new ColorDrawable(Color.BLACK))
@@ -114,7 +117,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
             TVShowSeasonDetails tvShowSeason = ((TVShowSeasonDetails)mediaList.get(position));
             if(tvShowSeason.getName()!=null){
                 //holder.name.setVisibility(View.VISIBLE);
-                //holder.name.setText(tvShowSeason.getName());
+                holder.name.setText("Season "+tvShowSeason.getSeason_number());
 
                 holder.season2.setVisibility(View.VISIBLE);
                 holder.season2.setText(tvShowSeason.getName());

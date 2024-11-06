@@ -180,6 +180,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         ratingsText = view.findViewById(R.id.ratingsTVText);
         play = view.findViewById(R.id.playInTVShowDetails);
         addToList = view.findViewById(R.id.addToListButtonTV);
+        addToList.requestFocus();
         share = view.findViewById(R.id.shareButton);
 
     }

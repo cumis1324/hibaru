@@ -74,12 +74,12 @@
             android:layout_height="50dp"
             android:clickable="true"
             android:layout_toLeftOf="@id/downloadButton"
-            android:backgroundTint="@color/transparent"
+            android:focusableInTouchMode="true"
             android:focusable="true"
-            android:nextFocusRight="@id/downloadButton"
-            android:nextFocusDown="@id/downloadButton"
+            android:nextFocusRight="@id/shareButton"
+            android:nextFocusDown="@id/saweria"
             android:scaleType="centerInside"
-            android:background="@drawable/play_shape"
+            android:background="@drawable/button_selector"
             android:src="@drawable/ic_add"
             />
 
@@ -144,13 +144,15 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_toRightOf="@id/changeSourceButton"
-            android:background="@color/transparent"
+            android:background="@drawable/button_selector"
             android:clickable="true"
             android:focusable="true"
-            android:nextFocusLeft="@id/changeSourceButton"
-            android:nextFocusUp="@id/changeSourceButton"
+            android:nextFocusLeft="@id/addToListButtonTV"
+            android:nextFocusUp="@id/addToListButtonTV"
+            android:nextFocusRight="@id/saweria"
+            android:nextFocusDown="@id/saweria"
             android:scaleType="centerInside"
-            android:backgroundTint="@color/download_button_bg_color"
+            android:focusableInTouchMode="true"
             android:src="@drawable/ic_share_24"
             />
 
@@ -390,11 +392,16 @@
                             android:src="@drawable/cendol"/>
                         <Button
                             android:id="@+id/saweria"
+                            android:focusableInTouchMode="true"
+                            android:focusable="true"
+                            android:clickable="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/jost_medium"
+                            android:nextFocusUp="@id/addToListButtonTV"
+                            android:nextFocusDown="@id/tvShowTitle"
                             android:text="Trakteer cendol disini"
-                            android:background="@color/transparent"
+                            android:background="@drawable/button_selector"
                             android:textColor="@color/white"
                             android:layout_centerHorizontal="true"
                             android:layout_centerInParent="true"
@@ -415,6 +422,11 @@
                     <TextView
                             android:id="@+id/tvShowTitle"
                             style="@style/sizelabel"
+                            android:focusable="true"
+                        android:background="@drawable/button_selector"
+                        android:focusableInTouchMode="true"
+                        android:nextFocusUp="@id/saweria"
+                        android:nextFocusDown="@id/overviewDescTVShow"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentBottom="true"
@@ -432,6 +444,11 @@
 
                             />
                     <TextView
+                        android:focusableInTouchMode="true"
+                        android:focusable="true"
+                        android:nextFocusUp="@id/tvShowTitle"
+                        android:nextFocusDown="@id/my_template"
+                        android:background="@drawable/button_selector"
                         android:id="@+id/overviewDescTVShow"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -443,6 +460,12 @@
                         tools:text="In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization." />
                     <com.google.android.ads.nativetemplates.TemplateView
                         android:id="@+id/my_template"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:background="@drawable/button_selector"
+                        android:nextFocusUp="@id/overviewDescTVShow"
+                        android:nextFocusDown="@id/recyclerSeasons"
                         app:gnt_template_type="@layout/gnt_medium_template_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
@@ -459,6 +482,8 @@
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerSeasons"
+                        android:focusable="true"
+                        android:nextFocusUp="@id/my_template"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"

@@ -55,7 +55,7 @@
                 android:scrollbars="horizontal"
                 android:focusable="true"
                 android:clickable="true"
-                android:background="@drawable/button_selector"
+                app:background="@drawable/button_selector"
                 android:nextFocusDown="@id/trendingRecycler"
                 android:layout_marginTop="14dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
