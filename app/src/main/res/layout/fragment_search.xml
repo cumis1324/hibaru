@@ -32,8 +32,8 @@
         app:hintEnabled="false"
         android:textColorHint="#50FFFFFF"
         app:hintAnimationEnabled="false"
-        app:startIconDrawable="@drawable/ic_search"
-        app:startIconTint="@color/white">
+        app:endIconDrawable="@drawable/ic_search"
+        app:endIconTint="@color/black">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/search_input"
@@ -41,14 +41,16 @@
             android:layout_height="match_parent"
             android:focusable="true"
             android:clickable="true"
-            android:background="@color/black_overlay"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:background="@color/media_item_bg_color"
             android:fontFamily="@font/jost_regular"
             android:hint="@string/search_for_a_movie_or_a_show"
             android:gravity="start|center_vertical"
-            android:textColor="@color/white"
+            android:textColor="@color/black"
             android:textSize="14sp"
             android:paddingTop="12dp"
-            android:textColorHint="@color/white"
+            android:textColorHint="@color/black_overlay"
 
             />
 

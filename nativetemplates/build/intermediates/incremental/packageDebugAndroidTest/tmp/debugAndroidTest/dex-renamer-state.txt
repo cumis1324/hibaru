@@ -1,0 +1,10 @@
+#Wed Nov 06 21:30:48 ICT 2024
+base.0=D\:\\nfgplus\\hibaru\\nativetemplates\\build\\intermediates\\dex\\debugAndroidTest\\mergeDexDebugAndroidTest\\classes.dex
+base.1=D\:\\nfgplus\\hibaru\\nativetemplates\\build\\intermediates\\dex\\debugAndroidTest\\mergeDexDebugAndroidTest\\classes2.dex
+base.2=D\:\\nfgplus\\hibaru\\nativetemplates\\build\\intermediates\\dex\\debugAndroidTest\\mergeDexDebugAndroidTest\\classes3.dex
+path.0=classes.dex
+path.1=classes2.dex
+path.2=classes3.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex

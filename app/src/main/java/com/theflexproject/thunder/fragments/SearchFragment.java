@@ -66,6 +66,7 @@ public class SearchFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         searchBox = view.findViewById(R.id.search_input);
+        searchBox.requestFocus();
 //        search = view.findViewById(R.id.search_button);
 //        scrollview= view.findViewById(R.id.scrollview);
         recyclerView = mActivity.findViewById(R.id.recyclersearch);
@@ -82,104 +83,59 @@ public class SearchFragment extends BaseFragment {
 
     }
 
-    void showSearchResults(){
+    void showSearchResults() {
         setOnClickListner();
-        try{
-            searchBox.addTextChangedListener(
-                    new TextWatcher() {
-                        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        try {
+            searchBox.setOnEditorActionListener((v, actionId, event) -> {
+                if (event != null && event.getAction() == android.view.KeyEvent.ACTION_DOWN && event.getKeyCode() == android.view.KeyEvent.KEYCODE_ENTER) {
+                    if (!searchBox.getText().toString().isEmpty()) {
+                        Thread thread = new Thread(() -> {
+                            Log.i(" ", "in thread");
+                            movieList = DatabaseClient
+                                    .getInstance(mActivity)
+                                    .getAppDatabase()
+                                    .movieDao()
+                                    .getSearchQuery(searchBox.getText().toString());
+                            tvShowsList = DatabaseClient
+                                    .getInstance(mActivity)
+                                    .getAppDatabase()
+                                    .tvShowDao()
+                                    .getSearchQuery(searchBox.getText().toString());
 
-                        private Timer timer = new Timer();
-                        private final long DELAY = 500; // milliseconds
+                            matchesFound = new ArrayList<>();
+                            matchesFound.addAll(movieList);
+                            matchesFound.addAll(tvShowsList);
 
-                        @Override
-                        public void afterTextChanged(final Editable s) {
-                            timer.cancel();
-                            timer = new Timer();
-                            timer.schedule(
-                                    new TimerTask() {
-                                        @Override
-                                        public void run() {
-                                            if(!s.toString().equals("")){
-                                            Thread thread = new Thread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Log.i(" ", "in thread");
-                                                    movieList = DatabaseClient
-                                                            .getInstance(mActivity)
-                                                            .getAppDatabase()
-                                                            .movieDao()
-                                                            .getSearchQuery(searchBox.getText().toString());
-                                                    tvShowsList = DatabaseClient
-                                                            .getInstance(mActivity)
-                                                            .getAppDatabase()
-                                                            .tvShowDao()
-                                                            .getSearchQuery(searchBox.getText().toString());
-
-                                                    matchesFound =new ArrayList<>();
-                                                    matchesFound.addAll(movieList);
-                                                    matchesFound.addAll(tvShowsList);
-
-                                                    mActivity.runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
-                                                            float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
-                                                            int noOfItems;
-                                                            if(dpWidth < 600f){noOfItems = 3;}
-                                                            else if(dpWidth < 840f){noOfItems = 6;}
-                                                            else {noOfItems = 8; }
-                                                            Log.i(" ", matchesFound.toString());
-                                                            recyclerView.setLayoutManager(new GridLayoutManager(mActivity , noOfItems));
-                                                            recyclerView.setHasFixedSize(true);
-                                                            mediaAdapter = new MediaAdapter(mActivity , matchesFound , listener);
-                                                            recyclerView.setAdapter(mediaAdapter);
-                                                            mediaAdapter.notifyDataSetChanged();
-                                                        }
-                                                    });
-                                                }});
-                                            thread.start();
-                                            }
-                                        }
-                                    },
-                                    DELAY
-                            );
-                        }
+                            mActivity.runOnUiThread(() -> {
+                                DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
+                                float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
+                                int noOfItems;
+                                if (dpWidth < 600f) {
+                                    noOfItems = 3;
+                                } else if (dpWidth < 840f) {
+                                    noOfItems = 6;
+                                } else {
+                                    noOfItems = 8;
+                                }
+                                Log.i(" ", matchesFound.toString());
+                                recyclerView.setLayoutManager(new GridLayoutManager(mActivity, noOfItems));
+                                recyclerView.setHasFixedSize(true);
+                                mediaAdapter = new MediaAdapter(mActivity, matchesFound, listener);
+                                recyclerView.setAdapter(mediaAdapter);
+                                mediaAdapter.notifyDataSetChanged();
+                            });
+                        });
+                        thread.start();
                     }
-            );
-        }catch (Exception e){
-            Log.i(e.toString(),"Exception");
+                    return true; // Return true to indicate the event is handled
+                }
+                return false;
+            });
+        } catch (Exception e) {
+            Log.i(e.toString(), "Exception");
         }
-
     }
 
-    /** To-Do */
-    void showbyGenre(){
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.i(" ", "in thread");
-//                genreList = DatabaseClient
-//                        .getInstance(mCtx)
-//                        .getAppDatabase()
-//                        .fileDao()
-//                        .getSearchQuery(searchBox.getText().toString());
-//                getActivity().runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        Log.i(" ", newmediaList.toString());
-//                        recyclerViewGenres = getView().findViewById(R.id.recyclersearch);
-//                        recyclerViewGenres.setLayoutManager(new GridLayoutManager(getContext(), 2));
-//                        recyclerViewGenres.setHasFixedSize(true);
-//                        movieRecyclerAdapterLibrary = new MovieRecyclerAdapterLibrary(getContext(),newmediaList,listener);
-//                        recyclerViewGenres.setAdapter(movieRecyclerAdapterLibrary);
-//                        movieRecyclerAdapterLibrary.notifyDataSetChanged();
-//                    }
-//                });
-//            }});
-//        thread.start();
-    }
 
     private void setOnClickListner() {
         listener = (view , position) -> {
