@@ -119,9 +119,9 @@ public class SettingsFragment extends BaseFragment {
         storageReference = FirebaseStorage.getInstance().getReference("profile_images");
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler2);
         lastPlayedMoviesRecyclerView = view.findViewById(R.id.lastPlayedMoviesRecycler2);
-
-        updateUI();
         initWidgets();
+        updateUI();
+
         setStatesOfToggleSwitches();
         getHistoryFb();
         getFavorit();
@@ -201,12 +201,6 @@ public class SettingsFragment extends BaseFragment {
     // on click button
     private void setMyOnClickListeners() {
 
-        profilePicture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openImageChooser();
-            }
-        });
 
 
         addIndex.setOnClickListener(new View.OnClickListener() {
