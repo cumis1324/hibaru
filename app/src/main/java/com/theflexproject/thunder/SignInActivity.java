@@ -57,6 +57,7 @@ public class SignInActivity extends AppCompatActivity {
         rootView = decorView.findViewById(android.R.id.content);
 
         emailEditText = findViewById(R.id.email);
+        emailEditText.requestFocus();
         passwordEditText = findViewById(R.id.password);
         signInButton = findViewById(R.id.signinbtn);
         signUpButton = findViewById(R.id.signuppbtn);
