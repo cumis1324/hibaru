@@ -639,7 +639,12 @@ public class MovieDetailsFragment extends BaseFragment{
 
     private void setMyOnClickListeners(){
 
-        saweria.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
+        saweria.setOnClickListener(v -> {
+            PremiumFragment manageDatabaseFragment = new PremiumFragment();
+            mActivity.getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
+                    .replace(R.id.container, manageDatabaseFragment).addToBackStack(null).commit();
+        });
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {

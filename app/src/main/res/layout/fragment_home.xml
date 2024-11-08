@@ -60,16 +60,23 @@
                 android:layout_marginTop="14dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/movie_item_banner" />
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/trending"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="@font/jost_medium"
-                android:paddingStart="20dp"
                 android:text="Recently Added"
                 android:textColor="@color/white"
-                android:layout_marginTop="10dp"
-                android:textSize="16sp" />
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/trendingRecycler"
@@ -81,17 +88,25 @@
                 android:nextFocusDown="@id/recentlyReleasedMoviesRecycler"
                 android:layout_marginTop="14dp"
                 android:scrollbars="horizontal"
-                android:background="@drawable/button_selector"/>
-            <TextView
+                android:background="@drawable/button_selector"
+                />
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/newReleasesMovies"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="@font/jost_medium"
-                android:paddingStart="20dp"
                 android:text="New Released"
                 android:textColor="@color/white"
-                android:layout_marginTop="10dp"
-                android:textSize="16sp" />
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recentlyReleasedMoviesRecycler"
@@ -105,16 +120,23 @@
                 android:scrollbars="horizontal"
                 android:background="@drawable/button_selector"/>
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/topRatedMovies"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="@font/jost_medium"
-                android:layout_marginTop="10dp"
-                android:paddingStart="20dp"
                 android:text="@string/top_rated_movies"
                 android:textColor="@color/white"
-                android:textSize="16sp" />
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/topRatedMoviesRecycler"
@@ -131,16 +153,24 @@
                 tools:listitem="@layout/movie_item_banner"
                 android:background="@drawable/button_selector"/>
 
-            <TextView
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/lastPlayedMovies2"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="@font/jost_medium"
-                android:paddingStart="20dp"
                 android:text="Some Recommendation"
-                android:layout_marginTop="10dp"
                 android:textColor="@color/white"
-                android:textSize="16sp" />
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/lastPlayedMoviesRecycler"
@@ -155,16 +185,25 @@
                 android:background="@drawable/button_selector"
                  />
 
-            <TextView
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/watchListMedia1"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="@font/jost_medium"
-                android:paddingStart="20dp"
                 android:text="Old Gold Movies"
-                android:layout_marginTop="10dp"
                 android:textColor="@color/white"
-                android:textSize="16sp" />
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
+
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/watchListMediaRecycler"
@@ -179,17 +218,23 @@
                 android:background="@drawable/button_selector"
                  />
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/filmIndo"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="@font/jost_medium"
-                android:paddingStart="20dp"
                 android:text="@string/film_indo"
                 android:textColor="@color/white"
-                android:textSize="16sp"
-                />
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/filmIndoRecycler"

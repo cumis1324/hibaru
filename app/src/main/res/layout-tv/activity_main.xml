@@ -78,9 +78,10 @@
             android:layout_gravity="bottom"
             app:itemBackground="@drawable/bottom_navigation_item_background"
             android:layout_marginBottom="45dp"
+            app:itemTextColor="@color/white"
             android:background="@drawable/bottom_navigation_background"
             app:itemIconTint="@drawable/bottom_navigation_color_selector"
-            app:labelVisibilityMode="unlabeled"
+            app:labelVisibilityMode="labeled"
             app:menu="@menu/bottom_navigation_menu" />
     </eightbitlab.com.blurview.BlurView>
 

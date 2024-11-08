@@ -38,7 +38,7 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE fileName LIKE :fileName and disabled=0")
     Movie getByFileName(String fileName);
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 GROUP BY id ORDER BY release_date DESC LIMIT 10")
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 GROUP BY id ORDER BY release_date")
     List<Movie> getTopRated();
 
     @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC")

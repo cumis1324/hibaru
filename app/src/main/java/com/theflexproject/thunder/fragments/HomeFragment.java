@@ -15,11 +15,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseUser;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.RefreshJobService;
@@ -42,72 +44,29 @@ import java.util.Random;
 
 public class HomeFragment extends BaseFragment {
 
-    BannerRecyclerAdapter recentlyAddedRecyclerAdapter;
-    MediaAdapter recentlyReleasedRecyclerViewAdapter;
-    BannerRecyclerAdapter topRatedMoviesRecyclerViewAdapter;
-    MediaAdapter trendingMoviesRecyclerAdapter;
-    MediaAdapter lastPlayedMoviesRecyclerViewAdapter;
-    MediaAdapter watchlistRecyclerViewAdapter;
+    BannerRecyclerAdapter recentlyAddedRecyclerAdapter, topRatedMoviesRecyclerViewAdapter;
+    MediaAdapter recentlyReleasedRecyclerViewAdapter, trendingMoviesRecyclerAdapter,
+            lastPlayedMoviesRecyclerViewAdapter, watchlistRecyclerViewAdapter,
+            filmIndoAdapter;
 
-    MediaAdapter topRatedShowsRecyclerAdapter;
-    MediaAdapter newSeasonRecyclerAdapter;
+    TextView recentlyAddedRecyclerViewTitle,
+            verifTitle;
+    RecyclerView recentlyAddedRecyclerView, recentlyReleasedRecyclerView,
+            filmIndoView,topRatedMoviesRecyclerView, trendingRecyclerView,
+            lastPlayedMoviesRecyclerView, watchlistRecyclerView;
+
+    MaterialButton trendingTitle,lastPlayedMoviesRecyclerViewTitle,
+            topRatedMoviesRecyclerViewTitle, recentlyReleasedRecyclerViewTitle, filmIndoTitle,
+            watchlistRecyclerViewTitle;
 
 
+    List<Movie> recentlyAddedMovies, recentlyReleasedMovies, topRatedMovies,
+            trending, lastPlayedList, fav, played, ogMovies, topOld, filmIndo;
+    List<MyMedia> ogtop, someRecom;
 
-    TextView recentlyAddedRecyclerViewTitle;
-    RecyclerView recentlyAddedRecyclerView;
-
-    TextView recentlyReleasedRecyclerViewTitle;
-    RecyclerView recentlyReleasedRecyclerView;
-
-    TextView topRatedMoviesRecyclerViewTitle;
-    TextView trendingTitle, verifTitle;
-
-    TextView filmIndoTitle;
-    RecyclerView filmIndoView;
-    MediaAdapter filmIndoAdapter;
-    MediaAdapter.OnItemClickListener filmIndoListener;
-    TextView drakorTitle;
-    RecyclerView drakorView;
-    DrakorBannerAdapter drakorAdapter;
-    DrakorBannerAdapter.OnItemClickListener drakorListener;
-    RecyclerView topRatedMoviesRecyclerView;
-    RecyclerView trendingRecyclerView;
-
-    TextView lastPlayedMoviesRecyclerViewTitle;
-    RecyclerView lastPlayedMoviesRecyclerView;
-
-    TextView watchlistRecyclerViewTitle;
-    RecyclerView watchlistRecyclerView;
-
-    TextView topRatedShowsRecyclerViewTitle;
-    RecyclerView topRatedShowsRecyclerView;
-
-    TextView newSeasonRecyclerViewTitle;
-    RecyclerView newSeasonRecyclerView;
-
-    List<Movie> recentlyAddedMovies;
-    List<Movie> recentlyReleasedMovies;
-    List<Movie> topRatedMovies;
-    List<Movie> trending;
-    List<Movie> lastPlayedList, fav, played;
-    List<Movie> ogMovies;
-    List<Movie> topOld;
-    List<Movie> filmIndo;
-    List<TVShow> drakor;
-    List<MyMedia> ogtop;
-    List<MyMedia> someRecom;
-    List<TVShow> newSeason;
-    List<TVShow> topRatedShows;
-
-    BannerRecyclerAdapter.OnItemClickListener recentlyAddedListener;
-    MediaAdapter.OnItemClickListener recentlyReleasedListener;
-    BannerRecyclerAdapter.OnItemClickListener topRatedMoviesListener;
-    MediaAdapter.OnItemClickListener trendingListener;
-    MediaAdapter.OnItemClickListener lastPlayedListener;
-    MediaAdapter.OnItemClickListener watchlistListener;
-    MediaAdapter.OnItemClickListener topRatedShowsListener;
-    MediaAdapter.OnItemClickListener newSeasonListener;
+    BannerRecyclerAdapter.OnItemClickListener recentlyAddedListener,topRatedMoviesListener;
+    MediaAdapter.OnItemClickListener recentlyReleasedListener,
+            trendingListener,lastPlayedListener,watchlistListener,filmIndoListener;
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -119,9 +78,6 @@ public class HomeFragment extends BaseFragment {
 
 
     private SwipeRefreshLayout swipeRefreshLayout;
-
-//    List<PairMovies> pairMoviesList;
-//    List<PairTvShows> pairTvShowsList;
 
     public HomeFragment() {
     }
@@ -136,12 +92,12 @@ public class HomeFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        verifTitle = view.findViewById(R.id.verifTitle);
         FirebaseManager firebaseManager;
         firebaseManager = new FirebaseManager();
         FirebaseUser currentUser;
         currentUser = firebaseManager.getCurrentUser();
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        verifTitle = view.findViewById(R.id.verifTitle);
         if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
             verifTitle.setVisibility(View.VISIBLE);
         }
@@ -159,15 +115,7 @@ public class HomeFragment extends BaseFragment {
         lastPlayedMoviesRecyclerViewTitle = view.findViewById(R.id.lastPlayedMovies2);
         watchlistRecyclerViewTitle = view.findViewById(R.id.watchListMedia1);
         filmIndoTitle = view.findViewById(R.id.filmIndo);
-        loadTrending();
-        loadRecentlyAddedMovies();
-        loadRecentlyReleasedMovies();
-        loadTopRatedMovies();
-
-        loadLastPlayedMovies();
-        loadWatchlist();
-
-        loadFilmIndo();
+        refreshData();
         setOnClickListner();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -214,6 +162,24 @@ public class HomeFragment extends BaseFragment {
                 .addToBackStack(null)
                 .commit();
     }
+    private void refreshData() {
+        // Implement your refresh logic here
+        // For example, you can re-fetch the data or perform any necessary updates
+        // Once the refresh is complete, call setRefreshing(false) on the SwipeRefreshLayout
+        // to indicate that the refresh has finished.
+        loadRecentlyAddedMovies();
+        loadRecentlyReleasedMovies();
+        loadTopRatedMovies();
+        loadLastPlayedMovies();
+        loadWatchlist();
+
+        loadTrending();
+
+        loadFilmIndo();
+
+        swipeRefreshLayout.setRefreshing(false);
+
+    }
 
 
     private void loadWatchlist() {
@@ -255,29 +221,15 @@ public class HomeFragment extends BaseFragment {
                     });
 
                 }
+                else {
+                    watchlistRecyclerViewTitle.setVisibility(View.GONE);
+                }
             }});
         thread.start();
     }
 
     //load refresh
-    private void refreshData() {
-        // Implement your refresh logic here
-        // For example, you can re-fetch the data or perform any necessary updates
-        // Once the refresh is complete, call setRefreshing(false) on the SwipeRefreshLayout
-        // to indicate that the refresh has finished.
-        loadRecentlyAddedMovies();
-        loadRecentlyReleasedMovies();
-        loadTopRatedMovies();
-        loadLastPlayedMovies();
-        loadWatchlist();
 
-        loadTrending();
-
-        loadFilmIndo();
-
-        swipeRefreshLayout.setRefreshing(false);
-
-    }
     // RECYLER MENU HOME
     private void  loadRecentlyAddedMovies() {
         Thread thread = new Thread(new Runnable() {
@@ -305,6 +257,9 @@ public class HomeFragment extends BaseFragment {
                         }
                     });
                 }
+                else {
+                    recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
+                }
 
            }});
         thread.start();
@@ -323,18 +278,33 @@ public class HomeFragment extends BaseFragment {
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            List<Movie> limitedTrending = recentlyAddedMovies.size() > 10 ? recentlyAddedMovies.subList(0, 10) : recentlyAddedMovies;
+                            List<MyMedia> all = new ArrayList<>(recentlyAddedMovies);
                             ScaleCenterItemLayoutManager linearLayoutManager1 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             recentlyReleasedRecyclerViewTitle.setVisibility(View.VISIBLE);
 
                             recentlyReleasedRecyclerView.setLayoutManager(linearLayoutManager1);
                             recentlyReleasedRecyclerView.setHasFixedSize(true);
-                            recentlyReleasedRecyclerViewAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) recentlyReleasedMovies, recentlyReleasedListener);
+                            recentlyReleasedRecyclerViewAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) limitedTrending, recentlyReleasedListener);
                             recentlyReleasedRecyclerView.setAdapter(recentlyReleasedRecyclerViewAdapter);
                             recentlyReleasedRecyclerView.setNestedScrollingEnabled(false);
+                            recentlyReleasedRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // Navigate to a new fragment or activity with all data
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
                         }
                     });
 
+                }
+                else {
+                    recentlyReleasedRecyclerViewTitle.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -350,6 +320,8 @@ public class HomeFragment extends BaseFragment {
                         .getTopRated();
                 if(topRatedMovies!=null && topRatedMovies.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
+                        List<Movie> limitedTrending = topRatedMovies.size() > 10 ? topRatedMovies.subList(0, 10) : topRatedMovies;
+                        List<MyMedia> all = new ArrayList<>(topRatedMovies);
                         @Override
                         public void run() {
                             ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
@@ -358,11 +330,24 @@ public class HomeFragment extends BaseFragment {
 
                             topRatedMoviesRecyclerView.setLayoutManager(linearLayoutManager2);
                             topRatedMoviesRecyclerView.setHasFixedSize(true);
-                            topRatedMoviesRecyclerViewAdapter = new BannerRecyclerAdapter(getContext(), topRatedMovies , topRatedMoviesListener);
+                            topRatedMoviesRecyclerViewAdapter = new BannerRecyclerAdapter(getContext(), limitedTrending , topRatedMoviesListener);
                             topRatedMoviesRecyclerView.setAdapter(topRatedMoviesRecyclerViewAdapter);
                             topRatedMoviesRecyclerView.setNestedScrollingEnabled(false);
+                            topRatedMoviesRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // Navigate to a new fragment or activity with all data
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
                         }
                     });
+                }
+                else {
+                    topRatedMoviesRecyclerViewTitle.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -377,6 +362,8 @@ public class HomeFragment extends BaseFragment {
                         .movieDao()
                         .getrecentlyadded();
                 if(trending!=null && trending.size()>0){
+                    List<Movie> limitedTrending = trending.size() > 10 ? trending.subList(0, 10) : trending;
+                    List<MyMedia> all = new ArrayList<>(trending);
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -386,11 +373,24 @@ public class HomeFragment extends BaseFragment {
 
                             trendingRecyclerView.setLayoutManager(linearLayoutManager2);
                             trendingRecyclerView.setHasFixedSize(true);
-                            trendingMoviesRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) trending , trendingListener);
+                            trendingMoviesRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , trendingListener);
                             trendingRecyclerView.setAdapter(trendingMoviesRecyclerAdapter);
                             trendingRecyclerView.setNestedScrollingEnabled(false);
+                            trendingTitle.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // Navigate to a new fragment or activity with all data
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
                         }
                     });
+                }
+                else {
+                    trendingTitle.setVisibility(View.GONE);
                 }
 
             }});
@@ -424,21 +424,37 @@ public class HomeFragment extends BaseFragment {
                 someRecom.addAll(lastPlayedList);
                 if(someRecom!=null && someRecom.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
+                        List<MyMedia> limitedTrending = someRecom.size() > 10 ? someRecom.subList(0, 10) : someRecom;
+
                         @Override
                         public void run() {
                             ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             lastPlayedMoviesRecyclerViewTitle.setVisibility(View.VISIBLE);
                             Collections.shuffle(someRecom);
+                            Collections.shuffle(limitedTrending);
                             //lastPlayedMoviesRecyclerView.setVisibility(View.VISIBLE);
                             lastPlayedMoviesRecyclerView.setLayoutManager(linearLayoutManager3);
                             lastPlayedMoviesRecyclerView.setHasFixedSize(true);
-                            lastPlayedMoviesRecyclerViewAdapter = new MediaAdapter(getContext() ,someRecom , lastPlayedListener);
+                            lastPlayedMoviesRecyclerViewAdapter = new MediaAdapter(getContext() ,limitedTrending , lastPlayedListener);
                             lastPlayedMoviesRecyclerView.setAdapter(lastPlayedMoviesRecyclerViewAdapter);
                             lastPlayedMoviesRecyclerView.setNestedScrollingEnabled(false);
+                            lastPlayedMoviesRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // Navigate to a new fragment or activity with all data
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(someRecom)); // Pass data to new fragment
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
                         }
                     });
 
+                }
+                else {
+                    lastPlayedMoviesRecyclerViewTitle.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -456,100 +472,33 @@ public class HomeFragment extends BaseFragment {
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            List<Movie> limitedTrending = filmIndo.size() > 10 ? filmIndo.subList(0, 10) : filmIndo;
+                            List<MyMedia> all = new ArrayList<>(filmIndo);
                             ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             filmIndoTitle.setVisibility(View.VISIBLE);
                             Collections.shuffle(filmIndo);
+                            Collections.shuffle(limitedTrending);
                             filmIndoView.setLayoutManager(linearLayoutManager2);
                             filmIndoView.setHasFixedSize(true);
-                            filmIndoAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) filmIndo , filmIndoListener);
+                            filmIndoAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , filmIndoListener);
                             filmIndoView.setAdapter(filmIndoAdapter);
                             filmIndoView.setNestedScrollingEnabled(false);
+                            filmIndoTitle.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // Navigate to a new fragment or activity with all data
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
                         }
                     });
                 }
-            }});
-        thread.start();
-    }
-    private void loadDrakor()  {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                drakor = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .tvShowDao()
-                        .getDrakor();
-                if(drakor!=null && drakor.size()>0){
-                    mActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
-                            drakorTitle = mActivity.findViewById(R.id.drakor);
-                            drakorTitle.setVisibility(View.VISIBLE);
-                            drakorView = mActivity.findViewById(R.id.drakorRecycler);
-                            drakorView.setLayoutManager(linearLayoutManager2);
-                            drakorView.setHasFixedSize(true);
-                            drakorAdapter = new DrakorBannerAdapter(getContext(), drakor , drakorListener);
-                            drakorView.setAdapter(drakorAdapter);
-                        }
-                    });
-                }
-            }});
-        thread.start();
-    }
-    private void loadNewSeason(){
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                newSeason = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .tvShowDao()
-                        .getNewShows();
-                if(newSeason!=null && newSeason.size()>0){
-                    mActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
-                            newSeasonRecyclerViewTitle = mActivity.findViewById(R.id.newSeason);
-                            newSeasonRecyclerViewTitle.setVisibility(View.VISIBLE);
-                            newSeasonRecyclerView = mActivity.findViewById(R.id.newSeasonRecycler);
-                            newSeasonRecyclerView.setVisibility(View.VISIBLE);
-                            newSeasonRecyclerView = mActivity.findViewById(R.id.newSeasonRecycler);
-                            newSeasonRecyclerView.setLayoutManager(linearLayoutManager3);
-                            newSeasonRecyclerView.setHasFixedSize(true);
-                            newSeasonRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) newSeason , newSeasonListener);
-                            newSeasonRecyclerView.setAdapter(newSeasonRecyclerAdapter);
-                        }
-                    });
-                }
-            }});
-        thread.start();
-    }
-    private void loadTopRatedShows(){
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                topRatedShows = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .tvShowDao()
-                        .getTopRated();
-                if(topRatedShows!=null && topRatedShows.size()>0){
-                    mActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
-                            topRatedShowsRecyclerViewTitle = mActivity.findViewById(R.id.topRatedTVShows);
-                            topRatedShowsRecyclerViewTitle.setVisibility(View.VISIBLE);
-                            topRatedShowsRecyclerView = mActivity.findViewById(R.id.topRatedTVShowsRecycler);
-                            topRatedShowsRecyclerView.setLayoutManager(linearLayoutManager3);
-                            topRatedShowsRecyclerView.setHasFixedSize(true);
-                            topRatedShowsRecyclerAdapter = new MediaAdapter(getContext() , (List<MyMedia>)(List<?>) topRatedShows , topRatedShowsListener);
-                            topRatedShowsRecyclerView.setAdapter(topRatedShowsRecyclerAdapter);
-                        }
-                    });
+                else {
+                    filmIndoTitle.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -568,15 +517,7 @@ public class HomeFragment extends BaseFragment {
 
             }
         };
-        drakorListener = new DrakorBannerAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(drakor.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
+
         recentlyAddedListener = new BannerRecyclerAdapter.OnItemClickListener() {
             @Override
             public void onClick(View view, int position) {
@@ -637,24 +578,6 @@ public class HomeFragment extends BaseFragment {
             }
         };
 
-        newSeasonListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(newSeason.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-        topRatedShowsListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(topRatedShows.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
     }
 
 

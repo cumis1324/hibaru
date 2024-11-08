@@ -260,7 +260,8 @@
             android:text="Sign in with Google"
                 android:textSize="11sp"
                 app:backgroundTint="@color/white"
-                app:icon="@drawable/googleg_disabled_color_18"
+                app:icon="@drawable/googleg_standard_color_18"
+
 
                 />
         </RelativeLayout>

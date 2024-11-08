@@ -141,6 +141,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
             }
 
             holder.play.setOnClickListener(view -> holder.playEpisode(episode));
+            holder.itemView.setOnClickListener(view -> holder.playEpisode(episode));
             holder.download.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

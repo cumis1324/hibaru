@@ -270,6 +270,10 @@
                         tools:text="In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization." />
 
                     <TextView
+                        android:id="@+id/listEpisode"
+                        android:focusableInTouchMode="true"
+                        android:focusable="true"
+                        android:background="@drawable/button_selector"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"

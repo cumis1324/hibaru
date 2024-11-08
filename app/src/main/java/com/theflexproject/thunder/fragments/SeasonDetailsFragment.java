@@ -62,7 +62,7 @@ public class SeasonDetailsFragment extends BaseFragment {
     ImageButton play;
 
     ImageView logo;
-    TextView continueWatching;
+    TextView continueWatching, listEpisode;
     ImageView dot3;
     TextView episodeTitle;
 
@@ -129,6 +129,8 @@ public class SeasonDetailsFragment extends BaseFragment {
         continueWatching = view.findViewById(R.id.continueWatchingText);
         episodeTitle = view.findViewById(R.id.episodeNameInTvSeason);
         dot3 = view.findViewById(R.id.dot3);
+        listEpisode = view.findViewById(R.id.listEpisode);
+        listEpisode.requestFocus();
 
 
         play = view.findViewById(R.id.playInSeasonDetails);
