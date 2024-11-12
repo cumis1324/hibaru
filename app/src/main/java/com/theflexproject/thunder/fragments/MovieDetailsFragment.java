@@ -27,6 +27,8 @@ import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoa
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -124,81 +126,36 @@ import eightbitlab.com.blurview.RenderScriptBlur;
 
 public class MovieDetailsFragment extends BaseFragment{
 
-    BannerRecyclerAdapter moreRecomRecycler;
+
     MoreMoviesAdapterr moreMovieRecycler;
-    TextView moreMoviesTitle;
-    RecyclerView moreRecomView;
     RecyclerView moreMovieView;
-    List<Movie> moreMovies;
-    List<Movie> morebyId;
-    List<Movie> moreRecom;
+    List<Movie> moreMovies, morebyId, moreRecom, movieFileList;
     MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
-    BannerRecyclerAdapter.OnItemClickListener moreRecomListener;
     BlurView blurView;
     ViewGroup rootView;
-    View decorView;
-
 
     int movieId;
     String movieFileName;
-    ImageView logo;
-    TextView namaMovie;
-    TextView yearText;
-    TextView runtime;
-    ImageButton play;
-    ImageButton changeSource;
-    ImageButton addToList;
-    ImageButton download;
-    TextView overview;
-//    Button changeTMDB;
-//    TextView size;
-//    Button externalPlayer;
-
-
-    TableRow director;
-    TableRow writer;
-    TableRow genres;
-
-
-
-
-    TextView directorText;
-    TextView writerText;
-    TextView genresText;
-    TextView ratingsText;
-    ImageView dot1;
-    ImageView ratings;
-
-    ImageView backdrop;
-    Movie movieDetails;
-    TextView size;
+    ImageView logo, backdrop;
+    ImageButton play,changeSource,addToList,download, shareButton;
+    Movie movieDetails, largestFile, selectedFile;
     TextView quality;
-    ImageButton shareButton;
 
-
-    List<Movie> movieFileList;
     List<MyMedia> moreMovieList;
-    FileItemAdapter fileAdapter;
-    FileItemAdapter.OnItemClickListener listenerFileItem;
-    Movie largestFile;
-    Movie selectedFile;
     BottomNavigationView botnav;
-
+    MaterialButton rating;
+    RelativeLayout titleLayout;
 
     //adview
-    private static final String AD_UNIT_ID = "ca-app-pub-3940256099942544/9214589741";
-    private AdView adView;
-    private FrameLayout adContainerView;
-    private RelativeLayout relativeContainer;
 
     private Button saweria;
 
-    private InterstitialAd mInterstitialAd;
+
     private RewardedAd rewardedAd;
     FirebaseManager manager;
     private DatabaseReference databaseReference;
     View progressOverlay;
-    TextView title;
+    MaterialTextView title;
     private TemplateView template;
 
     public MovieDetailsFragment() {
@@ -236,9 +193,7 @@ public class MovieDetailsFragment extends BaseFragment{
         webView.loadUrl("https://stream.trakteer.id/running-text-default.html?rt_count=5&rt_speed=fast&rt_1_clr1=rgba%280%2C+0%2C+0%2C+1%29&rt_septype=image&rt_txtshadow=true&rt_showsuppmsg=true&creator_name=nfgplus-official&page_url=trakteer.id/nfgplusofficial&mod=3&key=trstream-hV0jDdrlk82mv3aZnzpA&hash=a6z74q7pkgn3mlqy");
         title = view.findViewById(R.id.title3);
         progressOverlay = view.findViewById(R.id.progress_overlay);
-        size = view.findViewById(R.id.sizeTextInFileItem1);
         quality = view.findViewById(R.id.fakebutton);
-        relativeContainer = view.findViewById(R.id.relativeContainer);
         moreMovieView = view.findViewById(R.id.recyclerEpisodes2);
         saweria = view.findViewById(R.id.saweria);
         template = view.findViewById(R.id.my_template);
@@ -344,23 +299,17 @@ public class MovieDetailsFragment extends BaseFragment{
 
 
     private void initWidgets(View view) {
-        namaMovie = view.findViewById(R.id.namaMovie);
         logo = view.findViewById(R.id.movieLogo);
-        yearText = view.findViewById(R.id.year_text);
-        runtime = view.findViewById(R.id.RuntimeText);
-        overview = view.findViewById(R.id.overviewdesc);
+
         backdrop = view.findViewById(R.id.movieBackdrop);
-        genres = view.findViewById(R.id.Genres);
-        genresText = view.findViewById(R.id.GenresText);
-        ratings = view.findViewById(R.id.ratings);
-        dot1 = view.findViewById(R.id.dot);
-        ratingsText = view.findViewById(R.id.ratingsText);
         play = view.findViewById(R.id.play);
         play.requestFocus();
         download = view.findViewById(R.id.downloadButton);
         shareButton = view.findViewById(R.id.shareButton);
         addToList = view.findViewById(R.id.addToListButton);
         changeSource = view.findViewById(R.id.changeSourceButton);
+        rating = view.findViewById(R.id.ratingsSheet1);
+        titleLayout = view.findViewById(R.id.titleLayout);
 //        changeTMDB = view.findViewById(R.id.changeTMDBId);
 
 
@@ -398,24 +347,30 @@ public class MovieDetailsFragment extends BaseFragment{
                        loadMoreMovies();
                        Log.i("insideLoadDetails",movieDetails.toString());
                        mActivity.runOnUiThread(new Runnable() {
+                           @SuppressLint("SetTextI18n")
                            @Override
                            public void run() {
                                String titleText = movieDetails.getTitle();
-                               title.setText(titleText);
-                               //size.setText(sizetoReadablesize.humanReadableByteCountBin(Long.parseLong(((Movie) movieDetails).getSize())));
+                               String year = movieDetails.getRelease_date();
+                               String yearCrop = year.substring(0,year.indexOf('-'));
+                               String deskripsi = movieDetails.getOverview();
+                               String ratings = (int)(movieDetails.getVote_average()*10)+"%";
+                               String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
+                               rating.setText(ratings + " - " + result + " ...Selengkapnya");
+                               title.setText(titleText + " ("+yearCrop+")");
+                               titleLayout.setOnClickListener(new View.OnClickListener() {
+                                   @Override
+                                   public void onClick(View view) {
+                                       VideoDetailsBottomSheet bottomSheet = VideoDetailsBottomSheet.newInstance(movieDetails.getId(), "movie");
+                                       bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+                                   }
+                               });
 
-                               //String qualityStr = MovieQualityExtractor.extractQualtiy(((Movie) movieDetails).getFileName());
-                               //if (qualityStr != null) {
-                               //    quality.setVisibility(View.VISIBLE);
-                               //    quality.setText(qualityStr);
-                               //}
                                String tmdbId = String.valueOf(movieDetails.getId());
                                databaseReference = FirebaseDatabase.getInstance().getReference("History/");
                                String userId = manager.getCurrentUser().getUid();
                                DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
                                DatabaseReference lastP = databaseReference.child(userId).child(tmdbId).child("lastPlayed");
-
-// Listener for lastPosition
                                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                    @Override
                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -459,11 +414,6 @@ public class MovieDetailsFragment extends BaseFragment{
                                        // Handle onCancelled event
                                    }
                                });
-
-
-
-                               size.setText(movieDetails.getOriginal_language());
-                               size.setVisibility(View.VISIBLE);
                                quality.setText(movieDetails.getOriginal_title());
                                quality.setVisibility(View.VISIBLE);
 
@@ -473,10 +423,6 @@ public class MovieDetailsFragment extends BaseFragment{
 
                                if(logoLink!=null && !logoLink.equals("")){
                                    logo.setVisibility(View.VISIBLE);
-                                       namaMovie.setVisibility(View.VISIBLE);
-                                       namaMovie.setText(titleText);
-
-
                                    Glide.with(mActivity)
                                            .load(logoLink)
                                            .apply(new RequestOptions()
@@ -487,61 +433,11 @@ public class MovieDetailsFragment extends BaseFragment{
                                            .into(logo);
                                }
                                if(logoLink!=null && logoLink.equals("") && movieDetails.getTitle()!=null){
-
-                                       namaMovie.setVisibility(View.VISIBLE);
-                                       namaMovie.setText(titleText);
-
-
-
-
                                    logo.setVisibility(View.GONE);
-                               }else {
-                                   namaMovie.setVisibility(View.VISIBLE);
-                                   namaMovie.setText(movieFileName);
                                }
 
-                               if(movieDetails.getRuntime()>0){
-                                   String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
-                                   runtime.setVisibility(View.VISIBLE);
-                                   runtime.setText(result);
-                               }
-                               if(movieDetails.getGenres()!=null){
-                                   genresText.setVisibility(View.VISIBLE);
-                                   ArrayList<Genre> genres = movieDetails.getGenres();
-                                   StringBuilder sb = new StringBuilder();
-                                   for (int i=0;i<genres.size();i++) {
-                                       Genre genre = genres.get(i);
-                                       if(i == genres.size()-1 && genre != null){sb.append(genre.getName());}
-                                       else if(genre!= null){sb.append(genre.getName()).append(", ");}
-                                   }
-                                   genresText.setText(sb.toString());
-                               }
-                               if(movieDetails.getVote_average()!=0){
-//                                   ratings.setVisibility(View.VISIBLE);
-                                   dot1.setVisibility(View.VISIBLE);
-                                   ratingsText.setVisibility(View.VISIBLE);
-                                   String rating = (int)(movieDetails.getVote_average()*10)+"%";
-                                   ratingsText.setText(rating);
-                               }
-                               String year = movieDetails.getRelease_date();
-                               if(movieDetails.getRelease_date()!=null && movieDetails.getRelease_date().length()>1) {
-                                   yearText.setVisibility(View.VISIBLE);
-                                   yearText.setText(year.substring(0,year.indexOf('-')));
-                               }
-                               if(movieDetails.getOverview()!=null){overview.setVisibility(View.VISIBLE); overview.setText(movieDetails.getOverview());}
-                               if(movieDetails.getPoster_path()!=null) {
-//                                           Glide.with(mActivity)
-//                                                   .load(TMDB_IMAGE_BASE_URL + movieDetails.getPoster_path())
-//                                                   .diskCacheStrategy(DiskCacheStrategy.ALL)
-//                                                   .placeholder(new ColorDrawable(Color.TRANSPARENT))
-//                                                   .into(poster);
-                               }
                                if(movieDetails.getBackdrop_path()!=null) {
-//                                   Glide.with(mActivity)
-//                                           .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
-//                                           .apply(bitmapTransform(new BlurTransformation(10, 3)))
-//                                           .diskCacheStrategy(DiskCacheStrategy.ALL)
-//                                           .into(backdrop);
+//
 
                                            Glide.with(mActivity)
                                                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
@@ -639,12 +535,7 @@ public class MovieDetailsFragment extends BaseFragment{
 
     private void setMyOnClickListeners(){
 
-        saweria.setOnClickListener(v -> {
-            PremiumFragment manageDatabaseFragment = new PremiumFragment();
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
-                    .replace(R.id.container, manageDatabaseFragment).addToBackStack(null).commit();
-        });
+        saweria.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {

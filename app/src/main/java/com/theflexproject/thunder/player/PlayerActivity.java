@@ -63,7 +63,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-public class PlayerActivity extends AppCompatActivity implements View.OnClickListener, StyledPlayerView.ControllerVisibilityListener, IklanPremium.SubscriptionStatusListener  {
+public class PlayerActivity extends AppCompatActivity implements View.OnClickListener, StyledPlayerView.ControllerVisibilityListener {
 
     public static final String KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters";
     public static final String KEY_ITEM_INDEX = "item_index";
@@ -154,28 +154,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             trackSelectionParameters = new TrackSelectionParameters.Builder(/* context= */ this).build();
             clearStartPosition();
         }
-        IklanPremium.checkSubscriptionStatus(this);
-
-
-    }
-    @Override
-    public void onSubscriptionActive(Long subscriptionEnd) {
-        // Logika ketika langganan aktif, misalnya menyembunyikan iklan
-        Toast.makeText(this, "Langganan aktif, Iklan tidak akan tayang.", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Langganan aktif, sembunyikan iklan.");
-    }
-
-    @Override
-    public void onSubscriptionInactive() {
-        // Logika ketika langganan tidak aktif, misalnya menampilkan iklan
         adRequest = new AdRequest.Builder().build();
-        Toast.makeText(this, "Langganan tidak aktif, Iklan akan tayang.", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Langganan tidak aktif, tampilkan iklan.");
-    }
 
+    }
 
 
     private void loadReward(){
+
         if (adRequest != null) {
             RewardedAd.load(PlayerActivity.this, "ca-app-pub-7142401354409440/7652952632",
                     adRequest, new RewardedAdLoadCallback() {

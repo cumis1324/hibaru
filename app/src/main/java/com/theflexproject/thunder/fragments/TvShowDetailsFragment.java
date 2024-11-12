@@ -2,6 +2,7 @@ package com.theflexproject.thunder.fragments;
 
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,6 +21,7 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +46,7 @@ import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -72,43 +75,21 @@ import com.google.firebase.database.FirebaseDatabase;
 public class TvShowDetailsFragment extends BaseFragment {
 
     int tvShowId;
-    TextView tvShowTitleText;
-    TextView titleOri;
-    TextView numberOfSeasons;
-    TextView numberOfEpisodes;
 
-    TextView overview;
-    TextView listOfFiles;
-    ImageButton play;
-
-    ImageButton addToList;
-    ImageButton share;
+    TextView titleOri, title;
 
 
 
-    TableRow genres;
-    TableRow status;
-    TableRow type;
-    TableRow votesAvg;
-    TableRow votesCount;
 
-    TextView statusText;
-    TextView typeText;
-    TextView genresText;
+    ImageButton addToList,share;
+
 
     ImageView logo;
-    TextView continueWatching;
-    ImageView dot3;
-    ImageView dot1;
-    TextView episodeTitle;
+    RelativeLayout titleLayout;
+    MaterialButton rating;
 
 
-    TextView voteAvgText;
-    TextView votesCountText;
-    TextView ratingsText;
-    ImageView ratings;
 
-    ImageView poster;
     ImageView backdrop;
     TVShow tvShowDetails;
 
@@ -165,24 +146,15 @@ public class TvShowDetailsFragment extends BaseFragment {
         webSettings.setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("https://stream.trakteer.id/running-text-default.html?rt_count=5&rt_speed=fast&rt_1_clr1=rgba%280%2C+0%2C+0%2C+1%29&rt_septype=image&rt_txtshadow=true&rt_showsuppmsg=true&creator_name=nfgplus-official&page_url=trakteer.id/nfgplusofficial&mod=3&key=trstream-hV0jDdrlk82mv3aZnzpA&hash=a6z74q7pkgn3mlqy");
-        tvShowTitleText = view.findViewById(R.id.tvShowTitle);
         titleOri = view.findViewById(R.id.fakebutton2);
         logo = view.findViewById(R.id.tvLogo);
-        numberOfSeasons = view.findViewById(R.id.noOfSeasons);
-        numberOfEpisodes = view.findViewById(R.id.noOfEpisodes);
-        overview = view.findViewById(R.id.overviewDescTVShow);
         backdrop = view.findViewById(R.id.tvShowBackdrop);
-        genresText = view.findViewById(R.id.tvShowGenresText);
-        continueWatching = view.findViewById(R.id.continueWatchingText);
-        dot3 = view.findViewById(R.id.dot3);
-        dot1 = view.findViewById(R.id.dot);
-        episodeTitle = view.findViewById(R.id.episodeNameInTv);
-        ratingsText = view.findViewById(R.id.ratingsTVText);
-        play = view.findViewById(R.id.playInTVShowDetails);
         addToList = view.findViewById(R.id.addToListButtonTV);
-        addToList.requestFocus();
         share = view.findViewById(R.id.shareButton);
-
+        titleLayout = view.findViewById(R.id.titleLayout2);
+        titleLayout.requestFocus();
+        title = view.findViewById(R.id.titleShow);
+        rating = view.findViewById(R.id.ratingsShow);
     }
 
     private void loadNative() {
@@ -229,17 +201,29 @@ public class TvShowDetailsFragment extends BaseFragment {
 
                     Log.i("tvShowDetails Object",tvShowDetails.toString());
                     mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("SetTextI18n")
                         @Override
                         public void run() {
-
+                            String ratings = String.valueOf((int)(tvShowDetails.getVote_average()*10));
+                            String year = tvShowDetails.getFirst_air_date();
+                            String yearCrop = year.substring(0, year.indexOf('-'));
+                            String result = String.valueOf(tvShowDetails.getNumber_of_seasons());
                             String logoLink = tvShowDetails.getLogo_path();
+                            title.setText(tvShowDetails.getName() + " (" + yearCrop + ") ");
+                            rating.setText(ratings + " - " + result + " Season" + " ... Selengkapnya");
                             System.out.println("Logo Link"+logoLink);
                             titleOri.setVisibility(View.VISIBLE);
                             titleOri.setText(tvShowDetails.getOriginal_name());
+                            titleLayout.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    VideoDetailsBottomSheet bottomSheet = VideoDetailsBottomSheet.newInstance(tvShowDetails.getId(), "tvshow");
+                                    bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+                                }
+                            });
 
                             if(!logoLink.equals("")){
                                 logo.setVisibility(View.VISIBLE);
-                                tvShowTitleText.setText(tvShowDetails.getName());
                                 Glide.with(mActivity)
                                         .load(logoLink)
                                         .apply(new RequestOptions()
@@ -250,55 +234,9 @@ public class TvShowDetailsFragment extends BaseFragment {
                                         .into(logo);
                             }
                             if(logoLink.equals("")&&tvShowDetails.getName()!=null){
-                                tvShowTitleText.setVisibility(View.VISIBLE);
-                                tvShowTitleText.setText(tvShowDetails.getName());
                                 logo.setVisibility(View.GONE);
                             }
-                            if(tvShowDetails.getGenres()!=null){
-//                                genres.setVisibility(View.VISIBLE);
-                                ArrayList<Genre> genres = tvShowDetails.getGenres();
-                                StringBuilder sb = new StringBuilder();
-                                for (int i=0;i<genres.size();i++) {
-                                    Genre genre = genres.get(i);
-                                    if(genre!=null){
-                                        if(i== genres.size()-1){sb.append(genre.getName());}
-                                        else {sb.append(genre.getName()).append(", ");}
-                                    }
-                                }
-                                System.out.println("genres"+ genres);
-                                genresText.setText(sb.toString());
-                            }
-                            if(tvShowDetails.getVote_average()!=0){
-//                                ratings.setVisibility(View.VISIBLE);
-                                dot1.setVisibility(View.VISIBLE);
-                                ratingsText.setVisibility(View.VISIBLE);
-                                String rating = (int)(tvShowDetails.getVote_average()*10)+"%" ;
-                                ratingsText.setText(rating);
-                            }
-                            int number_of_seasons = tvShowDetails.getNumber_of_seasons();
-                            int number_of_episodes = tvShowDetails.getNumber_of_episodes();
-                            if(number_of_seasons!=0) {
-                                numberOfSeasons.setVisibility(View.VISIBLE);
-                                numberOfSeasons.setText(+number_of_seasons+" Seasons");
-                                numberOfEpisodes.setVisibility(View.VISIBLE);
-                                numberOfEpisodes.setText(number_of_episodes+" Episodes");
-                            }
-//                            if(tvShowDetails.getType()!=null){
-//                                type.setVisibility(View.VISIBLE);
-//                                typeText.setText(tvShowDetails.getType());
-//                            }
-//                            if(tvShowDetails.getStatus()!=null){
-//                                status.setVisibility(View.VISIBLE);
-//                                statusText.setText(tvShowDetails.getStatus());
-//                            }
-                            if(tvShowDetails.getOverview()!=null){overview.setText(tvShowDetails.getOverview());}
-                            if(tvShowDetails.getPoster_path()!=null) {
-//                                Glide.with(mActivity)
-//                                        .load(TMDB_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
-//                                        .placeholder(new ColorDrawable(Color.BLACK))
-//                                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-//                                        .into(poster);
-                            }
+
                             if(tvShowDetails.getBackdrop_path()!=null){
                                 Glide.with(mActivity)
                                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
@@ -324,13 +262,6 @@ public class TvShowDetailsFragment extends BaseFragment {
                             if (nextEpisode != null) {
                                 String buttonText = "S" + nextEpisode.getSeason_number() + " E" + nextEpisode.getEpisode_number();
                                 System.out.println(buttonText);
-                                continueWatching.setText(buttonText);
-//                            play.setText(buttonText);
-                                if(nextEpisode.getName()!=null){
-                                    dot3.setVisibility(View.VISIBLE);
-                                    episodeTitle.setVisibility(View.VISIBLE);
-                                    episodeTitle.setText(nextEpisode.getName());
-                                }
                             }
 
                         }
@@ -391,37 +322,6 @@ public class TvShowDetailsFragment extends BaseFragment {
         SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings" , Context.MODE_PRIVATE);
         boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING" , false);
 
-
-        play.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (savedEXT) {
-                    //External Player
-                    addToLastPlayed();
-                    Intent intent = new Intent(Intent.ACTION_VIEW , Uri.parse(nextEpisode.getUrlString()));
-                    intent.setDataAndType(Uri.parse(nextEpisode.getUrlString()) , "video/*");
-                    startActivity(intent);
-                } else {
-                    //Play video
-                    addToLastPlayed();
-                    Intent in = new Intent(getActivity() , PlayerActivity.class);
-                    in.putExtra("url" , nextEpisode.getUrlString());
-                    startActivity(in);
-                    Toast.makeText(getContext() , "Play" , Toast.LENGTH_LONG).show();
-                }
-            }
-            private void addToLastPlayed() {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-                        String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-                        DatabaseClient.getInstance(getContext()).getAppDatabase().episodeDao().updatePlayed(nextEpisode.getId(), currentDateTime+" added");
-                    }
-                });
-                thread.start();
-            }
-        });
         saweria.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
 
         addToList.setOnClickListener(new View.OnClickListener() {

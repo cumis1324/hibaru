@@ -6,13 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/black"
     android:orientation="vertical">
-    <View
-        android:id="@+id/progress_overlay"
-        android:layout_width="0dp"
-        android:layout_below="@id/frameBackdrop"
-        android:layout_height="10dp"
-        android:background="@color/blue"
-        android:visibility="visible" />
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="200dp"
@@ -26,6 +19,14 @@
 
 
     </RelativeLayout>
+    <View
+        android:id="@+id/progress_overlay"
+        android:layout_width="0dp"
+        android:layout_below="@id/frameBackdrop"
+        android:layout_height="10dp"
+        android:background="@color/blue"
+        android:visibility="visible" />
+
 
 
     <LinearLayout
@@ -54,107 +55,7 @@
             android:src="@drawable/dummyposter"
             android:visibility="visible" />
     </RelativeLayout>
-    <RelativeLayout
-        android:id="@+id/imageButtonContainer"
-        android:layout_below="@id/progress_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/light_blue_900"
 
-        >
-
-        <ImageButton
-            android:tooltipText="Favorit"
-            android:id="@+id/addToListButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:clickable="true"
-            android:layout_toLeftOf="@id/downloadButton"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:nextFocusDown="@id/saweria"
-            android:nextFocusRight="@id/downloadButton"
-            android:nextFocusUp="@id/play"
-            android:scaleType="centerInside"
-            android:background="@drawable/button_selector"
-            android:src="@drawable/ic_add"
-            />
-
-
-
-        <ImageButton
-            android:id="@+id/downloadButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_toLeftOf="@id/fakebutton"
-            android:background="@drawable/button_selector"
-            android:clickable="true"
-            android:focusableInTouchMode="true"
-            android:focusable="true"
-            android:nextFocusLeft="@id/addToListButton"
-            android:nextFocusRight="@id/changeSourceButton"
-            android:nextFocusDown="@id/saweria"
-            android:nextFocusUp="@id/play"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_download"
-            />
-
-        <TextView
-            android:id="@+id/fakebutton"
-            style="@style/sizelabel"
-            android:layout_width="120dp"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:fontFamily="@font/jost_medium"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:text="Kung Panda THE LEGEND OF AANG"
-            android:visibility="invisible"
-            android:layout_centerVertical="true"
-            android:ellipsize="end"
-            />
-
-        <ImageButton
-            android:id="@+id/changeSourceButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_centerHorizontal="true"
-            android:focusableInTouchMode="true"
-            android:layout_toRightOf="@id/fakebutton"
-            android:background="@drawable/button_selector"
-            android:clickable="true"
-            android:focusable="true"
-            android:nextFocusLeft="@id/downloadButton"
-            android:nextFocusUp="@id/play"
-            android:nextFocusRight="@id/shareButton"
-            android:nextFocusDown="@id/saweria"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_settings"
-            />
-
-
-
-        <ImageButton
-            android:id="@+id/shareButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_toRightOf="@id/changeSourceButton"
-            android:background="@drawable/button_selector"
-            android:focusableInTouchMode="true"
-            android:clickable="true"
-            android:focusable="true"
-            android:nextFocusLeft="@id/changeSourceButton"
-            android:nextFocusUp="@id/play"
-            android:nextFocusDown="@id/saweria"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_share_24"
-            />
-
-
-        <!--                    android:background="@drawable/tab_bg_color"-->
-
-
-    </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="200dp">
@@ -169,7 +70,7 @@
             android:clickable="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:nextFocusDown="@id/addToListButton"
+            android:nextFocusDown="@id/titleLayout"
             android:nextFocusLeft="@id/play"
             android:nextFocusRight="@id/play"
             android:nextFocusForward="@id/play"
@@ -186,198 +87,167 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/imageButtonContainer">
+        android:layout_below="@id/progress_overlay">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- Add this TextView for the countdown -->
-
-
-            <RelativeLayout
-                android:id="@+id/relativeContainer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <RelativeLayout
-                    android:id="@+id/judulOriginal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="30dp">
-                    <TextView
-                        android:id="@+id/namaMovie"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerHorizontal="true"
-                        android:fontFamily="@font/jost_medium"
-                        android:paddingHorizontal="20dp"
-                        android:textColor="#CCCCCC"
-                        android:textSize="20sp"
-                        android:text="Title Movie"
-                        android:visibility="gone"
-                        />
-
-                </RelativeLayout>
-                <RelativeLayout
-                    android:id="@+id/labels"
-                    android:layout_below="@id/judulOriginal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="5dp"
-                    android:layout_marginHorizontal="20dp"
-                    android:gravity="center_horizontal">
-
-
-                    <TextView
-                        android:id="@+id/ratingsText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start|center_vertical"
-                        android:fontFamily="@font/jost_regular"
-                        android:textAlignment="viewStart"
-                        android:textColor="#CCCCCC"
-                        android:textSize="14sp"
-                        android:visibility="gone"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/ratings"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="8.6" />
-
-                    <ImageView
-                        android:id="@+id/dot"
-                        android:visibility="gone"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:layout_marginHorizontal="5dp"
-                        android:layout_toEndOf="@id/ratingsText"
-                        android:src="@drawable/oval" />
-
-                    <TextView
-                        android:id="@+id/year_text"
-                        style="@style/sizelabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/dot"
-                        android:fontFamily="@font/jost_regular"
-                        android:textColor="#CCCCCC"
-                        android:textSize="14sp"
-                        android:visibility="visible"
-                        tools:text="2099" />
-
-
-                    <ImageView
-                        android:id="@+id/dot2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:layout_marginHorizontal="5dp"
-                        android:layout_toEndOf="@id/year_text"
-                        android:src="@drawable/oval" />
-
-                    <TextView
-                        android:id="@+id/RuntimeText"
-                        style="@style/sizelabel"
-                        android:layout_width="wrap_content"
-
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/dot2"
-                        android:fontFamily="@font/jost_regular"
-                        android:text="1h 30m"
-                        android:textColor="#CCCCCC"
-                        android:textSize="14sp"
-                        android:visibility="visible" />
-
-                    <ImageView
-                        android:id="@+id/ratings"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="start|center_vertical"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/tmdb"
-                        android:visibility="gone"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                </RelativeLayout>
-
-                <LinearLayout
-                    android:id="@+id/ratingsLabels"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/labels"
-                    android:layout_marginHorizontal="20dp"
-                    android:gravity="center_horizontal"
-                    android:orientation="horizontal"
-                    android:visibility="visible">
-
-
-                    <TextView
-                        android:id="@+id/GenresText"
-                        style="@style/sizelabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:fontFamily="@font/jost_regular"
-                        android:gravity="start"
-                        android:maxLines="1"
-                        android:scrollHorizontally="true"
-                        android:text="Action, Adventure, Fantasy"
-                        android:textColor="#CCCCCC"
-                        android:textSize="14sp"
-                        android:visibility="visible" />
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/sizeLabel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/ratingsLabels"
-                    android:layout_marginHorizontal="10dp"
-                    android:gravity="center_horizontal"
-                    android:orientation="horizontal"
-                    android:visibility="visible">
-
-                    <TextView
-                        android:id="@+id/sizeTextInFileItem1"
-                        style="@style/sizelabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerHorizontal="true"
-                        android:fontFamily="@font/jost_medium"
-                        android:paddingHorizontal="20dp"
-                        android:text="955mb"
-                        android:textColor="#CCCCCC"
-                        android:textSize="15sp"
-                        android:visibility="gone" />
-
-
-
-                </LinearLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="35dp"
-                    android:id="@+id/donasiOverlay"
-                    android:layout_below="@id/sizeLabel">
-
-                    <WebView
-                        android:id="@+id/webview"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </RelativeLayout>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/donasiOverlay"
-                    android:layout_marginHorizontal="20dp"
                     android:orientation="vertical">
+                    <RelativeLayout
+                        android:id="@+id/titleLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusableInTouchMode="true"
+                        android:focusable="true"
+                        android:background="@drawable/button_selector"
+                        android:nextFocusDown="@id/addToListButton"
+                        android:nextFocusLeft="@id/play"
+                        android:nextFocusRight="@id/addToListButton"
+                        android:nextFocusUp="@id/play"
+                        >
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/title3"
+                            style="@style/sizelabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/jost_medium"
+                            android:textColor="#CCCCCC"
+                            android:textSize="20sp"
+                            android:text="Nama Movie"
+                            android:visibility="visible"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            />
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_below="@id/title3"
+                            android:id="@+id/ratingsSheet1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/jost_regular"
+                            android:textColor="#CCCCCC"
+                            android:textSize="14sp"
+                            android:visibility="visible"
+                            app:icon="@drawable/star"
+                            app:iconTint="@color/yellow"
+                            tools:text="8.6" />
+                    </RelativeLayout>
+                    <RelativeLayout
+                        android:id="@+id/imageButtonContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/light_blue_900"
+
+                        >
+
+                        <ImageButton
+                            android:tooltipText="Favorit"
+                            android:id="@+id/addToListButton"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:clickable="true"
+                            android:layout_toLeftOf="@id/downloadButton"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusDown="@id/saweria"
+                            android:nextFocusRight="@id/downloadButton"
+                            android:nextFocusUp="@id/titleLayout"
+                            android:nextFocusLeft="@id/titleLayout"
+                            android:scaleType="centerInside"
+                            android:background="@drawable/button_selector"
+                            android:src="@drawable/ic_add"
+                            />
+
+
+
+                        <ImageButton
+                            android:id="@+id/downloadButton"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_toLeftOf="@id/fakebutton"
+                            android:background="@drawable/button_selector"
+                            android:clickable="true"
+                            android:focusableInTouchMode="true"
+                            android:focusable="true"
+                            android:nextFocusLeft="@id/addToListButton"
+                            android:nextFocusRight="@id/changeSourceButton"
+                            android:nextFocusDown="@id/saweria"
+                            android:nextFocusUp="@id/titleLayout"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_download"
+                            />
+
+                        <TextView
+                            android:id="@+id/fakebutton"
+                            style="@style/sizelabel"
+                            android:layout_width="120dp"
+                            android:layout_height="wrap_content"
+                            android:layout_centerHorizontal="true"
+                            android:fontFamily="@font/jost_medium"
+                            android:textColor="@color/white"
+                            android:textSize="15sp"
+                            android:text="Kung Panda THE LEGEND OF AANG"
+                            android:visibility="invisible"
+                            android:layout_centerVertical="true"
+                            android:ellipsize="end"
+                            />
+
+                        <ImageButton
+                            android:id="@+id/changeSourceButton"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_centerHorizontal="true"
+                            android:focusableInTouchMode="true"
+                            android:layout_toRightOf="@id/fakebutton"
+                            android:background="@drawable/button_selector"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:nextFocusLeft="@id/downloadButton"
+                            android:nextFocusUp="@id/titleLayout"
+                            android:nextFocusRight="@id/shareButton"
+                            android:nextFocusDown="@id/saweria"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_settings"
+                            />
+
+
+
+                        <ImageButton
+                            android:id="@+id/shareButton"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_toRightOf="@id/changeSourceButton"
+                            android:background="@drawable/button_selector"
+                            android:focusableInTouchMode="true"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:nextFocusLeft="@id/changeSourceButton"
+                            android:nextFocusUp="@id/titleLayout"
+                            android:nextFocusDown="@id/saweria"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_share_24"
+                            />
+
+
+                        <!--                    android:background="@drawable/tab_bg_color"-->
+
+
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="35dp"
+                        android:id="@+id/donasiOverlay"
+                        >
+
+                        <WebView
+                            android:id="@+id/webview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </RelativeLayout>
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -415,57 +285,15 @@
                             android:textSize="18sp"
                             android:visibility="visible"/>
                     </RelativeLayout>
-                    <TextView
-                        android:id="@+id/title3"
-                        style="@style/sizelabel"
-                        android:focusableInTouchMode="true"
-                        android:focusable="true"
-                        android:background="@drawable/button_selector"
-                        android:nextFocusDown="@id/overviewdesc"
-                        android:nextFocusUp="@id/saweria"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/jost_medium"
-                        android:textColor="#CCCCCC"
-                        android:textSize="20sp"
-                        android:text="Nama Movie"
-                        android:visibility="visible"
-                        />
 
-                    <TextView
-                        android:id="@+id/overviewtext"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/jost_medium"
-                        android:text="@string/overview"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:visibility="gone">
 
-                    </TextView>
-
-                    <TextView
-                        android:id="@+id/overviewdesc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginVertical="10dp"
-                        android:focusable="true"
-                        android:focusableInTouchMode="true"
-                        android:background="@drawable/button_selector"
-                        android:nextFocusDown="@id/my_template"
-                        android:nextFocusUp="@id/title3"
-                        android:fontFamily="@font/jost_regular"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:visibility="visible"
-                        tools:text="In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization." />
                     <com.google.android.ads.nativetemplates.TemplateView
                         android:id="@+id/my_template"
                         android:focusableInTouchMode="true"
                         android:focusable="true"
                         android:clickable="true"
                         android:nextFocusDown="@id/recyclerEpisodes2"
-                        android:nextFocusUp="@id/overviewdesc"
+                        android:nextFocusUp="@id/saweria"
                         android:background="@drawable/button_selector"
                         app:gnt_template_type="@layout/gnt_medium_template_view"
                         android:layout_width="match_parent"
@@ -495,8 +323,6 @@
 
 
                 </LinearLayout>
-
-            </RelativeLayout>
 
         </RelativeLayout>
 

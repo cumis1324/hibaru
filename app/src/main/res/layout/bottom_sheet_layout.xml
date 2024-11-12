@@ -1,0 +1,58 @@
+<!-- res/layout/bottom_sheet_layout.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@color/black"
+    android:layout_marginTop="200dp"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/bottom_sheet_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Judul Video"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:paddingBottom="8dp"/>
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/ratingsSheet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/jost_regular"
+        android:textColor="#CCCCCC"
+        android:textSize="14sp"
+        android:visibility="visible"
+        app:icon="@drawable/star"
+        app:iconTint="@color/yellow"
+        tools:text="8.6" />
+
+
+
+    <TextView
+        android:id="@+id/genreSheet"
+        style="@style/sizelabel"
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/dot2"
+        android:fontFamily="@font/jost_regular"
+        android:text="1h 30m"
+        android:textColor="#CCCCCC"
+        android:textSize="14sp"
+        android:visibility="visible" />
+
+
+
+    <TextView
+        android:id="@+id/bottom_sheet_description"
+        android:layout_width="match_parent"
+        android:textColor="@color/white"
+        android:layout_height="wrap_content"
+        android:text="Deskripsi video secara lengkap akan muncul di sini..."
+        android:textSize="16sp"/>
+
+</LinearLayout>

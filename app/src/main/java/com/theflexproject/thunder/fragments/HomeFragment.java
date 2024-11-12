@@ -223,6 +223,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     watchlistRecyclerViewTitle.setVisibility(View.GONE);
+                    watchlistRecyclerView.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -259,6 +260,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
+                    recentlyAddedRecyclerView.setVisibility(View.GONE);
                 }
 
            }});
@@ -305,6 +307,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     recentlyReleasedRecyclerViewTitle.setVisibility(View.GONE);
+                    recentlyReleasedRecyclerView.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -348,6 +351,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     topRatedMoviesRecyclerViewTitle.setVisibility(View.GONE);
+                    topRatedMoviesRecyclerView.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -391,6 +395,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     trendingTitle.setVisibility(View.GONE);
+                    trendingRecyclerView.setVisibility(View.GONE);
                 }
 
             }});
@@ -455,6 +460,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     lastPlayedMoviesRecyclerViewTitle.setVisibility(View.GONE);
+                    lastPlayedMoviesRecyclerView.setVisibility(View.GONE);
                 }
             }});
         thread.start();
@@ -499,6 +505,7 @@ public class HomeFragment extends BaseFragment {
                 }
                 else {
                     filmIndoTitle.setVisibility(View.GONE);
+                    filmIndoView.setVisibility(View.GONE);
                 }
             }});
         thread.start();
