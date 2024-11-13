@@ -226,7 +226,7 @@ public class HomeFragment extends BaseFragment {
 
                             ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
-                           watchlistRecyclerViewTitle.setVisibility(View.VISIBLE);
+                            watchlistRecyclerViewTitle.setVisibility(View.VISIBLE);
 
                             //watchlistRecyclerView.setVisibility(View.VISIBLE);
                             watchlistRecyclerView.setLayoutManager(linearLayoutManager3);
@@ -279,7 +279,7 @@ public class HomeFragment extends BaseFragment {
                     recentlyAddedRecyclerView.setVisibility(View.GONE);
                 }
 
-           }});
+            }});
         thread.start();
 
     }
