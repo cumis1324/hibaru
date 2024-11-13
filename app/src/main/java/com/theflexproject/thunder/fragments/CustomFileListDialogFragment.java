@@ -19,13 +19,16 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.FileItemDialogAdapter;
 import com.theflexproject.thunder.model.MyMedia;
 
 import java.util.List;
 
-public class CustomFileListDialogFragment extends DialogFragment {
+public class CustomFileListDialogFragment extends BottomSheetDialogFragment {
 
     Context context;
     RecyclerView fileListInDialog;
@@ -43,19 +46,13 @@ public class CustomFileListDialogFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set style to make the dialog full-screen and modal
-        setStyle(DialogFragment.STYLE_NORMAL, R.style.FullScreenDialog);
-        setCancelable(false);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Request to remove the title (if any) and make it fullscreen
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-            getDialog().getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
-        }
+
         return inflater.inflate(R.layout.fragment_custom_file_list_dialog, container, false);
     }
 
@@ -89,5 +86,21 @@ public class CustomFileListDialogFragment extends DialogFragment {
 
     public interface OnInputListener {
         void sendInput(int selection);
+    }
+    public void onStart() {
+        super.onStart();
+        BottomSheetDialog dialog = (BottomSheetDialog) getDialog();
+        if (dialog != null) {
+            // Mengambil BottomSheet untuk mengatur state-nya
+            View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
+
+            // Mengatur BottomSheet ke state expanded secara otomatis
+
+            // Optional: Mengatur tinggi Bottom Sheet ke full-screen
+            bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+            bottomSheet.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+
+        }
     }
 }

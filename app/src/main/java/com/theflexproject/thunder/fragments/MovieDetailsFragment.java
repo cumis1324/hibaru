@@ -580,13 +580,7 @@ public class MovieDetailsFragment extends BaseFragment{
                                 new CustomFileListDialogFragment(mActivity,changeSource,
                                         (List<MyMedia>)(List<?>) movieFileList);
 
-                        mActivity.
-                                getSupportFragmentManager()
-                                .beginTransaction()
-                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                                .add(android.R.id.content, dialog)
-                                .addToBackStack(null)
-                                .commit();
+                        dialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
                         dialog.mOnInputListener = new CustomFileListDialogFragment.OnInputListener() {
                             @Override
                             public void sendInput(int selection) {
@@ -648,13 +642,7 @@ public class MovieDetailsFragment extends BaseFragment{
                         new CustomFileListDialogFragment(mActivity,changeSource,
                                 (List<MyMedia>)(List<?>) movieFileList);
 
-                mActivity.
-                        getSupportFragmentManager()
-                        .beginTransaction()
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                        .add(android.R.id.content, downdialog)
-                        .addToBackStack(null)
-                        .commit();
+                downdialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
                 downdialog.mOnInputListener = new CustomFileListDialogFragment.OnInputListener() {
                     @Override
                     public void sendInput(int selection) {
@@ -735,13 +723,7 @@ public class MovieDetailsFragment extends BaseFragment{
                         new CustomFileListDialogFragment(mActivity,changeSource,
                                 (List<MyMedia>)(List<?>) movieFileList);
 
-               mActivity.
-                       getSupportFragmentManager()
-                       .beginTransaction()
-                       .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                       .add(android.R.id.content, dialog)
-                       .addToBackStack(null)
-                       .commit();
+               dialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
                 dialog.mOnInputListener = new CustomFileListDialogFragment.OnInputListener() {
                     @Override
                     public void sendInput(int selection) {

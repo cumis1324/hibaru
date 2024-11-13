@@ -138,7 +138,6 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
             BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
 
             // Mengatur BottomSheet ke state expanded secara otomatis
-            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
             // Optional: Mengatur tinggi Bottom Sheet ke full-screen
             bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
