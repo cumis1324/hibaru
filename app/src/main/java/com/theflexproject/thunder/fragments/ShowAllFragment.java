@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.model.Movie;
@@ -30,6 +31,7 @@ public class ShowAllFragment extends BaseFragment {
     private RecyclerView allMoviesRecyclerView;
     private MediaAdapter allMoviesAdapter;
     MediaAdapter.OnItemClickListener listener;
+    BottomNavigationView botnav;
 
     public ShowAllFragment() {
         // Required empty public constructor
@@ -56,6 +58,8 @@ public class ShowAllFragment extends BaseFragment {
                              Bundle savedInstanceState) {
         // Inflate layout untuk fragment
         View view = inflater.inflate(R.layout.fragment_show_all, container, false);
+        botnav = mActivity.findViewById(R.id.bottom_navigation);
+        botnav.setVisibility(View.GONE);
 
         // Set listener sebelum memuat UI
         setOnClickListener();
@@ -66,8 +70,15 @@ public class ShowAllFragment extends BaseFragment {
         return view;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        botnav.setVisibility(View.VISIBLE);
+    }
+
     private void loadUI(View view) {
         allMoviesRecyclerView = view.findViewById(R.id.allMoviesRecyclerView);
+
 
         if (getArguments() != null) {
             // Mengambil daftar film yang dikirim melalui Bundle

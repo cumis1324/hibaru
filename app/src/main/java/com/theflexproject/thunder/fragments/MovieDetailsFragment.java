@@ -358,6 +358,13 @@ public class MovieDetailsFragment extends BaseFragment{
                                String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
                                rating.setText(ratings + " - " + result + " ...Selengkapnya");
                                title.setText(titleText + " ("+yearCrop+")");
+                               rating.setOnClickListener(new View.OnClickListener() {
+                                   @Override
+                                   public void onClick(View view) {
+                                       VideoDetailsBottomSheet bottomSheet = VideoDetailsBottomSheet.newInstance(movieDetails.getId(), "movie");
+                                       bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+                                   }
+                               });
                                titleLayout.setOnClickListener(new View.OnClickListener() {
                                    @Override
                                    public void onClick(View view) {

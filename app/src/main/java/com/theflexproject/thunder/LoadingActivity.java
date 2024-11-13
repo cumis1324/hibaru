@@ -150,6 +150,11 @@ public class LoadingActivity extends AppCompatActivity {
                 File downloadedFile = downloadFileFromUrl(fileUrl);
                 if (downloadedFile != null) {
                     restoreDatabase(downloadedFile, deepLinkData);
+                }else {
+                    SharedPreferences prefs = getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+
+                    prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
+                    checkForModifiedData(fileUrl, deepLinkData);
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Error in restoreDatabaseFromUrl", e);
@@ -210,11 +215,15 @@ public class LoadingActivity extends AppCompatActivity {
             int length;
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
+
             }
+        }finally {
+            Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
+            launchMainActivity(deepLinkData);
         }
 
-        Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
-        launchMainActivity(deepLinkData);
+
+
     }
 
     private void launchMainActivity(Uri deepLinkData) {
