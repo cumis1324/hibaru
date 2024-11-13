@@ -85,22 +85,15 @@ public class HomeFragment extends BaseFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_home, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        loadUI(view);
+        return view;
 
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        FirebaseManager firebaseManager;
-        firebaseManager = new FirebaseManager();
-        FirebaseUser currentUser;
-        currentUser = firebaseManager.getCurrentUser();
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        verifTitle = view.findViewById(R.id.verifTitle);
-        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
-            verifTitle.setVisibility(View.VISIBLE);
-        }
+    private void loadUI(View view) {
+        setOnClickListner();
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler);
         trendingRecyclerView = view.findViewById(R.id.trendingRecycler);
         recentlyAddedRecyclerView = view.findViewById(R.id.recentlyAddedRecycler);
@@ -115,8 +108,31 @@ public class HomeFragment extends BaseFragment {
         lastPlayedMoviesRecyclerViewTitle = view.findViewById(R.id.lastPlayedMovies2);
         watchlistRecyclerViewTitle = view.findViewById(R.id.watchListMedia1);
         filmIndoTitle = view.findViewById(R.id.filmIndo);
-        refreshData();
-        setOnClickListner();
+        loadRecentlyAddedMovies();
+        loadRecentlyReleasedMovies();
+        loadTopRatedMovies();
+        loadLastPlayedMovies();
+        loadWatchlist();
+
+        loadTrending();
+
+        loadFilmIndo();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        FirebaseManager firebaseManager;
+        firebaseManager = new FirebaseManager();
+        FirebaseUser currentUser;
+        currentUser = firebaseManager.getCurrentUser();
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        verifTitle = view.findViewById(R.id.verifTitle);
+        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
+            verifTitle.setVisibility(View.VISIBLE);
+        }
+
+
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override

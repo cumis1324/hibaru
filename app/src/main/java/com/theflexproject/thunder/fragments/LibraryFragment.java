@@ -81,6 +81,7 @@ public class LibraryFragment extends BaseFragment {
                 tabLayout.selectTab(tabLayout.getTabAt(position));
             }
         });
+        viewPagerLibrary.setUserInputEnabled(false);
 
     }
 
