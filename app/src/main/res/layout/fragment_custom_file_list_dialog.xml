@@ -12,7 +12,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/fileListInDialog"
             android:layout_width="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="center_horizontal"
             android:maxHeight="0dp"
             android:layout_height="wrap_content"
 
