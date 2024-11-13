@@ -7,9 +7,10 @@
     android:background="@color/black"
     app:cardCornerRadius="12dp"
     app:cardBackgroundColor="@color/black"
-    android:padding="16dp">
+    >
 
         <androidx.recyclerview.widget.RecyclerView
+            android:layout_marginTop="30dp"
             android:id="@+id/fileListInDialog"
             android:layout_width="wrap_content"
             android:layout_gravity="center_horizontal"
