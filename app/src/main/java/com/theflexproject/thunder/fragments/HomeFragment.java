@@ -93,7 +93,12 @@ public class HomeFragment extends BaseFragment {
     }
 
     private void loadUI(View view) {
+        FirebaseManager firebaseManager;
+        firebaseManager = new FirebaseManager();
+        FirebaseUser currentUser;
+        currentUser = firebaseManager.getCurrentUser();
         setOnClickListner();
+        verifTitle = view.findViewById(R.id.verifTitle);
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler);
         trendingRecyclerView = view.findViewById(R.id.trendingRecycler);
         recentlyAddedRecyclerView = view.findViewById(R.id.recentlyAddedRecycler);
@@ -108,29 +113,34 @@ public class HomeFragment extends BaseFragment {
         lastPlayedMoviesRecyclerViewTitle = view.findViewById(R.id.lastPlayedMovies2);
         watchlistRecyclerViewTitle = view.findViewById(R.id.watchListMedia1);
         filmIndoTitle = view.findViewById(R.id.filmIndo);
-        loadRecentlyAddedMovies();
-        loadRecentlyReleasedMovies();
-        loadTopRatedMovies();
-        loadLastPlayedMovies();
-        loadWatchlist();
+        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
+            verifTitle.setVisibility(View.VISIBLE);
+            recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
+            topRatedMoviesRecyclerViewTitle.setVisibility(View.GONE);
+            lastPlayedMoviesRecyclerViewTitle.setVisibility(View.GONE);
+            watchlistRecyclerViewTitle.setVisibility(View.GONE);
+            filmIndoTitle.setVisibility(View.GONE);
+            loadTrending();
+            loadRecentlyReleasedMovies();
+        }else{
 
-        loadTrending();
 
-        loadFilmIndo();
+            loadRecentlyAddedMovies();
+            loadRecentlyReleasedMovies();
+            loadTopRatedMovies();
+            loadLastPlayedMovies();
+            loadWatchlist();
+
+            loadTrending();
+
+            loadFilmIndo();
+        }
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        FirebaseManager firebaseManager;
-        firebaseManager = new FirebaseManager();
-        FirebaseUser currentUser;
-        currentUser = firebaseManager.getCurrentUser();
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        verifTitle = view.findViewById(R.id.verifTitle);
-        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
-            verifTitle.setVisibility(View.VISIBLE);
-        }
 
 
 
@@ -296,8 +306,8 @@ public class HomeFragment extends BaseFragment {
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            List<Movie> limitedTrending = recentlyAddedMovies.size() > 10 ? recentlyAddedMovies.subList(0, 10) : recentlyAddedMovies;
-                            List<MyMedia> all = new ArrayList<>(recentlyAddedMovies);
+                            List<Movie> limitedTrending = recentlyReleasedMovies.size() > 10 ? recentlyReleasedMovies.subList(0, 10) : recentlyReleasedMovies;
+                            List<MyMedia> all = new ArrayList<>(recentlyReleasedMovies);
                             ScaleCenterItemLayoutManager linearLayoutManager1 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             recentlyReleasedRecyclerViewTitle.setVisibility(View.VISIBLE);
