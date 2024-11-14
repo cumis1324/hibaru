@@ -41,11 +41,15 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 GROUP BY id ORDER BY release_date")
     List<Movie> getTopRated();
 
-    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC")
+    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC LIMIT 10")
     List<Movie> getrecentlyadded();
+    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC")
+    List<Movie> getallrecentlyadded();
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC")
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC lIMIT 10")
     List<Movie> getrecentreleases();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC")
+    List<Movie> getallrecentreleases();
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND release_date >= '2023-01-01' GROUP BY id ORDER BY (popularity + release_date) DESC LIMIT 10")
     List<Movie> getTrending();
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY  genres Limit 10")

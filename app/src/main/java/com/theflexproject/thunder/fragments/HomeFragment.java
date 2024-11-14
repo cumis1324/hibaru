@@ -60,7 +60,7 @@ public class HomeFragment extends BaseFragment {
             watchlistRecyclerViewTitle;
 
 
-    List<Movie> recentlyAddedMovies, recentlyReleasedMovies, topRatedMovies,
+    List<Movie> recentlyAddedMovies,allrecentlyAddedMovies, recentlyReleasedMovies,allrecentlyReleasedMovies, topRatedMovies,
             trending, lastPlayedList, fav, played, ogMovies, topOld, filmIndo;
     List<MyMedia> ogtop, someRecom;
 
@@ -313,8 +313,12 @@ public class HomeFragment extends BaseFragment {
                         .getAppDatabase()
                         .movieDao()
                         .getrecentreleases();
-                List<Movie> limitedTrending = recentlyReleasedMovies.size() > 10 ? recentlyReleasedMovies.subList(0, 10) : recentlyReleasedMovies;
-                List<MyMedia> all = new ArrayList<>(recentlyReleasedMovies);
+                allrecentlyReleasedMovies  = DatabaseClient
+                        .getInstance(mActivity)
+                        .getAppDatabase()
+                        .movieDao()
+                        .getallrecentreleases();
+                List<MyMedia> all = new ArrayList<>(allrecentlyReleasedMovies);
                 if(recentlyReleasedMovies!=null && recentlyReleasedMovies.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
@@ -326,7 +330,7 @@ public class HomeFragment extends BaseFragment {
 
                             recentlyReleasedRecyclerView.setLayoutManager(linearLayoutManager1);
                             recentlyReleasedRecyclerView.setHasFixedSize(true);
-                            recentlyReleasedRecyclerViewAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) limitedTrending, recentlyReleasedListener);
+                            recentlyReleasedRecyclerViewAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) recentlyReleasedMovies, recentlyReleasedListener);
                             recentlyReleasedRecyclerView.setAdapter(recentlyReleasedRecyclerViewAdapter);
                             recentlyReleasedRecyclerView.setNestedScrollingEnabled(false);
                             recentlyReleasedRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
@@ -404,8 +408,12 @@ public class HomeFragment extends BaseFragment {
                         .getAppDatabase()
                         .movieDao()
                         .getrecentlyadded();
-                List<Movie> limitedTrending = trending.size() > 10 ? trending.subList(0, 10) : trending;
-                List<MyMedia> all = new ArrayList<>(trending);
+                allrecentlyAddedMovies = DatabaseClient
+                        .getInstance(mActivity)
+                        .getAppDatabase()
+                        .movieDao()
+                        .getallrecentlyadded();
+                List<MyMedia> all = new ArrayList<>(allrecentlyAddedMovies);
                 if(trending!=null && trending.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
@@ -416,7 +424,7 @@ public class HomeFragment extends BaseFragment {
 
                             trendingRecyclerView.setLayoutManager(linearLayoutManager2);
                             trendingRecyclerView.setHasFixedSize(true);
-                            trendingMoviesRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , trendingListener);
+                            trendingMoviesRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) trending, trendingListener);
                             trendingRecyclerView.setAdapter(trendingMoviesRecyclerAdapter);
                             trendingRecyclerView.setNestedScrollingEnabled(false);
                             trendingTitle.setOnClickListener(new View.OnClickListener() {
