@@ -2,7 +2,6 @@
 <androidx.cardview.widget.CardView android:layout_margin="8dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/media_item_bg_color"
     android:focusable="true"
     android:clickable="true"
     app:cardCornerRadius="12dp"

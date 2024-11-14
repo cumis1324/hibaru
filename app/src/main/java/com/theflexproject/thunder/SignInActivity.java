@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,12 +32,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class SignInActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 9001;
 
-    private EditText emailEditText, passwordEditText;
+    private TextInputEditText emailEditText, passwordEditText;
     private Button signInButton, signUpButton, googleSignInButton;
 
     ViewGroup rootView;

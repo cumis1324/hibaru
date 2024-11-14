@@ -19,103 +19,62 @@
 
 
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/emailContainer"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/emailContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/signintitle"
+            android:gravity="center_vertical"
+            android:textColorHint="#50FFFFFF"
+            android:textCursorDrawable="@null"
+            android:background="@color/white"
+            app:hintAnimationEnabled="false"
+            app:hintEnabled="false"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/email"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/signintitle"
-                android:layout_gravity="center"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:textColorHint="#50FFFFFF"
-                android:textCursorDrawable="@null"
-                android:background="@color/white"
-                app:hintAnimationEnabled="false"
-                app:hintEnabled="false"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                >
+                android:layout_height="match_parent"
+                android:gravity="start|center_vertical"
+                android:hint="@string/e_mail"
+                android:inputType="textEmailAddress"
+                android:nextFocusDown="@id/password"
+                android:textColor="#878787"
+                android:textColorHint="#878787"
+                android:textSize="18sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputEditText
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/passwordContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/emailContainer"
+            android:gravity="center_vertical"
+            android:textColorHint="#50FFFFFF"
+            android:textCursorDrawable="@null"
+            app:hintAnimationEnabled="false"
+            app:hintEnabled="false"
+            android:background="@color/white"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
 
-                    android:id="@+id/email"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_gravity="center"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginEnd="8dp"
-                    android:ems="10"
-                    android:background="@color/text_field_color"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:fontFamily="@font/jost_regular"
-                    android:gravity="start|center_vertical"
-                    android:hint="@string/e_mail"
-                    android:inputType="textEmailAddress"
-                    android:nextFocusDown="@id/password"
-                    android:paddingTop="12dp"
-                    android:textColor="#878787"
-                    android:textColorHint="#878787"
-                    android:textColorLink="#A3A3A3"
-                    android:textSize="18sp"
-                    />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/passwordContainer"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/password"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/emailContainer"
-                android:layout_alignParentStart="true"
-                android:layout_gravity="center"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:textColorHint="#50FFFFFF"
-                android:textCursorDrawable="@null"
-                app:hintAnimationEnabled="false"
-                app:hintEnabled="false"
-                android:background="@color/white"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-
-                >
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/password"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_gravity="center"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@color/text_field_color"
-                    android:ems="10"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:fontFamily="@font/jost_regular"
-                    android:gravity="start|center_vertical"
-                    android:hint="@string/password"
-                    android:inputType="textPassword"
-                    android:nextFocusUp="@id/email"
-                    android:nextFocusDown="@id/signinbtn"
-                    android:paddingTop="12dp"
-                    android:textColor="#878787"
-                    android:textColorHint="#878787"
-                    android:textColorLink="#A3A3A3"
-                    android:textSize="18sp" />
+                android:layout_height="match_parent"
+                android:gravity="start|center_vertical"
+                android:hint="@string/password"
+                android:inputType="textPassword"
+                android:nextFocusDown="@id/signinbtn"
+                android:textColor="#878787"
+                android:textColorHint="#878787"
+                android:textSize="18sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
 
-            </com.google.android.material.textfield.TextInputLayout>
-
-
-
-            <TextView
+        <TextView
                 android:id="@+id/signintitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

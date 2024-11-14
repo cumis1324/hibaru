@@ -271,6 +271,7 @@ public class MainActivity extends AppCompatActivity {
                         .beginTransaction()
                         .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
                         .replace(R.id.container , searchFragment)
+                        .addToBackStack(null)
                         .commit();
                 return true;
             }else if(item.getItemId()==R.id.downloadFragment){
@@ -278,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
                         .beginTransaction()
                         .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
                         .replace(R.id.container , downloadFragment)
+                        .addToBackStack(null)
                         .commit();
                 return true;
             }else if(item.getItemId()==R.id.libraryFragment){
@@ -285,6 +287,7 @@ public class MainActivity extends AppCompatActivity {
                         .beginTransaction()
                         .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
                         .replace(R.id.container , libraryFragment)
+                        .addToBackStack(null)
                         .commit();
                 return true;
             }else if(item.getItemId()==R.id.settingsFragment){
@@ -292,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
                         .beginTransaction()
                         .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
                         .replace(R.id.container , settingsFragment)
+                        .addToBackStack(null)
                         .commit();
                 return true;
             }

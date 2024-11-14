@@ -153,10 +153,11 @@ public class SeriesFragment extends BaseFragment{
                         .getAppDatabase()
                         .tvShowDao()
                         .getDrakor();
+                List<TVShow> limitedTrending = drakor.size() > 10 ? drakor.subList(0, 10) : drakor;
+                List<MyMedia> all = new ArrayList<>(drakor);
                 if(drakor!=null && drakor.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
-                        List<TVShow> limitedTrending = drakor.size() > 10 ? drakor.subList(0, 10) : drakor;
-                        List<MyMedia> all = new ArrayList<>(drakor);
+
                         @Override
                         public void run() {
                             ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
@@ -171,7 +172,7 @@ public class SeriesFragment extends BaseFragment{
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -194,10 +195,11 @@ public class SeriesFragment extends BaseFragment{
                         .getAppDatabase()
                         .tvShowDao()
                         .getNewShows();
+                List<TVShow> limitedTrending = newSeason.size() > 10 ? newSeason.subList(0, 10) : newSeason;
+                List<MyMedia> all = new ArrayList<>(newSeason);
                 if(newSeason!=null && newSeason.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
-                        List<TVShow> limitedTrending = newSeason.size() > 10 ? newSeason.subList(0, 10) : newSeason;
-                        List<MyMedia> all = new ArrayList<>(newSeason);
+
                         @Override
                         public void run() {
                             ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
@@ -213,7 +215,7 @@ public class SeriesFragment extends BaseFragment{
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -241,8 +243,9 @@ public class SeriesFragment extends BaseFragment{
                 recommended = new ArrayList<>();
                 recommended.addAll(recommendSeries);
                 recommended.addAll(topRatedShows);
+                List<MyMedia> limitedTrending = recommended.size() > 10 ? recommended.subList(0, 10) : recommended;
                 if(recommended!=null && recommended.size()>0){
-                    List<MyMedia> limitedTrending = recommended.size() > 10 ? recommended.subList(0, 10) : recommended;
+
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -250,6 +253,7 @@ public class SeriesFragment extends BaseFragment{
 
                             recommendedText.setVisibility(View.VISIBLE);
                             Collections.shuffle(recommended);
+                            Collections.shuffle(limitedTrending);
                             recommendedView.setLayoutManager(linearLayoutManager3);
                             recommendedView.setHasFixedSize(true);
                             recommendedAdapter = new MediaAdapter(getContext() ,limitedTrending , recommendedListener);
@@ -259,7 +263,7 @@ public class SeriesFragment extends BaseFragment{
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(recommended)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(recommended)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }

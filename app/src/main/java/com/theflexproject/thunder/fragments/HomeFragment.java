@@ -225,14 +225,15 @@ public class HomeFragment extends BaseFragment {
                 ogtop = new ArrayList<>();
                 ogtop.addAll(topOld);
                 ogtop.addAll(ogMovies);
-
+                List<MyMedia> limitedTrending = ogtop.size() > 10 ? ogtop.subList(0, 10) : ogtop;
                 if(ogtop!=null && ogtop.size()>0){
+
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             Random random = new Random();
 
-                            Collections.shuffle(ogtop);
+                            Collections.shuffle(limitedTrending);
 
                             ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
@@ -241,8 +242,18 @@ public class HomeFragment extends BaseFragment {
                             //watchlistRecyclerView.setVisibility(View.VISIBLE);
                             watchlistRecyclerView.setLayoutManager(linearLayoutManager3);
                             watchlistRecyclerView.setHasFixedSize(true);
-                            watchlistRecyclerViewAdapter = new MediaAdapter(getContext() ,ogtop , watchlistListener);
+                            watchlistRecyclerViewAdapter = new MediaAdapter(getContext() ,limitedTrending , watchlistListener);
                             watchlistRecyclerView.setAdapter(watchlistRecyclerViewAdapter);
+                            watchlistRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // Navigate to a new fragment or activity with all data
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(ogtop)); // Pass data to new fragment
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
                         }
                     });
 
@@ -302,12 +313,13 @@ public class HomeFragment extends BaseFragment {
                         .getAppDatabase()
                         .movieDao()
                         .getrecentreleases();
+                List<Movie> limitedTrending = recentlyReleasedMovies.size() > 10 ? recentlyReleasedMovies.subList(0, 10) : recentlyReleasedMovies;
+                List<MyMedia> all = new ArrayList<>(recentlyReleasedMovies);
                 if(recentlyReleasedMovies!=null && recentlyReleasedMovies.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            List<Movie> limitedTrending = recentlyReleasedMovies.size() > 10 ? recentlyReleasedMovies.subList(0, 10) : recentlyReleasedMovies;
-                            List<MyMedia> all = new ArrayList<>(recentlyReleasedMovies);
+
                             ScaleCenterItemLayoutManager linearLayoutManager1 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             recentlyReleasedRecyclerViewTitle.setVisibility(View.VISIBLE);
@@ -322,7 +334,7 @@ public class HomeFragment extends BaseFragment {
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -347,10 +359,11 @@ public class HomeFragment extends BaseFragment {
                         .getAppDatabase()
                         .movieDao()
                         .getTopRated();
+                List<Movie> limitedTrending = topRatedMovies.size() > 10 ? topRatedMovies.subList(0, 10) : topRatedMovies;
+                List<MyMedia> all = new ArrayList<>(topRatedMovies);
                 if(topRatedMovies!=null && topRatedMovies.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
-                        List<Movie> limitedTrending = topRatedMovies.size() > 10 ? topRatedMovies.subList(0, 10) : topRatedMovies;
-                        List<MyMedia> all = new ArrayList<>(topRatedMovies);
+
                         @Override
                         public void run() {
                             ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
@@ -367,7 +380,7 @@ public class HomeFragment extends BaseFragment {
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -391,9 +404,9 @@ public class HomeFragment extends BaseFragment {
                         .getAppDatabase()
                         .movieDao()
                         .getrecentlyadded();
+                List<Movie> limitedTrending = trending.size() > 10 ? trending.subList(0, 10) : trending;
+                List<MyMedia> all = new ArrayList<>(trending);
                 if(trending!=null && trending.size()>0){
-                    List<Movie> limitedTrending = trending.size() > 10 ? trending.subList(0, 10) : trending;
-                    List<MyMedia> all = new ArrayList<>(trending);
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -411,7 +424,7 @@ public class HomeFragment extends BaseFragment {
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -453,9 +466,9 @@ public class HomeFragment extends BaseFragment {
                 someRecom.addAll(played);
                 someRecom.addAll(fav);
                 someRecom.addAll(lastPlayedList);
+                List<MyMedia> limitedTrending = someRecom.size() > 10 ? someRecom.subList(0, 10) : someRecom;
                 if(someRecom!=null && someRecom.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
-                        List<MyMedia> limitedTrending = someRecom.size() > 10 ? someRecom.subList(0, 10) : someRecom;
 
                         @Override
                         public void run() {
@@ -475,7 +488,7 @@ public class HomeFragment extends BaseFragment {
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(someRecom)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(someRecom)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -500,12 +513,13 @@ public class HomeFragment extends BaseFragment {
                         .getAppDatabase()
                         .movieDao()
                         .getFilmIndo();
+                List<Movie> limitedTrending = filmIndo.size() > 10 ? filmIndo.subList(0, 10) : filmIndo;
+                List<MyMedia> all = new ArrayList<>(filmIndo);
                 if(filmIndo!=null && filmIndo.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            List<Movie> limitedTrending = filmIndo.size() > 10 ? filmIndo.subList(0, 10) : filmIndo;
-                            List<MyMedia> all = new ArrayList<>(filmIndo);
+
                             ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
 
                             filmIndoTitle.setVisibility(View.VISIBLE);
@@ -521,7 +535,7 @@ public class HomeFragment extends BaseFragment {
                                 public void onClick(View v) {
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.replace(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }

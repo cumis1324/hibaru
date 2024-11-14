@@ -1,6 +1,7 @@
 package com.theflexproject.thunder.adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ public class GenreAdapter extends RecyclerView.Adapter<GenreAdapter.GenreViewHol
     private List<Genres> genreList;
     private OnGenreClickListener onGenreClickListener;
     private Context context;
+    private int selectedGenreId = -1;
 
     public GenreAdapter(Context context, List<Genres> genreList, OnGenreClickListener listener) {
         this.context = context;
@@ -35,9 +37,16 @@ public class GenreAdapter extends RecyclerView.Adapter<GenreAdapter.GenreViewHol
     public void onBindViewHolder(@NonNull GenreViewHolder holder, int position) {
         Genres genre = genreList.get(position);
         holder.genreName.setText(genre.getName());
+        if (genre.getId() == selectedGenreId) {
+            holder.itemView.setBackgroundColor(Color.parseColor("#8000A3FF")); // warna biru saat dipilih
+        } else {
+            holder.itemView.setBackgroundColor(Color.WHITE); // warna putih saat tidak dipilih
+        }
         holder.itemView.setOnClickListener(v -> {
             if (onGenreClickListener != null) {
-                onGenreClickListener.onGenreClick(genre.getId()); // Pass genre ID
+                onGenreClickListener.onGenreClick(genre.getId());
+                selectedGenreId = genre.getId();
+                notifyDataSetChanged();
             }
         });
     }

@@ -43,7 +43,7 @@
     <string name="movies">Movies</string>
     <string name="tv_shows">TV Shows</string>
     <string name="import_export_instructions">When permission is asked for storage allow and restart the app \n Exported Database is stored in Download/Thunder \n (Check if the file \"ThunderBackup.db\" is present in the device after export)\n To import previously exported Database: \n Click Import Database and restart the app</string>
-    <string name="search_for_a_movie_or_a_show">Search for a movie or a show</string>
+    <string name="search_for_a_movie_or_a_show">Search for a movie or series</string>
     <string name="gdindex">GDIndex</string>
     <string name="goindex">GoIndex</string>
     <string name="mapleindex">Maple</string>

@@ -25,39 +25,35 @@
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
         android:layout_below="@id/searchTitle"
-        android:layout_alignParentStart="true"
         android:layout_gravity="center"
-        android:layout_marginHorizontal="20dp"
-        android:textCursorDrawable="@null"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:gravity="center_vertical"
-        app:hintEnabled="false"
         android:textColorHint="#50FFFFFF"
+        android:textCursorDrawable="@null"
+        android:background="@drawable/rounded_search"
         app:hintAnimationEnabled="false"
-        app:endIconDrawable="@drawable/ic_search"
-        app:endIconTint="@color/black">
+        app:hintEnabled="false"
+        >
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/search_input"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:focusable="true"
-            android:clickable="true"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:background="@color/text_field_color"
             android:fontFamily="@font/jost_regular"
             android:hint="@string/search_for_a_movie_or_a_show"
             android:gravity="start|center_vertical"
-            android:textColor="@color/black"
+            android:textColor="#878787"
+            android:textColorHint="#878787"
             android:textSize="14sp"
-            android:paddingTop="12dp"
-            android:textColorHint="@color/black_overlay"
-
             />
-
     </com.google.android.material.textfield.TextInputLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
+
+
+    <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclersearch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
