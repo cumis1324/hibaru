@@ -247,9 +247,10 @@ public class HomeFragment extends BaseFragment {
                             watchlistRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(ogtop);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(ogtop)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -336,9 +337,10 @@ public class HomeFragment extends BaseFragment {
                             recentlyReleasedRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -382,9 +384,10 @@ public class HomeFragment extends BaseFragment {
                             topRatedMoviesRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -430,9 +433,10 @@ public class HomeFragment extends BaseFragment {
                             trendingTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -494,9 +498,10 @@ public class HomeFragment extends BaseFragment {
                             lastPlayedMoviesRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(someRecom);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(someRecom)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -541,9 +546,10 @@ public class HomeFragment extends BaseFragment {
                             filmIndoTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }

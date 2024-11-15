@@ -68,25 +68,39 @@
             android:name=".SplashScreenActivity"
             android:exported="true"
             android:theme="@style/SplashTheme"
-            android:label="@string/app_name"
-            >
+            android:label="@string/app_name">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-
             </intent-filter>
+
+            <!-- Intent Filter for nfgplus.my.id -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="https" android:host="nfgplus.my.id" android:pathPrefix="/reviews.html" />
+            </intent-filter>
+
+            <!-- Intent Filter for www.nfgplus.my.id -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="www.nfgplus.my.id" android:pathPrefix="/reviews.html" />
+            </intent-filter>
+
+            <!-- Intent Filter for web.nfgplus.my.id -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="web.nfgplus.my.id" android:pathPrefix="/reviews.html" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".LoadingActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"

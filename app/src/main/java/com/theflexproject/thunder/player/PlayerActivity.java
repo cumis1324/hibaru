@@ -133,7 +133,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         nfgpluslog = findViewById(R.id.nfgpluslogo);
         playerEpsTitle = findViewById(R.id.playerEpsTitle);
         playerView.setControllerVisibilityListener(this);
-        playerView.requestFocus();
         loadTitle();
         Rational aspectRatio = new Rational(playerView.getWidth(), playerView.getHeight());
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -154,13 +153,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             trackSelectionParameters = new TrackSelectionParameters.Builder(/* context= */ this).build();
             clearStartPosition();
         }
-        adRequest = new AdRequest.Builder().build();
+
 
     }
 
 
     private void loadReward(){
-
+        adRequest = new AdRequest.Builder().build();
         if (adRequest != null) {
             RewardedAd.load(PlayerActivity.this, "ca-app-pub-7142401354409440/7652952632",
                     adRequest, new RewardedAdLoadCallback() {
@@ -264,15 +263,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        // Check if device orientation is landscape
-        if (newConfig.orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            // Show rewarded ad if loaded
-        }
-    }
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -438,8 +428,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             ExoPlayer.Builder playerBuilder =
                     new ExoPlayer.Builder(/* context= */ this)
                             .setMediaSourceFactory(createMediaSourceFactory());
-            setRenderersFactory(
-                    playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
+            setRenderersFactory(playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
             player = playerBuilder.build();
             player.setTrackSelectionParameters(trackSelectionParameters);
             player.addListener(new PlayerEventListener());
@@ -559,14 +548,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     private void showControls() {
 
-    }
-
-    private void showToast(int messageId) {
-        showToast(getString(messageId));
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 
     private class PlayerEventListener implements Player.Listener {

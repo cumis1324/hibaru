@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.HandlerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.room.Room;
 
@@ -68,7 +69,6 @@ public class LoadingActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
 
-        FirebaseApp.initializeApp(this);
         FirebaseMessaging.getInstance().subscribeToTopic("latest_update")
                 .addOnCompleteListener(task -> {
                     String msg = "Berhasil berlangganan topik";
@@ -227,7 +227,7 @@ public class LoadingActivity extends AppCompatActivity {
     }
 
     private void launchMainActivity(Uri deepLinkData) {
-        new Handler(Looper.getMainLooper()).post(() -> {
+        HandlerCompat.createAsync(Looper.getMainLooper()).post(() -> {
             ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
             List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
             if (appProcesses != null) {

@@ -38,18 +38,10 @@ public class ShowAllFragment extends BaseFragment {
     }
 
     // Membuat instance baru dari fragment dan mengirimkan daftar film melalui argument Bundle
-    public static ShowAllFragment newInstance(List<MyMedia> movies) {
-        ShowAllFragment fragment = new ShowAllFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_MOVIE_LIST, new ArrayList<>(movies)); // mengonversi List ke ArrayList untuk serialisasi
-        fragment.setArguments(args);
-        return fragment;
+    public ShowAllFragment(List<MyMedia> movies) {
+        this.movieList = movies;
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
     @SuppressLint("NotifyDataSetChanged")
     @Nullable
@@ -79,11 +71,6 @@ public class ShowAllFragment extends BaseFragment {
     private void loadUI(View view) {
         allMoviesRecyclerView = view.findViewById(R.id.allMoviesRecyclerView);
 
-
-        if (getArguments() != null) {
-            // Mengambil daftar film yang dikirim melalui Bundle
-            movieList = (List<MyMedia>) getArguments().getSerializable(ARG_MOVIE_LIST);
-        }
 
         mActivity.runOnUiThread(() -> {
             DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
@@ -115,12 +102,8 @@ public class ShowAllFragment extends BaseFragment {
                 Movie movie = (Movie) mediaItem;
                 MovieDetailsFragment movieDetailsFragment;
 
-                // Memilih fragment berdasarkan ID film
-                if (movie.getId() == 0) {
-                    movieDetailsFragment = new MovieDetailsFragment(movie.getFileName());
-                } else {
-                    movieDetailsFragment = new MovieDetailsFragment(movie.getId());
-                }
+                movieDetailsFragment = new MovieDetailsFragment(movie.getId());
+
 
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)

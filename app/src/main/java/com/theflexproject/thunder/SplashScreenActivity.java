@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.view.WindowManager;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.HandlerCompat;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseUser;
@@ -27,26 +28,31 @@ public class SplashScreenActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
-
-        FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
 
-        new Handler(Looper.getMainLooper()).postDelayed(() -> handleSignIn(data), 4000);
+        HandlerCompat.postDelayed(
+                new android.os.Handler(Looper.getMainLooper()),
+                () -> {
+                    currentUser = firebaseManager.getCurrentUser();
+                    handleSignIn(data);
+                },
+                null,
+                4000  // Add null for the optional token argument
+        );
     }
 
     private void handleSignIn(Uri data) {
         Intent intent;
         if (currentUser != null) {
             intent = new Intent(SplashScreenActivity.this, LoadingActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             if (data != null) {
                 intent.setData(data);  // Tambahkan URI ke Intent
             }
         } else {
             intent = new Intent(SplashScreenActivity.this, SignInActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         }
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
     }

@@ -170,9 +170,10 @@ public class SeriesFragment extends BaseFragment{
                             drakorTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -213,9 +214,10 @@ public class SeriesFragment extends BaseFragment{
                             newSeasonRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(all)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
@@ -261,9 +263,10 @@ public class SeriesFragment extends BaseFragment{
                             recommendedText.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    ShowAllFragment showAllFragment = new ShowAllFragment(recommended);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
-                                    transaction.add(R.id.container, ShowAllFragment.newInstance(recommended)); // Pass data to new fragment
+                                    transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
                                 }
