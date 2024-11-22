@@ -1,29 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:focusable="true"
     android:clickable="true"
-    app:cardBackgroundColor="@color/media_item_bg_color"
-    app:cardCornerRadius="12dp"
+    app:backgroundTint="@color/media_item_bg_color"
+    app:cornerRadius="20dp"
     android:layout_margin="10dp"
-    android:padding="8dp"
-    android:orientation="horizontal">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-       >
+    android:text="Action"
+    android:textAllCaps="false"
 
-    <TextView
-        android:id="@+id/genre_name"
-        android:gravity="center_horizontal"
-        android:maxLines="2"
-        android:text="Action"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textColor="@android:color/black"/>
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+    android:padding="8dp"
+    android:id="@+id/genre_name" />
+
+
+

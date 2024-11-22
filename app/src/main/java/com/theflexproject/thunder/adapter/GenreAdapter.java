@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.model.Genres;
 
@@ -57,7 +58,7 @@ public class GenreAdapter extends RecyclerView.Adapter<GenreAdapter.GenreViewHol
     }
 
     public static class GenreViewHolder extends RecyclerView.ViewHolder {
-        TextView genreName;
+        MaterialButton genreName;
 
         public GenreViewHolder(View itemView) {
             super(itemView);

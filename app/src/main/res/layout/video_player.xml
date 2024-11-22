@@ -30,7 +30,8 @@
             android:layout_height="wrap_content"
             android:scaleType="centerCrop"
             android:src="@drawable/bd"
-            android:visibility="visible" />
+            android:visibility="visible"
+            android:alpha="0.45"/>
         <RelativeLayout
             android:id="@+id/custom_buffering_indicator"
             android:layout_width="match_parent"
@@ -70,8 +71,9 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:focusable="false"
                 android:clickable="false"
-                android:layout_marginBottom="35dp"
+                android:layout_marginBottom="45dp"
                 android:fontFamily="@font/jost_medium"
                 android:paddingHorizontal="20dp"
                 android:textColor="#CCCCCC"
