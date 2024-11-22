@@ -134,8 +134,13 @@ public class LoadingActivity extends AppCompatActivity {
                     restoreDatabaseFromUrl(backupFileUrl, deepLinkData);
                 } else {
                     runOnUiThread(() -> updateProgressBar(50, "Loading database, please wait ...."));
-                    if (!isDatabaseCorrupt()) {
+                    if (!isDatabaseCorrupt(backupFileUrl, deepLinkData)) {
+                        runOnUiThread(() -> updateProgressBar(100, "Enjoy"));
                         launchMainActivity(deepLinkData);
+                    }else {
+                        runOnUiThread(() -> updateProgressBar(100, "Database corrupted, Recovering database...."));
+                        prefs.edit().putString(LAST_MODIFIED_KEY, lastModified).apply();
+                        restoreDatabaseFromUrl(backupFileUrl, deepLinkData);
                     }
                 }
             } catch (IOException e) {
@@ -254,28 +259,34 @@ public class LoadingActivity extends AppCompatActivity {
         });
     }
 
-    private boolean isDatabaseCorrupt() {
+    private boolean isDatabaseCorrupt(String backupFileUrl, Uri deepLinkData) {
         AppDatabase db = null;
-        try {
-            db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos")
-                    .allowMainThreadQueries()
-                    .build();
-            db.indexLinksDao().getAll();
-            Log.i(TAG, "DB Aman!");
+        File dbFile = getDatabasePath("MyToDos");
+        if (!dbFile.exists()) {
+            return true;
+        }else {
+            try {
+                db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos")
+                        .allowMainThreadQueries()
+                        .build();
+                db.indexLinksDao().getAll();
+                Log.i(TAG, "DB Aman!");
+                return false;
+            } catch (SQLiteException e) {
+                if (e instanceof android.database.sqlite.SQLiteDatabaseCorruptException) {
+                    Log.e(TAG, "Database is corrupt!", e);
+                    return true;
+                } else {
+                    Log.e(TAG, "Database is corrupt!", e);
+                }
+            } finally {
+                if (db != null) {
+                    db.close();
+                }
+
+            }
             return false;
-        } catch (SQLiteException e) {
-            if (e instanceof android.database.sqlite.SQLiteDatabaseCorruptException) {
-                Log.e(TAG, "Database is corrupt!", e);
-                return true;
-            } else {
-                Log.e(TAG, "Database is corrupt!", e);
-            }
-        } finally {
-            if (db != null) {
-                db.close();
-            }
         }
-        return false;
     }
 
     @NonNull
