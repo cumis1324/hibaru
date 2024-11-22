@@ -3,12 +3,14 @@ package com.theflexproject.thunder;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -39,6 +41,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
@@ -103,11 +106,11 @@ public class MainActivity extends AppCompatActivity {
     FrameLayout scanContainer;
     static FirebaseUser currentUser;
     AppDatabase dbs;
+    NavigationRailView navigationRailView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         requestWindowFeature(1);
         FirebaseApp.initializeApp(this);
         firebaseManager = new FirebaseManager();
@@ -123,6 +126,10 @@ public class MainActivity extends AppCompatActivity {
         // Daftarkan receiver untuk menerima pembaruan dari ModifiedCheckWorker
 
 
+    }
+    private boolean isTVDevice() {
+        UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);
+        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
     private boolean isNotificationEnabled() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -161,11 +168,19 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser != null) {
             dbs = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase();
             checkForAppUpdate();
-
-            setContentView(R.layout.activity_main);
-            initWidgets();
-            setUpBottomNavigationView();
-            handleDemoUser();
+            if (!isTVDevice()) {
+                setContentView(R.layout.activity_main);
+                initWidgets();
+                setUpBottomNavigationView();
+                handleDemoUser();
+            }
+            else {
+                setContentView(R.layout.main_tv);
+                initWidgets();
+                setUpBottomNavigationView();
+                handleDemoUser();
+                bottomNavigationView.setVisibility(View.GONE);
+            }
 
             // Mulai proses restore dengan WorkManager
             //AppDatabase db = Room.databaseBuilder(getApplicationContext() ,
@@ -245,6 +260,9 @@ public class MainActivity extends AppCompatActivity {
         loadingScan = findViewById(R.id.loadingScan);
         scanButton = findViewById(R.id.floating_scan);
         seriesButton = findViewById(R.id.scanSeries);
+        if (isTVDevice()) {
+            navigationRailView = findViewById(R.id.side_navigation);
+        }
         blurBottom();
     }
 
@@ -301,6 +319,59 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
+        if (isTVDevice()) {
+            navigationRailView.setOnItemSelectedListener(item -> {
+                if (item.getItemId() == R.id.homeFragment) {
+                    if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
+                        getSupportFragmentManager()
+                                .beginTransaction()
+                                .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                                .replace(R.id.container, homeVerif)
+                                .commit();
+                    } else {
+                        getSupportFragmentManager()
+                                .beginTransaction()
+                                .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                                .replace(R.id.container, homeFragment)
+                                .commit();
+                    }
+                    return true;
+                } else if (item.getItemId() == R.id.searchFragment) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                            .replace(R.id.container, searchFragment)
+                            .addToBackStack(null)
+                            .commit();
+                    return true;
+                } else if (item.getItemId() == R.id.downloadFragment) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                            .replace(R.id.container, downloadFragment)
+                            .addToBackStack(null)
+                            .commit();
+                    return true;
+                } else if (item.getItemId() == R.id.libraryFragment) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                            .replace(R.id.container, libraryFragment)
+                            .addToBackStack(null)
+                            .commit();
+                    return true;
+                } else if (item.getItemId() == R.id.settingsFragment) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                            .replace(R.id.container, settingsFragment)
+                            .addToBackStack(null)
+                            .commit();
+                    return true;
+                }
+                return false;
+            });
+        }
 
     }
 

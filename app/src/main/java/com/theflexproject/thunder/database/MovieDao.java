@@ -31,6 +31,8 @@ public interface MovieDao {
 
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size DESC limit 1 ")
     Movie byIdLargest(int id);
+    @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size ASC limit 1 ")
+    Movie byIdSmallest(int id);
 
     @Query("SELECT * FROM Movie WHERE (fileName LIKE '%' || :string || '%' OR title like '%' || :string || '%' OR urlString like '%' || :string || '%' or overview like '%' || :string || '%' or original_title like '%' || :string || '%') and disabled=0 GROUP BY id")
     List<Movie> getSearchQuery(String string);

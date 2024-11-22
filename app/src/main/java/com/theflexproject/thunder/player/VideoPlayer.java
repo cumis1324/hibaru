@@ -25,23 +25,23 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.C;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
+import androidx.media3.common.TrackSelectionParameters;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.datasource.DataSource;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.RenderersFactory;
+import androidx.media3.exoplayer.drm.DefaultDrmSessionManagerProvider;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.exoplayer.source.MediaSource;
+import androidx.media3.ui.PlayerView;
 
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.PlaybackException;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.RenderersFactory;
-import com.google.android.exoplayer2.audio.AudioAttributes;
-import com.google.android.exoplayer2.drm.DefaultDrmSessionManagerProvider;
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.TrackSelectionParameters;
-import com.google.android.exoplayer2.ui.StyledPlayerControlView;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
-import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.util.EventLogger;
+
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.FullScreenContentCallback;
@@ -74,7 +74,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-public class VideoPlayer extends AppCompatActivity implements View.OnClickListener, StyledPlayerView.ControllerVisibilityListener {
+@UnstableApi
+public class VideoPlayer extends AppCompatActivity implements View.OnClickListener, PlayerView.ControllerVisibilityListener {
 
     public static final String KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters";
     public static final String KEY_ITEM_INDEX = "item_index";
@@ -83,8 +84,8 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
     public static final String PREFER_EXTENSION_DECODERS_EXTRA = "prefer_extension_decoders";
 
-    protected StyledPlayerView playerView;
-    protected StyledPlayerControlView controlView;
+    protected PlayerView playerView;
+
     protected LinearLayout debugRootView;
 
 
@@ -439,6 +440,7 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
         }
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     private void updateTrackSelectorParameters() {
         if (playerHelper != null) {
             trackSelectionParameters = playerHelper.getTrackSelectionParameters();

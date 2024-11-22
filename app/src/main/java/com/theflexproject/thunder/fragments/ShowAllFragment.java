@@ -1,6 +1,9 @@
 package com.theflexproject.thunder.fragments;
 
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
+import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -61,11 +64,18 @@ public class ShowAllFragment extends BaseFragment {
 
         return view;
     }
-
+    private boolean isTVDevice() {
+        UiModeManager uiModeManager = (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
+        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();
-        botnav.setVisibility(View.VISIBLE);
+        if (isTVDevice()) {
+            botnav.setVisibility(View.GONE);
+        }else {
+            botnav.setVisibility(View.VISIBLE);
+        }
     }
 
     private void loadUI(View view) {

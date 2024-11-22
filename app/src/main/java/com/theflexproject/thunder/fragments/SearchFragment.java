@@ -6,6 +6,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,8 @@ import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -87,7 +90,7 @@ public class SearchFragment extends BaseFragment {
         setOnClickListner();
         try {
             searchBox.setOnEditorActionListener((v, actionId, event) -> {
-                if (event != null && event.getAction() == android.view.KeyEvent.ACTION_DOWN && event.getKeyCode() == android.view.KeyEvent.KEYCODE_ENTER) {
+                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                     if (!searchBox.getText().toString().isEmpty()) {
                         Thread thread = new Thread(() -> {
                             Log.i(" ", "in thread");
@@ -137,20 +140,22 @@ public class SearchFragment extends BaseFragment {
     }
 
 
+    @OptIn(markerClass = UnstableApi.class)
     private void setOnClickListner() {
         listener = (view , position) -> {
-            if(matchesFound.get(position) instanceof Movie){
+            if(matchesFound.get(position) instanceof Movie) {
                 MovieDetailsFragment movieDetailsFragment;
-                if(((Movie)matchesFound.get(position)).getId()==0){
-                    movieDetailsFragment = new MovieDetailsFragment(((Movie)matchesFound.get(position)).getFileName());
+                PlayerFragment playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), "movie");
+                if (((Movie) matchesFound.get(position)).getId() == 0) {
+                    movieDetailsFragment = new MovieDetailsFragment(((Movie) matchesFound.get(position)).getFileName());
 
-                }else {
-                    movieDetailsFragment = new MovieDetailsFragment(((Movie)matchesFound.get(position)).getId());
+                } else {
+                    playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), "movie");
                 }
 
                 mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                        .add(R.id.container, playerFragment).addToBackStack(null).commit();
             }
             if(matchesFound.get(position) instanceof TVShow){
                 TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(((TVShow)matchesFound.get(position)).getId());

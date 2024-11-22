@@ -3,9 +3,11 @@ package com.theflexproject.thunder.fragments;
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -133,10 +135,19 @@ public class TvShowDetailsFragment extends BaseFragment {
         initWidgets(view);
         loadDetails();
     }
+    private boolean isTVDevice() {
+        UiModeManager uiModeManager = (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
+        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+    }
 
     @Override
     public void onDestroyView() {
-        botnav.setVisibility(View.VISIBLE);
+        if(isTVDevice()) {
+            botnav.setVisibility(View.GONE);
+        }
+        else {
+            botnav.setVisibility(View.VISIBLE);
+        }
         super.onDestroyView();
     }
 

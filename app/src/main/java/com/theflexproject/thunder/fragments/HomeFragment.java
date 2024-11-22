@@ -1,10 +1,13 @@
 package com.theflexproject.thunder.fragments;
 
+import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,9 +17,12 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -77,7 +83,11 @@ public class HomeFragment extends BaseFragment {
     };
 
 
-    private SwipeRefreshLayout swipeRefreshLayout;
+    private NestedScrollView nestedScrollView;
+    private TextView homeTitle;
+    private boolean isTitleVisible = true; // Flag untuk visibilitas title
+    private Handler handler = new Handler(Looper.getMainLooper()); // Untuk debounce
+    private Runnable scrollRunnable;
 
     public HomeFragment() {
     }
@@ -123,6 +133,33 @@ public class HomeFragment extends BaseFragment {
             loadTrending();
             loadRecentlyReleasedMovies();
         }else{
+            homeTitle = mActivity.findViewById(R.id.homeTitle);
+            nestedScrollView = view.findViewById(R.id.nestedMovieHome);
+
+            // Tambahkan OnScrollChangeListener ke NestedScrollView
+            nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+                @Override
+                public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                    // Batalkan scrollRunnable jika ada event scroll baru
+                    if (scrollRunnable != null) {
+                        handler.removeCallbacks(scrollRunnable);
+                    }
+
+                    scrollRunnable = () -> {
+                        if (scrollY > oldScrollY && isTitleVisible) {
+                            // Scroll ke bawah: sembunyikan title
+                            collapseTitle();
+                        } else if (scrollY < oldScrollY && !isTitleVisible) {
+                            // Scroll ke atas: tampilkan title
+                            expandTitle();
+                        }
+                    };
+
+                    // Jalankan scrollRunnable setelah debounce (200ms)
+                    handler.postDelayed(scrollRunnable, 200);
+                }
+            });
+
 
 
             loadRecentlyAddedMovies();
@@ -136,22 +173,26 @@ public class HomeFragment extends BaseFragment {
             loadFilmIndo();
         }
     }
+    private void collapseTitle() {
+        isTitleVisible = false; // Ubah status flag
+        ObjectAnimator animation = ObjectAnimator.ofFloat(homeTitle, "translationY", 0, -homeTitle.getHeight());
+        animation.setDuration(300);
+        animation.start();
+        homeTitle.setVisibility(View.GONE); // Sembunyikan setelah animasi selesai
+    }
+
+    // Animasi untuk menampilkan searchTitle
+    private void expandTitle() {
+        isTitleVisible = true; // Ubah status flag
+        homeTitle.setVisibility(View.VISIBLE); // Tampilkan sebelum animasi mulai
+        ObjectAnimator animation = ObjectAnimator.ofFloat(homeTitle, "translationY", -homeTitle.getHeight(), 0);
+        animation.setDuration(300);
+        animation.start();
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-
-
-
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // Your refresh logic here
-                refreshData();
-
-            }
-        });
 
 
     }
@@ -161,6 +202,15 @@ public class HomeFragment extends BaseFragment {
         super.onResume();
         IntentFilter intentFilter = new IntentFilter("MovieDetailsFragment");
         LocalBroadcastManager.getInstance(mActivity).registerReceiver(receiver, intentFilter);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (handler != null && scrollRunnable != null) {
+            handler.removeCallbacks(scrollRunnable);
+        }
+
     }
 
     @Override
@@ -187,24 +237,6 @@ public class HomeFragment extends BaseFragment {
                 .add(R.id.container, movieDetailsFragment)
                 .addToBackStack(null)
                 .commit();
-    }
-    private void refreshData() {
-        // Implement your refresh logic here
-        // For example, you can re-fetch the data or perform any necessary updates
-        // Once the refresh is complete, call setRefreshing(false) on the SwipeRefreshLayout
-        // to indicate that the refresh has finished.
-        loadRecentlyAddedMovies();
-        loadRecentlyReleasedMovies();
-        loadTopRatedMovies();
-        loadLastPlayedMovies();
-        loadWatchlist();
-
-        loadTrending();
-
-        loadFilmIndo();
-
-        swipeRefreshLayout.setRefreshing(false);
-
     }
 
 
@@ -580,9 +612,10 @@ public class HomeFragment extends BaseFragment {
         };
 
         recentlyAddedListener = new BannerRecyclerAdapter.OnItemClickListener() {
+            @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View view, int position) {
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(recentlyAddedMovies.get(position).getId());
+                PlayerFragment movieDetailsFragment = new PlayerFragment(recentlyAddedMovies.get(position).getId(), "movie");
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                         .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();

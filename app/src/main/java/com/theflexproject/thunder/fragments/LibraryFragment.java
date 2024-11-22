@@ -55,10 +55,6 @@ public class LibraryFragment extends BaseFragment {
         moviesTab = mActivity.findViewById(R.id.movieTab);
         tvTab = mActivity.findViewById(R.id.tvTab);
         filesTab = mActivity.findViewById(R.id.filesTab);
-//        tabLayout.addTab(moviesTab);
-//        tabLayout.addTab(tvTab);
-//        tabLayout.addTab(tabLayout.newTab().setText("Movies"));
-//        tabLayout.addTab(tabLayout.newTab().setText("TV Shows"));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -81,16 +77,12 @@ public class LibraryFragment extends BaseFragment {
                 tabLayout.selectTab(tabLayout.getTabAt(position));
             }
         });
+
         viewPagerLibrary.setUserInputEnabled(false);
 
     }
 
     private void initWidgets() {
-
-//        sort_methods = mActivity.getResources().getStringArray(R.array.sort_methods);
-//        arrayAdapter = new ArrayAdapter<>(mActivity,R.layout.dropdown_item,sort_methods);
-//        autoCompleteTextView = mActivity.findViewById(R.id.AutoCompleteTextview);
-//        autoCompleteTextView.setAdapter(arrayAdapter);
 
         tabLayout = mActivity.findViewById(R.id.tabLayout);
         viewPagerLibrary = mActivity.findViewById(R.id.viewPagerLibrary);
@@ -100,149 +92,4 @@ public class LibraryFragment extends BaseFragment {
 
 
     }
-
-
-
-
-
-
-
-//
-//        Thread threadmediaList = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                    @Override
-//                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-////                        String methodChosen = autoCompleteTextView.getText().toString();
-////                        Log.i("Method",methodChosen);
-////                        switch(methodChosen){
-////                            case "FileName":
-////                                sortName();
-////                            case "ReleaseDate":
-////                                sortReleaseDate();
-////                            case "Size":
-////                                sortSize();
-////                            case "TimeModified":
-////                                sortTimeModified();
-////                            case "IndexLink":
-////                                sortIndexLink();
-////                            case "Title":
-////                                sortTitle();
-////                        }
-////
-////                        Toast.makeText(mActivity.getApplicationContext(), "" + autoCompleteTextView.getText().toString(), Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//
-//            }
-//        });
-//        threadmediaList.setPriority(10);
-//        threadmediaList.start();
-
-//    void sortName(){
-//        setOnClickListner(); /**set this every time*/
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                String methodChosen = autoCompleteTextView.getText().toString().trim();
-//                Log.i("Method",methodChosen);
-//                newmediaList = DatabaseClient
-//                        .getInstance(mActivity)
-//                        .getAppDatabase()
-//                        .fileDao()
-//                        .sortByFileName();
-//                showRecycler(newmediaList);
-//            }
-//        });
-//
-//
-//    }
-
-//    void sortReleaseDate(){
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                String methodChosen = autoCompleteTextView.getText().toString().trim();
-//                Log.i("inside sort function",methodChosen);
-//                newmediaList = DatabaseClient
-//                        .getInstance(mActivity)
-//                        .getAppDatabase()
-//                        .fileDao()
-//                        .sortByRelease();
-//                Log.i("inside sort function",newmediaList.toString());
-//                showRecycler(newmediaList);
-//            }
-//        });
-//
-//    }
-
-//    void sortSize(){
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                String methodChosen = autoCompleteTextView.getText().toString().trim();
-//                Log.i("Method",methodChosen);
-//                newmediaList = DatabaseClient
-//                                .getInstance(mActivity)
-//                                .getAppDatabase()
-//                                .fileDao()
-//                                .sortBySize();
-////                showRecycler(newmediaList);
-//            }
-//        });
-//
-//    }
-//
-//    void sortIndexLink() {
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                String methodChosen = autoCompleteTextView.getText().toString().trim();
-//                Log.i("Method",methodChosen);
-//                newmediaList = DatabaseClient
-//                        .getInstance(mActivity)
-//                        .getAppDatabase()
-//                        .fileDao()
-//                        .sortByIndex();
-////                showRecycler(newmediaList);
-//            }
-//        });
-//
-//
-//    }
-//
-//    void sortTimeModified(){
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                String methodChosen = autoCompleteTextView.getText().toString();
-//                Log.i("Method",methodChosen);
-//                newmediaList = DatabaseClient
-//                        .getInstance(mActivity)
-//                        .getAppDatabase()
-//                        .fileDao()
-//                        .sortByTime();
-////                showRecycler(newmediaList);
-//            }
-//        });
-//
-//    }
-//
-//    void sortTitle(){
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                String methodChosen = autoCompleteTextView.getText().toString().trim();
-//                Log.i("Method",methodChosen);
-//                newmediaList = DatabaseClient
-//                        .getInstance(mActivity)
-//                        .getAppDatabase()
-//                        .fileDao()
-//                        .sortByTitle();
-////                showRecycler(newmediaList);
-//            }
-//        });
-//
-//    }
 }

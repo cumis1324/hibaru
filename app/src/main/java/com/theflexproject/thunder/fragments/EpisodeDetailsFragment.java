@@ -34,6 +34,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.media3.common.C;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.TrackSelectionParameters;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,11 +47,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.trackselection.TrackSelectionParameters;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -79,6 +80,7 @@ import java.util.Map;
 import java.util.Objects;
 
 
+@UnstableApi
 public class EpisodeDetailsFragment extends BaseFragment {
 
 
@@ -117,7 +119,7 @@ public class EpisodeDetailsFragment extends BaseFragment {
     RecyclerView recyclerViewEpisodeFiles;
     List<Episode> episodeFileList;
     FileItemAdapter fileAdapter;
-    private StyledPlayerView playerView;
+    private PlayerView playerView;
     private TrackSelectionParameters trackSelectionParameters;
     private long startPosition;
     private boolean startAutoPlay;
@@ -477,7 +479,7 @@ public class EpisodeDetailsFragment extends BaseFragment {
     private void playVideo(String videoUrl) {
             playerHelper.initializePlayer(getContext(), playerView, videoUrl);
             playerHelper.seekTo(currentPosition);
-        playerView.setControllerVisibilityListener((StyledPlayerView.ControllerVisibilityListener) visibility -> {
+        playerView.setControllerVisibilityListener((PlayerView.ControllerVisibilityListener) visibility -> {
             fullScreen.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
         });
         String userId = manager.getCurrentUser().getUid();
