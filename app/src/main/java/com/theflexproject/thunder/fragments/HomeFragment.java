@@ -1,5 +1,8 @@
 package com.theflexproject.thunder.fragments;
 
+import static com.theflexproject.thunder.utils.ColapsingTitle.collapseTitle;
+import static com.theflexproject.thunder.utils.ColapsingTitle.expandTitle;
+
 import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -123,6 +126,8 @@ public class HomeFragment extends BaseFragment {
         lastPlayedMoviesRecyclerViewTitle = view.findViewById(R.id.lastPlayedMovies2);
         watchlistRecyclerViewTitle = view.findViewById(R.id.watchListMedia1);
         filmIndoTitle = view.findViewById(R.id.filmIndo);
+        homeTitle = mActivity.findViewById(R.id.homeTitle);
+        nestedScrollView = view.findViewById(R.id.nestedMovieHome);
         if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
             verifTitle.setVisibility(View.VISIBLE);
             recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
@@ -133,8 +138,7 @@ public class HomeFragment extends BaseFragment {
             loadTrending();
             loadRecentlyReleasedMovies();
         }else{
-            homeTitle = mActivity.findViewById(R.id.homeTitle);
-            nestedScrollView = view.findViewById(R.id.nestedMovieHome);
+
 
             // Tambahkan OnScrollChangeListener ke NestedScrollView
             nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
@@ -148,10 +152,12 @@ public class HomeFragment extends BaseFragment {
                     scrollRunnable = () -> {
                         if (scrollY > oldScrollY && isTitleVisible) {
                             // Scroll ke bawah: sembunyikan title
-                            collapseTitle();
+                            isTitleVisible = false;
+                            collapseTitle(homeTitle);
                         } else if (scrollY < oldScrollY && !isTitleVisible) {
                             // Scroll ke atas: tampilkan title
-                            expandTitle();
+                            isTitleVisible = true;
+                            expandTitle(homeTitle);
                         }
                     };
 
@@ -172,22 +178,6 @@ public class HomeFragment extends BaseFragment {
 
             loadFilmIndo();
         }
-    }
-    private void collapseTitle() {
-        isTitleVisible = false; // Ubah status flag
-        ObjectAnimator animation = ObjectAnimator.ofFloat(homeTitle, "translationY", 0, -homeTitle.getHeight());
-        animation.setDuration(300);
-        animation.start();
-        homeTitle.setVisibility(View.GONE); // Sembunyikan setelah animasi selesai
-    }
-
-    // Animasi untuk menampilkan searchTitle
-    private void expandTitle() {
-        isTitleVisible = true; // Ubah status flag
-        homeTitle.setVisibility(View.VISIBLE); // Tampilkan sebelum animasi mulai
-        ObjectAnimator animation = ObjectAnimator.ofFloat(homeTitle, "translationY", -homeTitle.getHeight(), 0);
-        animation.setDuration(300);
-        animation.start();
     }
 
     @Override
@@ -442,7 +432,7 @@ public class HomeFragment extends BaseFragment {
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .movieDao()
-                        .getrecentlyadded();
+                        .getrecentlyadded(10, 0);
                 allrecentlyAddedMovies = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()

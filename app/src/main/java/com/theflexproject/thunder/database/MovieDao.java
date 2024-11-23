@@ -34,7 +34,7 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size ASC limit 1 ")
     Movie byIdSmallest(int id);
 
-    @Query("SELECT * FROM Movie WHERE (fileName LIKE '%' || :string || '%' OR title like '%' || :string || '%' OR urlString like '%' || :string || '%' or overview like '%' || :string || '%' or original_title like '%' || :string || '%') and disabled=0 GROUP BY id")
+    @Query("SELECT * FROM Movie WHERE (title like '%' || :string || '%' or overview like '%' || :string || '%' or original_title like '%' || :string || '%') and disabled=0 GROUP BY id")
     List<Movie> getSearchQuery(String string);
 
     @Query("SELECT * FROM Movie WHERE fileName LIKE :fileName and disabled=0")
@@ -43,8 +43,8 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 GROUP BY id ORDER BY release_date")
     List<Movie> getTopRated();
 
-    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC LIMIT 10")
-    List<Movie> getrecentlyadded();
+    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getrecentlyadded(int limit, int offset);
     @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC")
     List<Movie> getallrecentlyadded();
 

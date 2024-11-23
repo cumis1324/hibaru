@@ -1,9 +1,15 @@
 package com.theflexproject.thunder.fragments;
 
+import static com.theflexproject.thunder.utils.ColapsingTitle.collapseTitle;
+import static com.theflexproject.thunder.utils.ColapsingTitle.expandTitle;
+
+import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +19,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -49,13 +56,11 @@ public class SeriesFragment extends BaseFragment{
     DrakorBannerAdapter.OnItemClickListener trendingListener;
     List<TVShow> seriesTrending,drakor,newSeason,topRatedShows,recommendSeries;
     List<MyMedia> recommended;
-
-
-
-    private SwipeRefreshLayout swipeRefreshLayout;
-
-//    List<PairMovies> pairMoviesList;
-//    List<PairTvShows> pairTvShowsList;
+    private NestedScrollView nestedScrollView;
+    private TextView homeTitle;
+    private boolean isTitleVisible = true; // Flag untuk visibilitas title
+    private Handler handler = new Handler(Looper.getMainLooper()); // Untuk debounce
+    private Runnable scrollRunnable;
 
     public SeriesFragment() {
     }
@@ -70,7 +75,6 @@ public class SeriesFragment extends BaseFragment{
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout2);
         trendingTitle = view.findViewById(R.id.trendingSeries);
         trendingView = view.findViewById(R.id.trendingSeriesRecycler);
         drakorTitle = view.findViewById(R.id.drakor);
@@ -79,39 +83,17 @@ public class SeriesFragment extends BaseFragment{
         newSeasonRecyclerView = view.findViewById(R.id.newSeasonRecycler);
         recommendedText = view.findViewById(R.id.topRatedTVShows);
         recommendedView = view.findViewById(R.id.topRatedTVShowsRecycler);
-
-        refreshData();
-        setOnClickListner();
-
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // Your refresh logic here
-                refreshData();
-
-            }
-        });
-    }
-    private void refreshData() {
-        // Implement your refresh logic here
-        // For example, you can re-fetch the data or perform any necessary updates
-        // Once the refresh is complete, call setRefreshing(false) on the SwipeRefreshLayout
-        // to indicate that the refresh has finished.
+        homeTitle = mActivity.findViewById(R.id.homeTitle);
+        nestedScrollView = view.findViewById(R.id.nestedSeriesHome);
 
         loadTrendingSeries();
         loadTopRatedShows();
         loadNewSeason();
         loadDrakor();
-
-
-        swipeRefreshLayout.setRefreshing(false);
+        setOnClickListner();
 
     }
 
-    public boolean onBackPressed(){
-
-        return false;
-    }
 
     private void  loadTrendingSeries() {
         Thread thread = new Thread(new Runnable() {
@@ -279,6 +261,30 @@ public class SeriesFragment extends BaseFragment{
     }
 
     private void setOnClickListner() {
+        nestedScrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                // Batalkan scrollRunnable jika ada event scroll baru
+                if (scrollRunnable != null) {
+                    handler.removeCallbacks(scrollRunnable);
+                }
+
+                scrollRunnable = () -> {
+                    if (scrollY > oldScrollY && isTitleVisible) {
+                        // Scroll ke bawah: sembunyikan title
+                        isTitleVisible = false;
+                        collapseTitle(homeTitle);
+                    } else if (scrollY < oldScrollY && !isTitleVisible) {
+                        // Scroll ke atas: tampilkan title
+                        isTitleVisible = true;
+                        expandTitle(homeTitle);
+                    }
+                };
+
+                // Jalankan scrollRunnable setelah debounce (200ms)
+                handler.postDelayed(scrollRunnable, 200);
+            }
+        });
         trendingListener = new DrakorBannerAdapter.OnItemClickListener() {
             @Override
             public void onClick(View view, int position) {

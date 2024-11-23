@@ -395,6 +395,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         public void onTracksChanged(Tracks tracks) {
             mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
             cc.setOnClickListener(v -> showSubtitleSelectionDialog(mActivity, mappedTrackInfo, trackSelector));
+            cc.setImageResource(subOn() ? R.drawable.ic_cc : R.drawable.ic_cc_filled);
             Player.Listener.super.onTracksChanged(tracks);
         }
         @Override
@@ -509,6 +510,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private boolean isTVDevice() {
         UiModeManager uiModeManager = (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+    }
+    private boolean subOn(){
+        DefaultTrackSelector.Parameters builders = trackSelector.getParameters();
+        return builders.getRendererDisabled(C.TRACK_TYPE_VIDEO);
     }
 
 }

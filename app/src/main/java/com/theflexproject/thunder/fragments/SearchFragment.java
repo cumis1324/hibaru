@@ -1,7 +1,12 @@
 package com.theflexproject.thunder.fragments;
 
 
+import static com.theflexproject.thunder.utils.ColapsingTitle.collapseTitle;
+import static com.theflexproject.thunder.utils.ColapsingTitle.expandTitle;
+
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -12,10 +17,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ScrollView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
+import androidx.core.widget.NestedScrollView;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,8 +53,10 @@ public class SearchFragment extends BaseFragment {
     MediaAdapter.OnItemClickListener listener;
 
     TextInputEditText searchBox;
-    Button search;
-    ScrollView scrollview;
+    private TextView homeTitle;
+    private boolean isTitleVisible = true; // Flag untuk visibilitas title
+    private Handler handler = new Handler(Looper.getMainLooper()); // Untuk debounce
+    private Runnable scrollRunnable;
 
     public SearchFragment() {
     }
@@ -70,24 +79,16 @@ public class SearchFragment extends BaseFragment {
 
         searchBox = view.findViewById(R.id.search_input);
         searchBox.requestFocus();
-//        search = view.findViewById(R.id.search_button);
-//        scrollview= view.findViewById(R.id.scrollview);
         recyclerView = mActivity.findViewById(R.id.recyclersearch);
-//        scrollview.setVisibility(View.VISIBLE);
+        homeTitle = mActivity.findViewById(R.id.searchTitle);
+        setOnClickListner();
         showSearchResults();
-//        search.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                showSearchResults();
-//            }
-//        });
-
 
 
     }
 
     void showSearchResults() {
-        setOnClickListner();
+
         try {
             searchBox.setOnEditorActionListener((v, actionId, event) -> {
                 if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
@@ -142,20 +143,47 @@ public class SearchFragment extends BaseFragment {
 
     @OptIn(markerClass = UnstableApi.class)
     private void setOnClickListner() {
+        recyclerView.setOnScrollChangeListener(new RecyclerView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                if (scrollRunnable != null) {
+                    handler.removeCallbacks(scrollRunnable);
+                }
+
+                scrollRunnable = () -> {
+                    if (scrollY > oldScrollY && isTitleVisible) {
+                        // Scroll ke bawah: sembunyikan title
+                        isTitleVisible = false;
+                        collapseTitle(homeTitle);
+                    } else if (scrollY < oldScrollY && !isTitleVisible) {
+                        // Scroll ke atas: tampilkan title
+                        isTitleVisible = true;
+                        expandTitle(homeTitle);
+                    }
+                };
+
+                // Jalankan scrollRunnable setelah debounce (200ms)
+                handler.postDelayed(scrollRunnable, 200);
+            }
+
+        });
         listener = (view , position) -> {
             if(matchesFound.get(position) instanceof Movie) {
                 MovieDetailsFragment movieDetailsFragment;
-                PlayerFragment playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), "movie");
+                PlayerFragment playerFragment;
                 if (((Movie) matchesFound.get(position)).getId() == 0) {
                     movieDetailsFragment = new MovieDetailsFragment(((Movie) matchesFound.get(position)).getFileName());
-
+                    mActivity.getSupportFragmentManager().beginTransaction()
+                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                            .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
                 } else {
                     playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), "movie");
+                    mActivity.getSupportFragmentManager().beginTransaction()
+                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                            .add(R.id.container, playerFragment).addToBackStack(null).commit();
                 }
 
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                        .add(R.id.container, playerFragment).addToBackStack(null).commit();
+
             }
             if(matchesFound.get(position) instanceof TVShow){
                 TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(((TVShow)matchesFound.get(position)).getId());

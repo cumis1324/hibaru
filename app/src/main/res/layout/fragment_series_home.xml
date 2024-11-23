@@ -9,124 +9,120 @@
     android:layout_marginBottom="100dp"
     tools:context="com.theflexproject.thunder.fragments.SeriesFragment">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshLayout2"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
 
-        <androidx.core.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/nestedSeriesHome"
+        android:paddingBottom="85dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="85dp"
-            android:clipToPadding="false"
-            android:scrollbars="vertical">
+            android:orientation="vertical">
 
-            <LinearLayout
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/trendingSeries"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="false"
+                android:fontFamily="@font/jost_medium"
+                android:text="Trending This Week"
+                android:textColor="@color/white"
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/trendingSeriesRecycler"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:scrollbars="horizontal"
+                android:layout_marginTop="14dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/movie_item_banner" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/trendingSeries"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:focusable="true"
-                    android:clickable="true"
-                    android:focusableInTouchMode="false"
-                    android:fontFamily="@font/jost_medium"
-                    android:text="Trending This Week"
-                    android:textColor="@color/white"
-                    android:textAlignment="viewStart"
-                    app:icon="@drawable/ic_next"
-                    app:iconTint="@color/white"
-                    app:backgroundTint="@color/button_text_color"
-                    app:iconGravity="end"
-                    app:iconPadding="8dp"
-                    android:textSize="14sp" />
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/trendingSeriesRecycler"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:scrollbars="horizontal"
-                    android:layout_marginTop="14dp"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    tools:listitem="@layout/movie_item_banner" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/newSeason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="false"
+                android:fontFamily="@font/jost_medium"
+                android:text="New Season"
+                android:textColor="@color/white"
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/newSeasonRecycler"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:scrollbars="horizontal" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/newSeason"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:focusable="true"
-                    android:clickable="true"
-                    android:focusableInTouchMode="false"
-                    android:fontFamily="@font/jost_medium"
-                    android:text="New Season"
-                    android:textColor="@color/white"
-                    android:textAlignment="viewStart"
-                    app:icon="@drawable/ic_next"
-                    app:iconTint="@color/white"
-                    app:backgroundTint="@color/button_text_color"
-                    app:iconGravity="end"
-                    app:iconPadding="8dp"
-                    android:textSize="14sp" />
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/newSeasonRecycler"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:scrollbars="horizontal" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/drakor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="false"
+                android:fontFamily="@font/jost_medium"
+                android:text="Korean Drama (Drakor)"
+                android:textColor="@color/white"
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/drakorRecycler"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:scrollbars="horizontal" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/drakor"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:focusable="true"
-                    android:clickable="true"
-                    android:focusableInTouchMode="false"
-                    android:fontFamily="@font/jost_medium"
-                    android:text="Korean Drama (Drakor)"
-                    android:textColor="@color/white"
-                    android:textAlignment="viewStart"
-                    app:icon="@drawable/ic_next"
-                    app:iconTint="@color/white"
-                    app:backgroundTint="@color/button_text_color"
-                    app:iconGravity="end"
-                    app:iconPadding="8dp"
-                    android:textSize="14sp" />
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/drakorRecycler"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:scrollbars="horizontal" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/topRatedTVShows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:clickable="true"
+                android:focusableInTouchMode="false"
+                android:fontFamily="@font/jost_medium"
+                android:text="Some Recommendation"
+                android:textColor="@color/white"
+                android:textAlignment="viewStart"
+                app:icon="@drawable/ic_next"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/button_text_color"
+                app:iconGravity="end"
+                app:iconPadding="8dp"
+                android:textSize="14sp" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/topRatedTVShowsRecycler"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:scrollbars="horizontal" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/topRatedTVShows"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:focusable="true"
-                    android:clickable="true"
-                    android:focusableInTouchMode="false"
-                    android:fontFamily="@font/jost_medium"
-                    android:text="Some Recommendation"
-                    android:textColor="@color/white"
-                    android:textAlignment="viewStart"
-                    app:icon="@drawable/ic_next"
-                    app:iconTint="@color/white"
-                    app:backgroundTint="@color/button_text_color"
-                    app:iconGravity="end"
-                    app:iconPadding="8dp"
-                    android:textSize="14sp" />
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/topRatedTVShowsRecycler"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:scrollbars="horizontal" />
+        </LinearLayout>
 
-            </LinearLayout>
-
-        </androidx.core.widget.NestedScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>
