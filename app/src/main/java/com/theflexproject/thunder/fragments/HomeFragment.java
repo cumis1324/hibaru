@@ -608,7 +608,7 @@ public class HomeFragment extends BaseFragment {
                 PlayerFragment movieDetailsFragment = new PlayerFragment(recentlyAddedMovies.get(position).getId(), "movie");
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+                        .replace(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
             }
         };
         recentlyReleasedListener = new MediaAdapter.OnItemClickListener() {

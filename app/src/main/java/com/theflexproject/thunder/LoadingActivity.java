@@ -223,6 +223,7 @@ public class LoadingActivity extends AppCompatActivity {
 
             }
         }finally {
+            file.delete();
             Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
             launchMainActivity(deepLinkData);
         }

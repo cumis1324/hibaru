@@ -2,6 +2,7 @@ package com.theflexproject.thunder.fragments;
 
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 import static com.theflexproject.thunder.Constants.TMDB_IMAGE_BASE_URL;
+import static com.theflexproject.thunder.player.PlayerListener.showSettingsDialog;
 import static com.theflexproject.thunder.player.PlayerListener.showSubtitleSelectionDialog;
 import static com.theflexproject.thunder.player.PlayerListener.togglePlayback;
 import static com.theflexproject.thunder.player.PlayerUtils.createMediaSourceFactory;
@@ -35,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,6 +63,7 @@ import androidx.media3.exoplayer.source.TrackGroupArray;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
+import androidx.media3.ui.CaptionStyleCompat;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
@@ -124,6 +127,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private ImageView imageView;
     private RelativeLayout customBufferingIndicator;
     private NavigationRailView navigationRailView;
+    private Spinner spinnerAudioTrack, spinnerSource;
+    View dialogView;
 
     public PlayerFragment() {
         // Default constructor
@@ -170,6 +175,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     }
 
     private void initViews(View view) {
+        LayoutInflater inflater = getLayoutInflater();
+        dialogView = inflater.inflate(R.layout.dialog_setting, null);
+        spinnerAudioTrack = dialogView.findViewById(R.id.spinnerAudioTrack);
+        spinnerSource = dialogView.findViewById(R.id.speed);
         playerFrame = view.findViewById(R.id.playerFrame);
         playerFrame.post(() -> {
             int width = playerFrame.getWidth(); // Lebar FrameLayout
@@ -201,7 +210,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     private void setControlListeners() {
         playPauseButton.setOnClickListener(v -> togglePlayback(player, playPauseButton));
-
         fullscreen.setOnClickListener(v -> {
             if (isFullscreen) {
                 exitFullscreen();
@@ -368,15 +376,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             if (player != null && player.isPlaying()) {
                 seekBar.setProgress((int) player.getCurrentPosition());
                 seekBar.setMax((int) player.getDuration());
-                seekBar.setSecondaryProgress((int) player.getBufferedPosition());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    ColorStateList colorStateList = new ColorStateList(
-                            new int[][]{new int[]{android.R.attr.state_enabled}},
-                            new int[]{Color.parseColor("#D3D3D3")} // Warna buffered
-                    );
-                    seekBar.setSecondaryProgressTintList(colorStateList);
-                }
-
                 updateTimer(timer, player.getCurrentPosition(), player.getDuration());
                 handler.postDelayed(this, 1000); // Update setiap detik
             }
@@ -396,6 +395,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
             cc.setOnClickListener(v -> showSubtitleSelectionDialog(mActivity, mappedTrackInfo, trackSelector));
             cc.setImageResource(subOn() ? R.drawable.ic_cc : R.drawable.ic_cc_filled);
+            setting.setOnClickListener(v -> loadSetting());
             Player.Listener.super.onTracksChanged(tracks);
         }
         @Override
@@ -451,6 +451,12 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
 
     }
+
+    private void loadSetting() {
+        showSettingsDialog(mActivity, spinnerAudioTrack, spinnerSource, dialogView, trackSelector, mappedTrackInfo, player);
+
+    }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
