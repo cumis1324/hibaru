@@ -34,6 +34,7 @@ import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.utils.FetchMovie;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,11 +96,7 @@ public class SearchFragment extends BaseFragment {
                     if (!searchBox.getText().toString().isEmpty()) {
                         Thread thread = new Thread(() -> {
                             Log.i(" ", "in thread");
-                            movieList = DatabaseClient
-                                    .getInstance(mActivity)
-                                    .getAppDatabase()
-                                    .movieDao()
-                                    .getSearchQuery(searchBox.getText().toString());
+                            movieList = FetchMovie.getSearch(mActivity, searchBox.getText().toString());
                             tvShowsList = DatabaseClient
                                     .getInstance(mActivity)
                                     .getAppDatabase()

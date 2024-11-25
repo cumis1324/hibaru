@@ -43,6 +43,7 @@ import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.utils.FetchMovie;
 import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.util.ArrayList;
@@ -234,16 +235,8 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                ogMovies = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getOgMovies();
-                topOld = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getTopOld();
+                ogMovies = FetchMovie.getOldGold(mActivity);
+                topOld = FetchMovie.getTopOld(mActivity);
                 ogtop = new ArrayList<>();
                 ogtop.addAll(topOld);
                 ogtop.addAll(ogMovies);
@@ -281,10 +274,6 @@ public class HomeFragment extends BaseFragment {
                     });
 
                 }
-                else {
-                    watchlistRecyclerViewTitle.setVisibility(View.GONE);
-                    watchlistRecyclerView.setVisibility(View.GONE);
-                }
             }});
         thread.start();
     }
@@ -318,10 +307,6 @@ public class HomeFragment extends BaseFragment {
                         }
                     });
                 }
-                else {
-                    recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
-                    recentlyAddedRecyclerView.setVisibility(View.GONE);
-                }
 
             }});
         thread.start();
@@ -331,16 +316,8 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                recentlyReleasedMovies  = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getrecentreleases();
-                allrecentlyReleasedMovies  = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getallrecentreleases();
+                recentlyReleasedMovies  = FetchMovie.getRecentRelease(mActivity);
+                allrecentlyReleasedMovies  = FetchMovie.getAllRecentRelease(mActivity);
                 List<MyMedia> all = new ArrayList<>(allrecentlyReleasedMovies);
                 if(recentlyReleasedMovies!=null && recentlyReleasedMovies.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
@@ -371,10 +348,6 @@ public class HomeFragment extends BaseFragment {
                     });
 
                 }
-                else {
-                    recentlyReleasedRecyclerViewTitle.setVisibility(View.GONE);
-                    recentlyReleasedRecyclerView.setVisibility(View.GONE);
-                }
             }});
         thread.start();
     }
@@ -382,11 +355,7 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                topRatedMovies = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getTopRated();
+                topRatedMovies = FetchMovie.getTopRated(mActivity);
                 List<Movie> limitedTrending = topRatedMovies.size() > 10 ? topRatedMovies.subList(0, 10) : topRatedMovies;
                 List<MyMedia> all = new ArrayList<>(topRatedMovies);
                 if(topRatedMovies!=null && topRatedMovies.size()>0){
@@ -417,10 +386,6 @@ public class HomeFragment extends BaseFragment {
                         }
                     });
                 }
-                else {
-                    topRatedMoviesRecyclerViewTitle.setVisibility(View.GONE);
-                    topRatedMoviesRecyclerView.setVisibility(View.GONE);
-                }
             }});
         thread.start();
     }
@@ -428,16 +393,8 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                trending = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getrecentlyadded(10, 0);
-                allrecentlyAddedMovies = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getallrecentlyadded();
+                trending = FetchMovie.getRecentlyAdded(mActivity);
+                allrecentlyAddedMovies = FetchMovie.getAllRecentAdded(mActivity);
                 List<MyMedia> all = new ArrayList<>(allrecentlyAddedMovies);
                 if(trending!=null && trending.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
@@ -466,10 +423,6 @@ public class HomeFragment extends BaseFragment {
                         }
                     });
                 }
-                else {
-                    trendingTitle.setVisibility(View.GONE);
-                    trendingRecyclerView.setVisibility(View.GONE);
-                }
 
             }});
         thread.start();
@@ -478,23 +431,11 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                lastPlayedList = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getrecomendation();
+                lastPlayedList = FetchMovie.getRecommendation(mActivity);
 
-                played = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getMoreMovied();
+                played = FetchMovie.getMore(mActivity);
 
-                fav = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getRecombyfav();
+                fav = FetchMovie.getRecombyFav(mActivity);
 
                 someRecom = new ArrayList<>();
                 someRecom.addAll(played);
@@ -532,10 +473,6 @@ public class HomeFragment extends BaseFragment {
                     });
 
                 }
-                else {
-                    lastPlayedMoviesRecyclerViewTitle.setVisibility(View.GONE);
-                    lastPlayedMoviesRecyclerView.setVisibility(View.GONE);
-                }
             }});
         thread.start();
     }
@@ -543,11 +480,7 @@ public class HomeFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                filmIndo = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .getFilmIndo();
+                filmIndo = FetchMovie.getFilmIndo(mActivity);
                 List<Movie> limitedTrending = filmIndo.size() > 10 ? filmIndo.subList(0, 10) : filmIndo;
                 List<MyMedia> all = new ArrayList<>(filmIndo);
                 if(filmIndo!=null && filmIndo.size()>0){
@@ -578,10 +511,6 @@ public class HomeFragment extends BaseFragment {
                             });
                         }
                     });
-                }
-                else {
-                    filmIndoTitle.setVisibility(View.GONE);
-                    filmIndoView.setVisibility(View.GONE);
                 }
             }});
         thread.start();

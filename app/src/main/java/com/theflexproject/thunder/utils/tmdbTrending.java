@@ -196,6 +196,122 @@ public class tmdbTrending {
 
         return trendingIds;
     }
+    public List<String> getTopRatedMovie() {
+        List<String> trendingIds = new ArrayList<>();
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+
+        try {
+            String similarApiUrl = "https://api.themoviedb.org/3/movie/top_rated" + "?api_key=" + API_KEY;
+            System.out.println("URL formed: " + similarApiUrl);
+
+            URL url = new URL(similarApiUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+
+            System.out.println("Opening connection...");
+            urlConnection.connect();
+
+            int responseCode = urlConnection.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                System.err.println("Failed: HTTP error code: " + responseCode);
+                return trendingIds;
+            }
+
+            InputStream inputStream = urlConnection.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            StringBuilder buffer = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line).append("\n");
+            }
+
+            System.out.println("Response JSON: " + buffer.toString());
+            trendingIds = parseTrendingIdsJson(buffer.toString());
+
+        } catch (IOException e) {
+            System.err.println("IOException occurred: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Exception occurred: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    System.err.println("Error closing reader: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return trendingIds;
+    }
+    public List<String> getLatest() {
+        List<String> trendingIds = new ArrayList<>();
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+
+        try {
+            String similarApiUrl = "https://api.themoviedb.org/3/movie/latest" + "?api_key=" + API_KEY;
+            System.out.println("URL formed: " + similarApiUrl);
+
+            URL url = new URL(similarApiUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+
+            System.out.println("Opening connection...");
+            urlConnection.connect();
+
+            int responseCode = urlConnection.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                System.err.println("Failed: HTTP error code: " + responseCode);
+                return trendingIds;
+            }
+
+            InputStream inputStream = urlConnection.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            StringBuilder buffer = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line).append("\n");
+            }
+
+            System.out.println("Response JSON: " + buffer.toString());
+            trendingIds = parseTrendingIdsJson(buffer.toString());
+
+        } catch (IOException e) {
+            System.err.println("IOException occurred: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Exception occurred: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    System.err.println("Error closing reader: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return trendingIds;
+    }
 
 
     private List<String> parseTrendingIdsJson(String json) {
