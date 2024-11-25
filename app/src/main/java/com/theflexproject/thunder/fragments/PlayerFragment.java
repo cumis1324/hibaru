@@ -15,8 +15,6 @@ import static com.theflexproject.thunder.player.PlayerUtils.resumePlayerState;
 import static com.theflexproject.thunder.player.PlayerUtils.saveResume;
 import static com.theflexproject.thunder.player.PlayerUtils.subOn;
 import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
-import static com.theflexproject.thunder.utils.DetailsUtils.getSeasonDetails;
-import static com.theflexproject.thunder.utils.DetailsUtils.getSeriesDetails;
 
 
 import android.annotation.SuppressLint;
@@ -46,6 +44,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.OptIn;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
@@ -64,6 +64,7 @@ import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
 import androidx.media3.datasource.DataSource;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -75,6 +76,9 @@ import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
+import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
+import com.theflexproject.thunder.adapter.SimilarAdapter;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
@@ -123,13 +127,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private RelativeLayout customBufferingIndicator;
     private NavigationRailView navigationRailView;
     private Spinner spinnerAudioTrack, spinnerSource;
-    private List<MyMedia> sourceList;
+    private List<MyMedia> sourceList, similarOrEpisode;
     private GestureDetector gestureDetector;
     PictureInPictureParams pipParams;
     View dialogView;
     private TVShow tvShowDetails;
     private TVShowSeasonDetails season;
     private int episodeId;
+    private RecyclerView similarView;
+    private SimilarAdapter.OnItemClickListener similarListener;
 
     public PlayerFragment() {
         // Default constructor
@@ -216,6 +222,56 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             initializePlayer(urlString);
         }
         sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
+        loadSimilar(movieId);
+    }
+
+    private void loadSimilar(int id) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                List<Movie> similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
+                List<Movie> recommendationMovie = DetailsUtils.getRecommendationMovies(mActivity, id);
+                if (similarMovie!=null){
+                    movieListener();
+                    similarOrEpisode = new ArrayList<>();
+                    similarOrEpisode.addAll(similarMovie);
+                    similarOrEpisode.addAll(recommendationMovie);
+                    mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void run() {
+                            similarView.setVisibility(View.VISIBLE);
+                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            similarView.setLayoutManager(linearLayoutManager);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
+                            similarView.setAdapter(moreMovieRecycler);
+                            moreMovieRecycler.notifyDataSetChanged();
+
+                        }
+                    });
+                }
+            }});
+        thread.start();
+    }
+    private void movieListener() {
+        similarListener = new SimilarAdapter.OnItemClickListener() {
+            @OptIn(markerClass = UnstableApi.class)
+            @Override
+            public void onClick(View view, int position) {
+                if (similarOrEpisode.get(position) instanceof Movie){
+                    Movie movie = (Movie) similarOrEpisode.get(position);
+                    String url = movie.getUrlString();
+                    int movieId = movie.getId();
+                    if (!Objects.equals(url, urlString)) {
+                        initializePlayer(url);
+                    }
+                    newSource();
+                    loadMovieDetails(movieId);
+                }
+
+            }
+        };
     }
 
     @SuppressLint("SetTextI18n")
@@ -303,6 +359,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         .setAspectRatio(aspectRatio)
                         .build();
         }
+        similarView = view.findViewById(R.id.similarAndEpisode);
 
 
     }

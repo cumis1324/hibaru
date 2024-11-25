@@ -91,8 +91,8 @@ public class DetailFragment extends BaseFragment{
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(poster);
-            similarListener();
-            loadSimilar();
+
+
         }
 
     }

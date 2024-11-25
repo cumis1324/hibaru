@@ -158,7 +158,7 @@
                 android:nestedScrollingEnabled="false"
                 android:paddingBottom="80dp"
                 android:scrollbars="vertical"
-                android:visibility="visible"
+                android:visibility="gone"
                 tools:itemCount="5"
                 tools:listitem="@layout/more_item" />
         </LinearLayout>

@@ -220,4 +220,31 @@ public class DetailsUtils {
             executor.shutdown();
         }
     }
+    @OptIn(markerClass = UnstableApi.class)
+    public static List<Movie> getRecommendationMovies(Context mActivity, int id) {
+        tmdbTrending movieSimilar = new tmdbTrending();
+        List<String> similarId = movieSimilar.getRecommendationMovie(id);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        // Tugas untuk mendapatkan data dari database
+        Callable<List<Movie>> callable = () -> DatabaseClient
+                .getInstance(mActivity)
+                .getAppDatabase()
+                .movieDao()
+                .loadAllByIds(similarId);
+
+        // Kirim tugas ke executor
+        Future<List<Movie>> future = executor.submit(callable);
+
+        try {
+            // Tunggu hasilnya
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return new ArrayList<>(); // Kembalikan daftar kosong jika terjadi kesalahan
+        } finally {
+            // Pastikan executor ditutup
+            executor.shutdown();
+        }
+    }
 }
