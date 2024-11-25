@@ -605,10 +605,10 @@ public class HomeFragment extends BaseFragment {
             @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View view, int position) {
-                PlayerFragment movieDetailsFragment = new PlayerFragment(recentlyAddedMovies.get(position).getId(), "movie");
+                PlayerFragment movieDetailsFragment = new PlayerFragment(recentlyAddedMovies.get(position).getId(), true);
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .replace(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
             }
         };
         recentlyReleasedListener = new MediaAdapter.OnItemClickListener() {

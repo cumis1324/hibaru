@@ -13,6 +13,11 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.media3.common.util.Log;
+import androidx.media3.common.util.UnstableApi;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -23,24 +28,34 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textview.MaterialTextView;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
+import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.model.Movie;
+import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
+import com.theflexproject.thunder.utils.tmdbTrending;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DetailFragment extends BaseFragment{
     private Movie movieDetails;
-    int id;
-    String type;
+    private int id;
+    private boolean isMovie;
     private MaterialTextView deskripsi, judul;
     private ShapeableImageView poster;
     private MaterialButton rating, donasi, watchlist, download, share;
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
+    private List<Movie> similarMovie;
+    MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
     public DetailFragment(){
     }
-    public DetailFragment (int id, String type){
+    public DetailFragment (int id, boolean isMovie){
         this.id = id;
-        this.type = type;
+        this.isMovie = isMovie;
     }
 
     @Nullable
@@ -50,7 +65,7 @@ public class DetailFragment extends BaseFragment{
         // Inflate layout untuk fragment
         View view = inflater.inflate(R.layout.detail_item, container, false);
         initWidget(view);
-        if ("movie".equals(type)) {
+        if (isMovie) {
             loadMovieDetails(id);
         }
         return view;
@@ -76,8 +91,54 @@ public class DetailFragment extends BaseFragment{
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(poster);
+            similarListener();
+            loadSimilar();
         }
 
+    }
+
+    private void similarListener() {
+        moreMoviesListener = new MoreMoviesAdapterr.OnItemClickListener() {
+            @OptIn(markerClass = UnstableApi.class)
+            @Override
+            public void onClick(View view, int position) {
+                Movie more = (similarMovie.get(position));
+                PlayerFragment playerFragment = new PlayerFragment(more.getId(), true);
+                mActivity.getSupportFragmentManager()
+                        .beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                        .replace(R.id.container,playerFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        };
+    }
+
+    private void loadSimilar() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
+                if (similarMovie!=null){
+                    mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void run() {
+                            moreItem.setVisibility(View.VISIBLE);
+                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            moreItem.setLayoutManager(linearLayoutManager);
+                            moreItem.setHasFixedSize(true);
+                            MoreMoviesAdapterr moreMovieRecycler = new MoreMoviesAdapterr(mActivity, (List<MyMedia>) (List<?>) similarMovie, moreMoviesListener);
+                            moreItem.setAdapter(moreMovieRecycler);
+                            moreMovieRecycler.notifyDataSetChanged();
+
+                        }
+                    });
+                }
+            }});
+        thread.start();
     }
 
     private void initWidget(View view) {

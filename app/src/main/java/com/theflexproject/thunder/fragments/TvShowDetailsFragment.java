@@ -30,6 +30,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -55,6 +57,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.adapter.ExpandableAdapter;
 import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.FirebaseManager;
@@ -79,19 +82,10 @@ public class TvShowDetailsFragment extends BaseFragment {
     int tvShowId;
 
     TextView titleOri, title;
-
-
-
-
     ImageButton addToList,share;
-
-
     ImageView logo;
     RelativeLayout titleLayout;
     MaterialButton rating;
-
-
-
     ImageView backdrop;
     TVShow tvShowDetails;
 
@@ -310,18 +304,12 @@ public class TvShowDetailsFragment extends BaseFragment {
 
                         DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
                         float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
-                        if(dpWidth>600f)
-                        {
-                            recyclerViewSeasons.setLayoutManager(new LinearLayoutManager(getContext(),RecyclerView.HORIZONTAL,false));
-                        }else {
-                            recyclerViewSeasons.setLayoutManager(new GridLayoutManager(getContext(),3));
-                        }
 
-
-//                        recyclerViewSeasons.setLayoutManager(linearLayoutManager);
-                        recyclerViewSeasons.setHasFixedSize(true);
-                        mediaAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) seasonsList,listenerSeasonItem);
+                        recyclerViewSeasons.setLayoutManager(new LinearLayoutManager(getContext(),RecyclerView.VERTICAL,false));
+                        ExpandableAdapter mediaAdapter = new ExpandableAdapter(getContext(),tvShowDetails, seasonsList, mActivity.getSupportFragmentManager());
                         recyclerViewSeasons.setAdapter(mediaAdapter);
+                        recyclerViewSeasons.setNestedScrollingEnabled(false);
+                        Log.d("RecyclerViewSetup", "Adapter attached with item count: " + mediaAdapter.getItemCount());
                         mediaAdapter.notifyDataSetChanged();
                     }
                 });
@@ -329,6 +317,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         thread.start();
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     private void setOnClickListner(){
         SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings" , Context.MODE_PRIVATE);
         boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING" , false);
@@ -391,12 +380,12 @@ public class TvShowDetailsFragment extends BaseFragment {
 
 
 
-        listenerSeasonItem = (view , position) -> {
-            SeasonDetailsFragment seasonDetailsFragment = new SeasonDetailsFragment(tvShowDetails,seasonsList.get(position));
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .add(R.id.container,seasonDetailsFragment).addToBackStack(null).commit();
-        };
+       // listenerSeasonItem = (view , position) -> {
+         //   PlayerFragment seasonDetailsFragment = new PlayerFragment(tvShowDetails,seasonsList.get(position));
+           // mActivity.getSupportFragmentManager().beginTransaction()
+             //       .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                  //  .replace(R.id.container,seasonDetailsFragment).addToBackStack(null).commit();
+        //};
     }
 
     private void shareIt() {

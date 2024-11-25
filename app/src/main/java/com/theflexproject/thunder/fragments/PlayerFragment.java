@@ -1,23 +1,27 @@
 package com.theflexproject.thunder.fragments;
 
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
-import static com.theflexproject.thunder.Constants.TMDB_IMAGE_BASE_URL;
+import static com.theflexproject.thunder.player.PlayerListener.fastForward;
+import static com.theflexproject.thunder.player.PlayerListener.rewind;
 import static com.theflexproject.thunder.player.PlayerListener.showSettingsDialog;
 import static com.theflexproject.thunder.player.PlayerListener.showSubtitleSelectionDialog;
 import static com.theflexproject.thunder.player.PlayerListener.togglePlayback;
 import static com.theflexproject.thunder.player.PlayerUtils.createMediaSourceFactory;
+import static com.theflexproject.thunder.player.PlayerUtils.enterFullscreen;
+import static com.theflexproject.thunder.player.PlayerUtils.exitFullscreen;
+import static com.theflexproject.thunder.player.PlayerUtils.isTVDevice;
 import static com.theflexproject.thunder.player.PlayerUtils.lastPositionListener;
 import static com.theflexproject.thunder.player.PlayerUtils.resumePlayerState;
+import static com.theflexproject.thunder.player.PlayerUtils.saveResume;
+import static com.theflexproject.thunder.player.PlayerUtils.subOn;
 import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
+import static com.theflexproject.thunder.utils.DetailsUtils.getSeasonDetails;
+import static com.theflexproject.thunder.utils.DetailsUtils.getSeriesDetails;
 
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.UiModeManager;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.pm.ActivityInfo;
-import android.content.res.ColorStateList;
+import android.app.PictureInPictureParams;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -27,69 +31,60 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Rational;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
-import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
-import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.common.TrackGroup;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 
-import androidx.media3.exoplayer.drm.DefaultDrmSessionManagerProvider;
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
-import androidx.media3.exoplayer.source.MediaSource;
-import androidx.media3.exoplayer.source.TrackGroupArray;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
-import androidx.media3.ui.CaptionStyleCompat;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
 import androidx.media3.datasource.DataSource;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
-import com.theflexproject.thunder.player.DemoUtil;
-import com.theflexproject.thunder.player.PlayerUtils;
+import com.theflexproject.thunder.model.MyMedia;
+import com.theflexproject.thunder.model.TVShowInfo.Episode;
+import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 import com.theflexproject.thunder.utils.DetailsUtils;
+import com.theflexproject.thunder.utils.MovieQualityExtractor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -101,15 +96,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters", KEY_ITEM_INDEX = "item_index",
             KEY_POSITION = "position", KEY_AUTO_PLAY = "auto_play";
 
-    private int movieId;
-    private String type = "type";
+    private int itemId;
+    private boolean isMovie;
     private FirebaseManager manager;
     private DatabaseReference databaseReference;
-    private String urlString, tmdbId, userId;
+    private String tmdbId, userId, urlString;
 
     private ExoPlayer player;
     private PlayerView playerView;
-    private ImageButton playPauseButton, setting, fullscreen, cc;
+    private ImageButton playPauseButton, setting, fullscreen, cc, ff, bw, source;
     private SeekBar seekBar;
     private TextView timer, movietitle, epstitle;
 
@@ -121,27 +116,41 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private TrackSelectionParameters trackSelectionParameters;
     BottomNavigationView bottomNavigationView;
     private boolean isFullscreen = false;
-    FrameLayout playerFrame;
+    private FrameLayout playerFrame;
     private DefaultTrackSelector trackSelector;
     private MappingTrackSelector.MappedTrackInfo mappedTrackInfo;
     private ImageView imageView;
     private RelativeLayout customBufferingIndicator;
     private NavigationRailView navigationRailView;
     private Spinner spinnerAudioTrack, spinnerSource;
+    private List<MyMedia> sourceList;
+    private GestureDetector gestureDetector;
+    PictureInPictureParams pipParams;
     View dialogView;
+    private TVShow tvShowDetails;
+    private TVShowSeasonDetails season;
+    private int episodeId;
 
     public PlayerFragment() {
         // Default constructor
     }
 
-    public PlayerFragment(int movieId, String type) {
-        this.movieId = movieId;
-        this.type = type;
+    public PlayerFragment(int itemId, boolean isMovie) {
+        this.itemId = itemId;
+        this.isMovie = isMovie;
+    }
+
+    // Konstruktor untuk Series
+    public PlayerFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, int episodeId) {
+        this.isMovie = false;
+        this.tvShowDetails = tvShowDetails;
+        this.season = seasonDetails;
+        this.episodeId = episodeId;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (isTVDevice()){
+        if (isTVDevice(mActivity)){
             View view = inflater.inflate(R.layout.video_tv, container, false);
             initFirebase();
             initViews(view);
@@ -149,8 +158,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             navigationRailView.setVisibility(View.GONE);
             fullscreen.setVisibility(View.GONE);
             initPlayerState(savedInstanceState);
-            if ("movie".equals(type)) {
-                loadMovieDetails(movieId);
+            if (isMovie) {
+                loadMovieDetails(itemId);
             }
             setControlListeners();
             movietitle.setVisibility(View.VISIBLE);
@@ -160,11 +169,92 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             initFirebase();
             initViews(view);
             initPlayerState(savedInstanceState);
-            if ("movie".equals(type)) {
-                loadMovieDetails(movieId);
+            if (isMovie) {
+                loadMovieDetails(itemId);
+            }else {
+                loadSeriesDetails(itemId);
+
             }
             setControlListeners();
             return view;
+        }
+    }
+    @SuppressLint("SetTextI18n")
+    private void loadMovieDetails(final int movieId) {
+        Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
+        if (movieDetails != null) {
+            String titleText = movieDetails.getTitle();
+            String year = movieDetails.getRelease_date();
+            urlString = movieDetails.getUrlString();
+            String yearCrop = year.substring(0,year.indexOf('-'));
+            tmdbId = String.valueOf(movieDetails.getId());
+            movietitle.setText(titleText + " ("+yearCrop+")");
+            mActivity.getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_container, new DetailFragment(movieId, true))
+                    .commit();
+            if(movieDetails.getBackdrop_path()!=null) {
+                Glide.with(mActivity)
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
+                        .apply(new RequestOptions()
+                                .fitCenter()
+                                .override(Target.SIZE_ORIGINAL))
+                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(imageView);
+            }else {
+                if(movieDetails.getPoster_path()!=null) {
+                    Glide.with(mActivity)
+                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
+                            .apply(new RequestOptions()
+                                    .fitCenter()
+                                    .override(Target.SIZE_ORIGINAL))
+                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .into(imageView);
+                }
+            }
+            initializePlayer(urlString);
+        }
+        sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void loadSeriesDetails(int itemId) {
+
+        if (tvShowDetails!=null){
+            String title = tvShowDetails.getName();
+            int seasonId = season.getId();
+            TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
+            movietitle.setText(title);
+            Episode nextEpisode = DetailsUtils.getNextEpisode(mActivity, episodeId);
+            epstitle.setText("Season "+seasonDetails.getSeason_number()
+                    +" Episode "+ nextEpisode.getEpisode_number());
+            tmdbId = String.valueOf(nextEpisode.getId());
+            urlString = nextEpisode.getUrlString();
+            Toast.makeText(mActivity, "url eps "+urlString, Toast.LENGTH_SHORT).show();
+            if(tvShowDetails.getBackdrop_path()!=null) {
+                Glide.with(mActivity)
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
+                        .apply(new RequestOptions()
+                                .fitCenter()
+                                .override(Target.SIZE_ORIGINAL))
+                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(imageView);
+            }else {
+                if(tvShowDetails.getPoster_path()!=null) {
+                    Glide.with(mActivity)
+                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
+                            .apply(new RequestOptions()
+                                    .fitCenter()
+                                    .override(Target.SIZE_ORIGINAL))
+                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .into(imageView);
+                }
+            }
+            initializePlayer(urlString);
+            sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, nextEpisode.getId());
         }
     }
 
@@ -201,20 +291,32 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         cc = customControls.findViewById(R.id.btn_cc);
         setting = customControls.findViewById(R.id.btn_setting);
         bottomNavigationView = mActivity.findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setVisibility(View.GONE);
         imageView = view.findViewById(R.id.background_image);
         customBufferingIndicator = view.findViewById(R.id.custom_buffering_indicator);
-
+        ff = customControls.findViewById(R.id.btn_ff);
+        bw = customControls.findViewById(R.id.btn_bw);
+        source = customControls.findViewById(R.id.btn_src);
+        Rational aspectRatio = new Rational(16, 9);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            pipParams = new PictureInPictureParams.Builder()
+                        .setAspectRatio(aspectRatio)
+                        .build();
+        }
 
 
     }
 
     private void setControlListeners() {
+        source.setOnClickListener(v -> showSources());
         playPauseButton.setOnClickListener(v -> togglePlayback(player, playPauseButton));
         fullscreen.setOnClickListener(v -> {
             if (isFullscreen) {
-                exitFullscreen();
+                exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+                isFullscreen = false;
             } else {
-                enterFullscreen();
+                enterFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+                isFullscreen = true;
             }
         });
 
@@ -232,6 +334,35 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+        gestureDetector = new GestureDetector(mActivity, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                Log.d("GestureDetector", "Single Tap detected");
+                return true; // Menangani tap tunggal (opsional)
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                Log.d("GestureDetector", "Double Tap detected");
+                // Tentukan area tap: kiri untuk rewind, kanan untuk fast forward
+                float screenWidth = playerView.getWidth();
+                if (e.getX() < screenWidth / 2) {
+                    Log.d("GestureDetector", "Double Tap Left - Rewind");
+                    rewind(player, bw);
+                } else {
+                    Log.d("GestureDetector", "Double Tap Right - Fast Forward");
+                    fastForward(player, ff);
+                }
+                return true; // Menandakan double-tap berhasil diproses
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                // Tidak wajib, ini untuk event lebih lanjut terkait double-tap
+                return super.onDoubleTapEvent(e);
+            }
+        });
+
     }
 
 
@@ -257,46 +388,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         startPosition = C.TIME_UNSET;
     }
 
-    @SuppressLint("SetTextI18n")
-    private void loadMovieDetails(final int movieId) {
-        bottomNavigationView.setVisibility(View.GONE);
-        Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
-        if (movieDetails != null) {
-            String titleText = movieDetails.getTitle();
-            String year = movieDetails.getRelease_date();
-            String yearCrop = year.substring(0,year.indexOf('-'));
-            urlString = movieDetails.getUrlString();
-            tmdbId = String.valueOf(movieDetails.getId());
-            movietitle.setText(titleText + " ("+yearCrop+")");
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container, new DetailFragment(movieId, "movie"))
-                    .commit();
-            if(movieDetails.getBackdrop_path()!=null) {
-                Glide.with(mActivity)
-                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
-                        .apply(new RequestOptions()
-                                .fitCenter()
-                                .override(Target.SIZE_ORIGINAL))
-                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .into(imageView);
-            }else {
-                if(movieDetails.getPoster_path()!=null) {
-                    Glide.with(mActivity)
-                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
-                            .apply(new RequestOptions()
-                                    .fitCenter()
-                                    .override(Target.SIZE_ORIGINAL))
-                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .into(imageView);
-                }
-            }
-            initializePlayer();
-        }
-    }
 
-    private void initializePlayer() {
+
+    private void initializePlayer(String urlString) {
         if (player == null) {
             if (urlString == null || urlString.isEmpty()) {
                 Log.e(TAG, "Invalid URL string");
@@ -331,25 +425,37 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             player.addListener(new PlayerEventListener());
         }
     }
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d("DetailFragment", "onDestroyView called");
+        releasePlayer();
+    }
+
+    private void releasePlayer() {
         if (player != null) {
+            saveResume(player, tmdbId);
             player.release();
             player = null;
+            playerView.setPlayer(null);
             stopSeekBarUpdate();
+            destroyAll();
         }
+    }
+    private void destroyAll() {
         if (lastPositionListener != null) {
             databaseReference.removeEventListener(lastPositionListener);
         }
+        if (isFullscreen) {
+            exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+        }
         bottomNavigationView.setVisibility(View.VISIBLE);
-        if (isTVDevice()){
+        if (isTVDevice(mActivity)) {
             navigationRailView.setVisibility(View.VISIBLE);
             bottomNavigationView.setVisibility(View.GONE);
         }
     }
-
     @Override
     public void onVisibilityChange(int visibility) {
         // Handle UI visibility change
@@ -361,7 +467,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             player.pause();
         }
     }
-
     @Override
     public void onResume() {
         super.onResume();
@@ -394,7 +499,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         public void onTracksChanged(Tracks tracks) {
             mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
             cc.setOnClickListener(v -> showSubtitleSelectionDialog(mActivity, mappedTrackInfo, trackSelector));
-            cc.setImageResource(subOn() ? R.drawable.ic_cc : R.drawable.ic_cc_filled);
+            cc.setImageResource(subOn(trackSelector) ? R.drawable.ic_cc : R.drawable.ic_cc_filled);
             setting.setOnClickListener(v -> loadSetting());
             Player.Listener.super.onTracksChanged(tracks);
         }
@@ -405,12 +510,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
 
         @Override
-        public void onPositionDiscontinuity(Player.PositionInfo oldPosition,
-                                            Player.PositionInfo newPosition,
-                                            int reason) {
-
-        }
-        @Override
         public void onPlaybackStateChanged(@Player.State int playbackState) {
             playerView.onPause();
             if (playbackState == Player.STATE_READY) {
@@ -419,20 +518,21 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 startSeekBarUpdate();
                 imageView.setVisibility(View.GONE);
                 customBufferingIndicator.setVisibility(View.GONE);
-                playPauseButton.setVisibility(View.VISIBLE);
+                ff.setOnClickListener(v -> fastForward(player, ff));
+                bw.setOnClickListener(v -> rewind(player, bw));
+                playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
             }
             if (playbackState != Player.STATE_READY) {
                 customBufferingIndicator.setVisibility(View.VISIBLE);
-                playPauseButton.setVisibility(View.GONE);
                 imageView.setVisibility(View.VISIBLE);
             }
             if (playbackState == Player.STATE_ENDED) {
                 imageView.setVisibility(View.GONE);
                 customBufferingIndicator.setVisibility(View.GONE);
-                playPauseButton.setVisibility(View.VISIBLE);
+
             }
             if (playbackState == Player.STATE_BUFFERING) {
-                playPauseButton.setVisibility(View.GONE);
+
                 // Tampilkan indikator buffering
                 customBufferingIndicator.setVisibility(View.VISIBLE);
                 imageView.setVisibility(View.VISIBLE);
@@ -445,8 +545,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
                 player.seekToDefaultPosition();
                 player.prepare();
-            } else {
-
             }
         }
 
@@ -454,72 +552,66 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     private void loadSetting() {
         showSettingsDialog(mActivity, spinnerAudioTrack, spinnerSource, dialogView, trackSelector, mappedTrackInfo, player);
-
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            enterFullscreen();
+            enterFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+            isFullscreen = true;
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            exitFullscreen();
+            exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+            isFullscreen = false;
         }
     }
-    private void enterFullscreen() {
+    private void showSources() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle("Select Source");
 
-        View decorView;
-        int uiOptions;
-        decorView = mActivity.getWindow().getDecorView();
-        // Set height ke match_parent
-        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) playerFrame.getLayoutParams();
-        params.height = LinearLayout.LayoutParams.MATCH_PARENT;
-        playerFrame.setLayoutParams(params);
-
-        uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-
-        decorView.setSystemUiVisibility(uiOptions);
-        movietitle.setVisibility(View.VISIBLE);
-        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-        fullscreen.setImageResource(R.drawable.ic_exit_fullscreen);
-        isFullscreen = true;
-    }
-    private void exitFullscreen() {
-        View decorView = mActivity.getWindow().getDecorView();
-        movietitle.setVisibility(View.GONE);
-        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-        // Set height kembali ke 250dp
-        playerFrame.post(() -> {
-            int width = playerFrame.getWidth(); // Lebar FrameLayout
-            int height = (int) (width / 16.0 * 9.0); // Hitung tinggi sesuai rasio 16:9
-            ViewGroup.LayoutParams params = playerFrame.getLayoutParams();
-            params.height = height;
-            playerFrame.setLayoutParams(params);
+        // Membuat daftar opsi kualitas untuk ditampilkan
+        List<String> sourcesOptions = new ArrayList<>();
+        for (MyMedia source : sourceList) {
+            if (source instanceof Movie) {
+                String qualityStr = MovieQualityExtractor.extractQualtiy(((Movie) source).getFileName());
+                sourcesOptions.add(qualityStr);
+            }else if (source instanceof Episode) {
+                String qualityStr = MovieQualityExtractor.extractQualtiy(((Episode) source).getFileName());
+                sourcesOptions.add(qualityStr);
+            } else {
+                sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
+            }
+        }
+        builder.setItems(sourcesOptions.toArray(new String[0]), (dialog, which) -> {
+            MyMedia selectedSource = sourceList.get(which);
+            if (selectedSource instanceof Movie) {
+                String selectedUrl = ((Movie) selectedSource).getUrlString();
+                if (!Objects.equals(selectedUrl, urlString)) {
+                    newSource();
+                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(selectedUrl));
+                }
+            }
+            if (selectedSource instanceof Episode) {
+                String selectedUrl = ((Episode) selectedSource).getUrlString();
+                if (!Objects.equals(selectedUrl, urlString)) {
+                    newSource();
+                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(selectedUrl));
+                }
+            }
         });
 
-
-        decorView.setSystemUiVisibility(uiOptions);
-
-        if (!isTVDevice()) {
-            // Terapkan logika orientasi untuk perangkat non-TV
-            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        builder.create().show();
+    }
+    protected void newSource() {
+        if (player != null) {
+            saveResume(player, tmdbId);
+            player.release();
+            player = null;
+            playerView.setPlayer(/* player= */ null);
+            stopSeekBarUpdate();
+            customBufferingIndicator.setVisibility(View.VISIBLE);
+            imageView.setVisibility(View.VISIBLE);
         }
-        fullscreen.setImageResource(R.drawable.ic_fullscreen);
-
-        isFullscreen = false; // Kembali ke mode normal
-    }
-    private boolean isTVDevice() {
-        UiModeManager uiModeManager = (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
-        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
-    }
-    private boolean subOn(){
-        DefaultTrackSelector.Parameters builders = trackSelector.getParameters();
-        return builders.getRendererDisabled(C.TRACK_TYPE_VIDEO);
     }
 
 }

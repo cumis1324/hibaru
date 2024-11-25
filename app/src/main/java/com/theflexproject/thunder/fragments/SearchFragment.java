@@ -177,7 +177,7 @@ public class SearchFragment extends BaseFragment {
                             .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
                             .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
                 } else {
-                    playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), "movie");
+                    playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), true);
                     mActivity.getSupportFragmentManager().beginTransaction()
                             .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
                             .add(R.id.container, playerFragment).addToBackStack(null).commit();

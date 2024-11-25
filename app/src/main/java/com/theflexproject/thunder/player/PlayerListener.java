@@ -21,6 +21,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.utils.LanguageUtils;
 
 import java.util.ArrayList;
@@ -28,6 +29,27 @@ import java.util.List;
 
 @UnstableApi
 public class PlayerListener {
+    public static void fastForward(Player player, ImageButton ffBtn) {
+        if (player!=null) {
+            ffBtn.setEnabled(true);
+            long currentPosition = player.getCurrentPosition();
+            long duration = player.getDuration();
+            long forwardPosition = currentPosition + 10000; // Tambahkan 10 detik
+            if (forwardPosition > duration) forwardPosition = duration; // Hindari melebihi durasi
+            player.seekTo(forwardPosition);
+        }else {
+            ffBtn.setEnabled(false);
+        }
+    }
+    public static void rewind (Player player, ImageButton bwBtn) {
+        if (player!=null){
+            bwBtn.setEnabled(true);
+            long currentPosition = player.getCurrentPosition();
+            long rewindPosition = currentPosition - 10000; // Kurangi 10 detik
+            if (rewindPosition < 0) rewindPosition = 0; // Hindari nilai negatif
+            player.seekTo(rewindPosition);
+        }
+    }
 
     public static void togglePlayback(Player player, ImageButton playPauseButton) {
         if (player != null) {
@@ -92,6 +114,7 @@ public class PlayerListener {
 
         builder.create().show();
     }
+
     public static void showSettingsDialog(Context mActivity, Spinner spinnerAudioTrack,
                                           Spinner spinnerPlaybackSpeed, View dialogView,
                                           DefaultTrackSelector trackSelector,

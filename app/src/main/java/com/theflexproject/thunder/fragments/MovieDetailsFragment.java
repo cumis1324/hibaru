@@ -79,9 +79,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -616,6 +618,7 @@ public class MovieDetailsFragment extends BaseFragment{
 
 //        Start download
         download.setOnClickListener(new View.OnClickListener() {
+            @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View v) {
                 if (Build.VERSION.SDK_INT < 32) {

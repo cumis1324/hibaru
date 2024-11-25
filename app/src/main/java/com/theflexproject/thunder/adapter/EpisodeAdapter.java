@@ -34,8 +34,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -143,6 +145,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
             holder.play.setOnClickListener(view -> holder.playEpisode(episode));
             holder.itemView.setOnClickListener(view -> holder.playEpisode(episode));
             holder.download.setOnClickListener(new View.OnClickListener() {
+                @OptIn(markerClass = UnstableApi.class)
                 @Override
                 public void onClick(View v) {
                     if (Build.VERSION.SDK_INT < 32) {

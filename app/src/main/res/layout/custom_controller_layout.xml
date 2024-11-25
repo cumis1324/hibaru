@@ -54,7 +54,19 @@
         <ImageButton
             android:focusable="true"
             android:clickable="true"
+            android:id="@+id/btn_src"
+            android:nextFocusRight="@id/btn_cc"
+            android:nextFocusDown="@id/btn_play_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_video_settings"
+            android:background="@drawable/button_selector"
+            android:padding="15dp"/>
+        <ImageButton
+            android:focusable="true"
+            android:clickable="true"
             android:id="@+id/btn_cc"
+            android:nextFocusLeft="@id/btn_src"
             android:nextFocusRight="@id/btn_setting"
             android:nextFocusDown="@id/btn_play_pause"
             android:layout_width="wrap_content"
@@ -85,11 +97,38 @@
             android:clickable="true"
             android:nextFocusDown="@id/btn_fullscreen"
             android:nextFocusUp="@id/btn_cc"
+            android:nextFocusRight="@drawable/play_shape"
+            android:id="@+id/btn_bw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector"
+            android:src="@drawable/ic_bw_10"
+            android:padding="15dp"/>
+        <ImageButton
+            android:focusable="true"
+            android:clickable="true"
+            android:nextFocusDown="@id/btn_fullscreen"
+            android:nextFocusUp="@id/btn_cc"
+            android:nextFocusLeft="@id/btn_bw"
+            android:nextFocusRight="@id/btn_ff"
             android:id="@+id/btn_play_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/button_selector"
-            android:src="@drawable/ic_play" />
+            android:src="@drawable/ic_play"
+            android:padding="15dp"/>
+        <ImageButton
+            android:focusable="true"
+            android:clickable="true"
+            android:nextFocusDown="@id/btn_fullscreen"
+            android:nextFocusUp="@id/btn_cc"
+            android:nextFocusLeft="@id/btn_play_pause"
+            android:id="@+id/btn_ff"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector"
+            android:src="@drawable/ic_ff_10"
+            android:padding="15dp"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

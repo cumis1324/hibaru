@@ -22,9 +22,9 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0")
     Movie byId(int id);
 
-    @Query("SELECT * FROM Movie WHERE id IN (:itemIds) and disabled=0 GROUP BY id")
+    @Query("SELECT * FROM Movie WHERE id IN (:itemIds) GROUP BY id")
     List<Movie> loadAllByIds(List<String> itemIds);
-    @Query("SELECT * FROM Movie WHERE id=:id and disabled=0")
+    @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size ASC")
     List<Movie> getAllById(int id);
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE id=:id)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getmorebyid(int id);

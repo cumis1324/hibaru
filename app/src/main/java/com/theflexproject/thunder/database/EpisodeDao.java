@@ -13,6 +13,8 @@ import java.util.List;
 public interface EpisodeDao {
     @Query("SELECT * FROM Episode ")
     List<Episode> getAll();
+    @Query("SELECT * FROM Episode WHERE id=:id GROUP BY id ORDER BY size ASC")
+    List<Episode> getAllById(int id);
 
     @Query("SELECT * FROM Episode WHERE id LIKE :id and disabled =0")
     Episode find(int id);

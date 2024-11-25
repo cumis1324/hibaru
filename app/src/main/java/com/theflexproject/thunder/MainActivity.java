@@ -3,6 +3,7 @@ package com.theflexproject.thunder;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PictureInPictureParams;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;

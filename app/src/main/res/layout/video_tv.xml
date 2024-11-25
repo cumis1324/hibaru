@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/buffer_progress"
                 android:layout_marginTop="16dp"
-                android:text="Loading..."
+                android:text="Buffering..."
                 android:layout_centerInParent="true"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
