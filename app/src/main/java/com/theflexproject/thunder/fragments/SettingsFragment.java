@@ -382,7 +382,6 @@ public class SettingsFragment extends BaseFragment {
             @Override
             public void run() {
                 lastPlayedList = DetailsUtils.getHistoryMovies(mActivity, itemIds);
-
                 if(lastPlayedList!=null && lastPlayedList.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
@@ -405,17 +404,9 @@ public class SettingsFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                List<Movie> watchlistMovies = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .loadAllByIds(itemIds);
+                List<Movie> watchlistMovies = DetailsUtils.getHistoryMovies(mActivity, itemIds);
 
-                List<TVShow> watchlistShows = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .tvShowDao()
-                        .loadAllByIds(itemIds);
+                List<TVShow> watchlistShows = DetailsUtils.getFavSeries(mActivity, itemIds);
 
                 watchlist = new ArrayList<>();
                 watchlist.addAll(watchlistMovies);

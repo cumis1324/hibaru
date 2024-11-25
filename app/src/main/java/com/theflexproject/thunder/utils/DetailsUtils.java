@@ -269,6 +269,31 @@ public class DetailsUtils {
             executor.shutdown();
         }
     }
+    public static List<TVShow> getFavSeries(Context mActivity, List<String> ids) {
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        // Tugas untuk mendapatkan data dari database
+        Callable<List<TVShow>> callable = () -> DatabaseClient
+                .getInstance(mActivity)
+                .getAppDatabase()
+                .tvShowDao()
+                .loadAllByIds(ids);
+
+        // Kirim tugas ke executor
+        Future<List<TVShow>> future = executor.submit(callable);
+
+        try {
+            // Tunggu hasilnya
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return new ArrayList<>(); // Kembalikan daftar kosong jika terjadi kesalahan
+        } finally {
+            // Pastikan executor ditutup
+            executor.shutdown();
+        }
+    }
     @OptIn(markerClass = UnstableApi.class)
     public static List<Movie> getRecommendationMovies(Context mActivity, int id) {
         tmdbTrending movieSimilar = new tmdbTrending();
