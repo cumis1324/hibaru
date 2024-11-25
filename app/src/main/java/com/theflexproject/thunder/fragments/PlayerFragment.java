@@ -283,11 +283,14 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
             movietitle.setText(title);
             Episode nextEpisode = DetailsUtils.getNextEpisode(mActivity, episodeId);
-            epstitle.setText("Season "+seasonDetails.getSeason_number()
-                    +" Episode "+ nextEpisode.getEpisode_number());
-            tmdbId = String.valueOf(nextEpisode.getId());
-            urlString = nextEpisode.getUrlString();
-            Toast.makeText(mActivity, "url eps "+urlString, Toast.LENGTH_SHORT).show();
+            if (nextEpisode!=null){
+                epstitle.setText("Season "+seasonDetails.getSeason_number()
+                        +" Episode "+ nextEpisode.getName());
+                tmdbId = String.valueOf(nextEpisode.getId());
+                urlString = nextEpisode.getUrlString();
+                initializePlayer(urlString);
+                sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, nextEpisode.getId());
+            }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
             if(tvShowDetails.getBackdrop_path()!=null) {
                 Glide.with(mActivity)
                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
@@ -309,8 +312,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                             .into(imageView);
                 }
             }
-            initializePlayer(urlString);
-            sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, nextEpisode.getId());
+
         }
     }
 

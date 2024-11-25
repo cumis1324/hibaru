@@ -48,6 +48,30 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
+    public static List<Episode> getListEpisode(Context mActivity, int showId, int seasonId) {
+        // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
+        FutureTask<List<Episode>> futureTask = new FutureTask<>(new Callable<List<Episode>>() {
+            @Override
+            public List<Episode> call() {
+                return DatabaseClient
+                        .getInstance(mActivity)
+                        .getAppDatabase()
+                        .episodeDao()
+                        .getFromThisSeason(showId, seasonId);
+            }
+        });
+
+        // Menjalankan FutureTask di dalam thread baru
+        Thread thread = new Thread(futureTask);
+        thread.start();
+
+        try {
+            // Mendapatkan hasil dari FutureTask setelah thread selesai
+            return futureTask.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
     public static TVShowSeasonDetails getSeasonDetails(Context mActivity, int id) {
         // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
         FutureTask<TVShowSeasonDetails> futureTask = new FutureTask<>(new Callable<TVShowSeasonDetails>() {
@@ -205,6 +229,31 @@ public class DetailsUtils {
                 .getAppDatabase()
                 .movieDao()
                 .loadAllByIds(similarId);
+
+        // Kirim tugas ke executor
+        Future<List<Movie>> future = executor.submit(callable);
+
+        try {
+            // Tunggu hasilnya
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return new ArrayList<>(); // Kembalikan daftar kosong jika terjadi kesalahan
+        } finally {
+            // Pastikan executor ditutup
+            executor.shutdown();
+        }
+    }
+    public static List<Movie> getHistoryMovies(Context mActivity, List<String> ids) {
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        // Tugas untuk mendapatkan data dari database
+        Callable<List<Movie>> callable = () -> DatabaseClient
+                .getInstance(mActivity)
+                .getAppDatabase()
+                .movieDao()
+                .loadAllByIds(ids);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);

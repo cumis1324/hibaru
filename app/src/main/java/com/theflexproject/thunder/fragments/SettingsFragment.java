@@ -45,6 +45,7 @@ import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.SettingsManager;
 
 import java.util.ArrayList;
@@ -94,10 +95,18 @@ public class SettingsFragment extends BaseFragment {
     private StorageReference storageReference;
     private SwipeRefreshLayout swipeRefreshLayout;
     List<String> itemIds = new ArrayList<>();
+    String userId;
+    DatabaseReference userRef;
     public SettingsFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        manager = new FirebaseManager();
+        currentUser = manager.getCurrentUser();
+        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
+        storageReference = FirebaseStorage.getInstance().getReference("profile_images");
+        userId = currentUser.getUid();
+        userRef = databaseReference.child(userId);
         super.onCreate(savedInstanceState);
     }
 
@@ -113,20 +122,18 @@ public class SettingsFragment extends BaseFragment {
         super.onViewCreated(view , savedInstanceState);
 
         // Initialize Firebase components
-        manager = new FirebaseManager();
-        currentUser = manager.getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference("Users");
-        storageReference = FirebaseStorage.getInstance().getReference("profile_images");
+
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler2);
         lastPlayedMoviesRecyclerView = view.findViewById(R.id.lastPlayedMoviesRecycler2);
         initWidgets();
         updateUI();
 
         setStatesOfToggleSwitches();
-        getHistoryFb();
-        getFavorit();
+
         setMyOnClickListeners();
         setOnClickListner();
+        getHistoryFb();
+        getFavorit();
 
 
 
@@ -328,8 +335,7 @@ public class SettingsFragment extends BaseFragment {
         if (currentUser != null) {
 
             // Update the user's profile with the new image URL
-            String userId = currentUser.getUid();
-            DatabaseReference userRef = databaseReference.child(userId);
+
 
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -375,13 +381,7 @@ public class SettingsFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-
-
-                lastPlayedList = DatabaseClient
-                        .getInstance(mActivity)
-                        .getAppDatabase()
-                        .movieDao()
-                        .loadAllByIds(itemIds);
+                lastPlayedList = DetailsUtils.getHistoryMovies(mActivity, itemIds);
 
                 if(lastPlayedList!=null && lastPlayedList.size()>0){
                     mActivity.runOnUiThread(new Runnable() {
@@ -500,8 +500,6 @@ public class SettingsFragment extends BaseFragment {
 
 
     private void getHistoryFb() {
-
-        String userId = currentUser.getUid();
         DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference("History").child(userId);
         List<String> itemIds = new ArrayList<>();
 

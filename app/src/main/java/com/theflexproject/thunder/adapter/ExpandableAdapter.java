@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.OptIn;
 import androidx.cardview.widget.CardView;
@@ -30,9 +31,12 @@ import com.theflexproject.thunder.fragments.PlayerFragment;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.utils.DetailsUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -42,6 +46,10 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private final List<Object> dataList;
     private final TVShow tvShow;
     private final FragmentManager fragmentManager;
+    private int expandedPosition = -1; // -1 berarti tidak ada yang diperluas
+    private final Map<Integer, List<Episode>> episodeMap = new HashMap<>();
+
+
 
     public ExpandableAdapter(Context context, TVShow tvShow, List<TVShowSeasonDetails> seasons, FragmentManager fragmentManager) {
         this.context = context;
@@ -119,63 +127,71 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     .into(poster);
 
             cardView.setOnClickListener(v -> {
-                if (isExpanded) {
-                    collapseEpisodes(position, season);
+                if (expandedPosition == position) {
+                    // Jika item yang sama diklik, maka collapse
+                    collapseEpisodes(position);
+                    expandedPosition = -1;
                 } else {
+                    // Collapse item yang sebelumnya diperluas (jika ada)
+                    if (expandedPosition >= 0) {
+                        collapseEpisodes(expandedPosition);
+                    }
+
+                    // Expand item yang baru diklik
                     expandEpisodes(position, season);
+                    expandedPosition = position;
                 }
             });
         }
 
-        private void collapseEpisodes(int position, TVShowSeasonDetails season) {
-            int count = season.getEpisodes() != null ? season.getEpisodes().size() : 0;
-            dataList.removeAll(season.getEpisodes());
-            notifyItemRangeRemoved(position + 1, count);
+        private void collapseEpisodes(int position) {
+            List<Episode> episodes = episodeMap.get(position);
+            if (episodes != null) {
+                dataList.removeAll(episodes);
+                notifyItemRangeRemoved(position + 1, episodes.size());
+                episodeMap.remove(position); // Hapus dari map setelah collapse
+            }
             isExpanded = false;
         }
 
+
         private void expandEpisodes(int position, TVShowSeasonDetails season) {
-            if (season.getEpisodes() != null) {
-                dataList.addAll(position + 1, season.getEpisodes());
-                notifyItemRangeInserted(position + 1, season.getEpisodes().size());
-                isExpanded = true;
+            if (!episodeMap.containsKey(position)) {
+                new FetchEpisodesTask(season, position).execute();
             } else {
-                new FetchEpisodesTask( season, position).execute();
+                List<Episode> episodes = episodeMap.get(position);
+                dataList.addAll(position + 1, episodes);
+                notifyItemRangeInserted(position + 1, episodes.size());
             }
+            isExpanded = true;
         }
 
         private class FetchEpisodesTask extends AsyncTask<Void, Void, List<Episode>> {
-            private final TVShowSeasonDetails season;
             private final int position;
+            private final TVShowSeasonDetails season;
 
-            public FetchEpisodesTask(TVShowSeasonDetails season, int position) {
+            FetchEpisodesTask(TVShowSeasonDetails season, int position) {
                 this.season = season;
                 this.position = position;
             }
 
             @Override
             protected List<Episode> doInBackground(Void... voids) {
-                try {
-                    return DatabaseClient
-                            .getInstance(context)
-                            .getAppDatabase()
-                            .episodeDao()
-                            .getFromThisSeason(tvShow.getId(), season.getId());
-                } catch (Exception e) {
-                    Log.e("FetchEpisodesTask", "Error fetching episodes: ", e);
-                    return new ArrayList<>();
-                }
+                // Panggil API untuk mendapatkan daftar episode
+                return DetailsUtils.getListEpisode(context, tvShow.getId(), season.getId());
             }
 
             @Override
             protected void onPostExecute(List<Episode> episodes) {
-                if (!episodes.isEmpty()) {
+                if (episodes != null) {
+                    // Simpan hasil episode di episodeMap
+                    episodeMap.put(position, episodes);
                     dataList.addAll(position + 1, episodes);
                     notifyItemRangeInserted(position + 1, episodes.size());
-                    isExpanded = true;
                 }
             }
         }
+
     }
 
     class EpisodeViewHolder extends RecyclerView.ViewHolder {
@@ -189,15 +205,19 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         @OptIn(markerClass = UnstableApi.class)
         @SuppressLint("SetTextI18n")
         void bind(TVShowSeasonDetails season, Episode episode) {
-            episodeName.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
-            episodeName.setOnClickListener(v -> {
-                PlayerFragment playerFragment = new PlayerFragment(tvShow, season, episode.id);
-                fragmentManager.beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                        .add(R.id.container, playerFragment)
-                        .addToBackStack(null)
-                        .commit();
-            });
+            if (episode.getEpisode_number()!=0) {
+                episodeName.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
+                episodeName.setOnClickListener(v -> {
+                    PlayerFragment playerFragment = new PlayerFragment(tvShow, season, episode.id);
+                    fragmentManager.beginTransaction()
+                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                            .add(R.id.container, playerFragment)
+                            .addToBackStack(null)
+                            .commit();
+                });
+            }else {
+                Toast.makeText(context, "No Episodes Found", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
