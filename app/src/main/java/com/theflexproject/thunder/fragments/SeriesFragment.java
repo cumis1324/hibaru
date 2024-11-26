@@ -160,6 +160,10 @@ public class SeriesFragment extends BaseFragment{
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -204,6 +208,10 @@ public class SeriesFragment extends BaseFragment{
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -253,6 +261,10 @@ public class SeriesFragment extends BaseFragment{
                                     ShowAllFragment showAllFragment = new ShowAllFragment(recommended);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();

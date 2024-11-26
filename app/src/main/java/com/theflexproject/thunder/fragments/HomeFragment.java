@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
@@ -80,13 +81,7 @@ public class HomeFragment extends BaseFragment {
             trending, lastPlayedList, fav, played, ogMovies, topOld, filmIndo;
     List<MyMedia> ogtop, someRecom;
 
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String itemId = intent.getStringExtra("itemId");
-            openMovieDetailsFragment(itemId);
-        }
-    };
+
 
 
     private NestedScrollView nestedScrollView;
@@ -95,6 +90,7 @@ public class HomeFragment extends BaseFragment {
     private Handler handler = new Handler(Looper.getMainLooper()); // Untuk debounce
     private Runnable scrollRunnable;
     private FragmentManager fragmentManager;
+    Fragment oldFragment;
 
     public HomeFragment() {
     }
@@ -132,6 +128,7 @@ public class HomeFragment extends BaseFragment {
         homeTitle = mActivity.findViewById(R.id.homeTitle);
         nestedScrollView = view.findViewById(R.id.nestedMovieHome);
         fragmentManager = mActivity.getSupportFragmentManager();
+        oldFragment = fragmentManager.findFragmentById(R.id.container);
         if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
             verifTitle.setVisibility(View.VISIBLE);
             recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
@@ -194,8 +191,7 @@ public class HomeFragment extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter("MovieDetailsFragment");
-        LocalBroadcastManager.getInstance(mActivity).registerReceiver(receiver, intentFilter);
+
     }
 
     @Override
@@ -210,28 +206,9 @@ public class HomeFragment extends BaseFragment {
     @Override
     public void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(mActivity).unregisterReceiver(receiver);
     }
 
-    private void openMovieDetailsFragment(String itemId) {
-        // Create a Bundle to pass data to the fragment
-        Bundle bundle = new Bundle();
-        bundle.putString("movieId", itemId);
 
-        // Create an instance of your MovieDetailsFragment
-        MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment();
-        movieDetailsFragment.setArguments(bundle);
-
-        // Use a FragmentManager to replace or add the fragment
-        FragmentManager fragmentManager = getChildFragmentManager(); // Use getChildFragmentManager()
-
-        // Example: Replace the current fragment with MovieDetailsFragment
-        fragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                .add(R.id.container, movieDetailsFragment)
-                .addToBackStack(null)
-                .commit();
-    }
 
 
     private void loadWatchlist() {
@@ -268,6 +245,9 @@ public class HomeFragment extends BaseFragment {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(ogtop);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -342,6 +322,9 @@ public class HomeFragment extends BaseFragment {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -381,6 +364,9 @@ public class HomeFragment extends BaseFragment {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -418,6 +404,9 @@ public class HomeFragment extends BaseFragment {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -478,6 +467,9 @@ public class HomeFragment extends BaseFragment {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(someRecom);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();
@@ -518,6 +510,9 @@ public class HomeFragment extends BaseFragment {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
                                     FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    if (oldFragment != null) {
+                                        transaction.hide(oldFragment);
+                                    }
                                     transaction.add(R.id.container, showAllFragment); // Pass data to new fragment
                                     transaction.addToBackStack(null);
                                     transaction.commit();

@@ -30,9 +30,13 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.media3.common.util.UnstableApi;
 import androidx.room.Room;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -59,6 +63,7 @@ import com.theflexproject.thunder.fragments.HomeFragment;
 import com.theflexproject.thunder.fragments.HomeNewFragment;
 import com.theflexproject.thunder.fragments.LibraryFragment;
 import com.theflexproject.thunder.fragments.MovieDetailsFragment;
+import com.theflexproject.thunder.fragments.PlayerFragment;
 import com.theflexproject.thunder.fragments.SearchFragment;
 import com.theflexproject.thunder.fragments.SettingsFragment;
 import com.theflexproject.thunder.fragments.TvShowDetailsFragment;
@@ -212,18 +217,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     private void openFragmentBasedOnType(String itemId, String itemType) {
         int id = Integer.parseInt(itemId);
         if (Objects.equals(itemType, "movie")){
-            MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(id);
-            getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+            PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            Fragment oldFragment = getSupportFragmentManager().findFragmentById(R.id.container);
+            if (oldFragment != null) {
+                transaction.hide(oldFragment);
+            }
+            transaction.setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out);
+            transaction.add(R.id.container,movieDetailsFragment).addToBackStack(null);
+            transaction.commit();
         }else {
                 TvShowDetailsFragment tvDetailsFragment = new TvShowDetailsFragment(id);
-                getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvDetailsFragment).addToBackStack(null).commit();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            Fragment oldFragment = getSupportFragmentManager().findFragmentById(R.id.container);
+            if (oldFragment != null) {
+                transaction.hide(oldFragment);
+            }
+
+            transaction.setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                    .add(R.id.container,tvDetailsFragment).addToBackStack(null).commit();
         }
     }
 
