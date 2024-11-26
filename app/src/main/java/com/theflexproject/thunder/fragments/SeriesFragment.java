@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.UnstableApi;
@@ -294,9 +295,14 @@ public class SeriesFragment extends BaseFragment{
             @Override
             public void onClick(View view, int position) {
                 TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(seriesTrending.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .replace(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+                Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+                if (oldFragment != null) {
+                    transaction.hide(oldFragment);
+                }
+                transaction.add(R.id.container, tvShowDetailsFragment).addToBackStack(null);
+                transaction.commit();
             }
         };
     }

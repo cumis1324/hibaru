@@ -16,7 +16,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -101,9 +103,14 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         }
         holder.itemView.setOnClickListener(v -> {
             PlayerFragment movieDetailsFragment = new PlayerFragment(movie.getId(), true);
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+            Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+            if (oldFragment != null) {
+                transaction.hide(oldFragment);
+            }
+            transaction.add(R.id.container, movieDetailsFragment).addToBackStack(null);
+            transaction.commit();
         });
 
         String tmdbId = String.valueOf(mediaList.get(position).getId());
