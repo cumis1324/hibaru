@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.FragmentManager;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,8 +52,6 @@ public class SearchFragment extends BaseFragment {
     List<Movie> movieList;
     List<TVShow> tvShowsList;
     List<MyMedia> matchesFound;
-    MediaAdapter.OnItemClickListener listener;
-
     TextInputEditText searchBox;
     private TextView homeTitle;
     private boolean isTitleVisible = true; // Flag untuk visibilitas title
@@ -121,7 +120,8 @@ public class SearchFragment extends BaseFragment {
                                 Log.i(" ", matchesFound.toString());
                                 recyclerView.setLayoutManager(new GridLayoutManager(mActivity, noOfItems));
                                 recyclerView.setHasFixedSize(true);
-                                mediaAdapter = new MediaAdapter(mActivity, matchesFound, listener);
+                                FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
+                                mediaAdapter = new MediaAdapter(mActivity, matchesFound, fragmentManager);
                                 recyclerView.setAdapter(mediaAdapter);
                                 mediaAdapter.notifyDataSetChanged();
                             });
@@ -164,31 +164,6 @@ public class SearchFragment extends BaseFragment {
             }
 
         });
-        listener = (view , position) -> {
-            if(matchesFound.get(position) instanceof Movie) {
-                MovieDetailsFragment movieDetailsFragment;
-                PlayerFragment playerFragment;
-                if (((Movie) matchesFound.get(position)).getId() == 0) {
-                    movieDetailsFragment = new MovieDetailsFragment(((Movie) matchesFound.get(position)).getFileName());
-                    mActivity.getSupportFragmentManager().beginTransaction()
-                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                            .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-                } else {
-                    playerFragment = new PlayerFragment(((Movie) matchesFound.get(position)).getId(), true);
-                    mActivity.getSupportFragmentManager().beginTransaction()
-                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                            .add(R.id.container, playerFragment).addToBackStack(null).commit();
-                }
 
-
-            }
-            if(matchesFound.get(position) instanceof TVShow){
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(((TVShow)matchesFound.get(position)).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-
-        };
     }
 }

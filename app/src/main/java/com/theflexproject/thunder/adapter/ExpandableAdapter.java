@@ -3,7 +3,9 @@ package com.theflexproject.thunder.adapter;
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -209,15 +211,26 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 episodeName.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
                 episodeName.setOnClickListener(v -> {
                     PlayerFragment playerFragment = new PlayerFragment(tvShow, season, episode.id);
-                    fragmentManager.beginTransaction()
-                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                            .add(R.id.container, playerFragment)
-                            .addToBackStack(null)
-                            .commit();
+                    if (isDeviceTv()) {
+                        fragmentManager.beginTransaction()
+                                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                                .replace(R.id.container, playerFragment)
+                                .commit();
+                    }else {
+                        fragmentManager.beginTransaction()
+                                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                                .add(R.id.container, playerFragment)
+                                .addToBackStack(null)
+                                .commit();
+                    }
                 });
             }else {
                 Toast.makeText(context, "No Episodes Found", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+    private boolean isDeviceTv() {
+        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 }

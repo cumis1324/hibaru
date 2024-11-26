@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,7 +32,6 @@ public class MovieLibraryFragment extends BaseFragment {
     GenreAdapter genreAdapter;
     List<Genres> genreList;
     MediaAdapter mediaAdapter;
-    MediaAdapter.OnItemClickListener listenerMovie;
     List<Movie> movieList, genreMovies;
 
     public MovieLibraryFragment() {}
@@ -70,7 +70,7 @@ public class MovieLibraryFragment extends BaseFragment {
     }
 
     void showLibraryMovies() {
-        setOnClickListner();
+
         Thread thread = new Thread(() -> {
             if (movieList == null) {
                 movieList = DatabaseClient.getInstance(mActivity)
@@ -89,23 +89,16 @@ public class MovieLibraryFragment extends BaseFragment {
             float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
             int noOfItems = (int) (dpWidth / 120);
             recyclerViewMovies = mActivity.findViewById(R.id.recyclerLibraryMovies);
+            FragmentManager fragmentManager = mActivity.getSupportFragmentManager();
 
             if (recyclerViewMovies != null) {
                 recyclerViewMovies.setLayoutManager(new GridLayoutManager(mActivity, noOfItems));
                 recyclerViewMovies.setHasFixedSize(true);
-                mediaAdapter = new MediaAdapter(mActivity, (List<MyMedia>) (List<?>) newMediaList, listenerMovie);
+                mediaAdapter = new MediaAdapter(mActivity, (List<MyMedia>) (List<?>) newMediaList, fragmentManager);
                 recyclerViewMovies.setAdapter(mediaAdapter);
                 mediaAdapter.notifyDataSetChanged();
             }
         });
     }
 
-    private void setOnClickListner() {
-        listenerMovie = (view, position) -> {
-            MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(movieList.get(position).getId());
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                    .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-        };
-    }
 }

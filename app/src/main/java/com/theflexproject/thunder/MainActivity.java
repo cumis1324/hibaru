@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
     static FirebaseUser currentUser;
     AppDatabase dbs;
     NavigationRailView navigationRailView;
+    private OnUserLeaveHintListener userLeaveHintListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -432,6 +433,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         DatabaseClient.getInstance(getApplicationContext()).closeDatabase();
+    }
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (userLeaveHintListener != null) {
+            userLeaveHintListener.onUserLeaveHint();
+        }
+    }
+
+    public void setOnUserLeaveHintListener(OnUserLeaveHintListener listener) {
+        this.userLeaveHintListener = listener;
+    }
+
+    public interface OnUserLeaveHintListener {
+        void onUserLeaveHint();
     }
 }
 

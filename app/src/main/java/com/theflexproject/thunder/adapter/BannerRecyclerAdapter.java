@@ -15,6 +15,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
+import androidx.fragment.app.FragmentManager;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -29,6 +32,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.fragments.PlayerFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 
@@ -38,14 +42,14 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
 
     Context context;
     List<Movie> mediaList;
-    private OnItemClickListener listener;
+    FragmentManager fragmentManager;
     FirebaseManager manager;
     private DatabaseReference databaseReference;
 
-    public BannerRecyclerAdapter(Context context, List<Movie> mediaList, OnItemClickListener listener) {
+    public BannerRecyclerAdapter(Context context, List<Movie> mediaList, FragmentManager fragmentManager) {
         this.context = context;
         this.mediaList = mediaList;
-        this.listener = listener;
+        this.fragmentManager = fragmentManager;
         this.manager = new FirebaseManager();
         databaseReference = FirebaseDatabase.getInstance().getReference("History");
         setHasStableIds(true); // Enable stable IDs
@@ -64,6 +68,7 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         return new MovieViewHolder(view);
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, @SuppressLint("RecyclerView") int position) {
@@ -92,7 +97,14 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
             } else {
                 holder.name.setVisibility(View.VISIBLE);
             }
+
         }
+        holder.itemView.setOnClickListener(v -> {
+            PlayerFragment movieDetailsFragment = new PlayerFragment(movie.getId(), true);
+            fragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                    .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
+        });
 
         String tmdbId = String.valueOf(mediaList.get(position).getId());
         String userId = manager.getCurrentUser().getUid();
@@ -152,7 +164,7 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         return position; // Return a unique ID for each item
     }
 
-    public class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class MovieViewHolder extends RecyclerView.ViewHolder {
 
         TextView name;
         ImageView poster;
@@ -165,13 +177,9 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
             logo = itemView.findViewById(R.id.movieLogo1);
             name = itemView.findViewById(R.id.textView4);
             poster = itemView.findViewById(R.id.moviePoster);
-            itemView.setOnClickListener(this);
+
         }
 
-        @Override
-        public void onClick(View v) {
-            listener.onClick(v, getAbsoluteAdapterPosition());
-        }
     }
 
     public interface OnItemClickListener {

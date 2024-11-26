@@ -140,6 +140,13 @@
             android:launchMode="singleTask"
             android:supportsPictureInPicture="true" />
         <activity
+            android:name=".DetailActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true" />
+        <activity
             android:name=".player.VideoPlayer"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="true"

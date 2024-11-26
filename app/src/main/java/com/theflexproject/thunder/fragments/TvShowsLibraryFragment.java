@@ -30,7 +30,6 @@ public class TvShowsLibraryFragment extends BaseFragment {
     RecyclerView recyclerViewTVShows, recyclerGenre;
     MediaAdapter mediaAdapter;
     GenreAdapter genreAdapter;
-    MediaAdapter.OnItemClickListener listenerTVShow;
     TextView textView;
     List<TVShow> tvShowList, genreTvShows;
 
@@ -61,7 +60,7 @@ public class TvShowsLibraryFragment extends BaseFragment {
     }
 
     void showLibraryTVShows() {
-        setOnClickListener();
+
         Thread thread = new Thread(() -> {
             Log.i(" ", "in thread");
 
@@ -87,23 +86,14 @@ public class TvShowsLibraryFragment extends BaseFragment {
             if (recyclerViewTVShows != null) {
                 recyclerViewTVShows.setLayoutManager(new GridLayoutManager(mActivity, noOfItems));
                 recyclerViewTVShows.setHasFixedSize(true);
-                mediaAdapter = new MediaAdapter(mActivity, (List<MyMedia>) (List<?>) tvShowList, listenerTVShow);
+                mediaAdapter = new MediaAdapter(mActivity, (List<MyMedia>) (List<?>) tvShowList, mActivity.getSupportFragmentManager());
                 recyclerViewTVShows.setAdapter(mediaAdapter);
                 mediaAdapter.notifyDataSetChanged();
             }
         });
     }
 
-    private void setOnClickListener() {
-        listenerTVShow = (view, position) -> {
-            TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(tvShowList.get(position).getId());
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                    .add(R.id.container, tvShowDetailsFragment)
-                    .addToBackStack(null)
-                    .commit();
-        };
-    }
+
 
     private void loadTvShowsByGenre(int genreId) {
         Thread thread = new Thread(() -> {

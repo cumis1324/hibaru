@@ -20,6 +20,7 @@ import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -66,6 +67,7 @@ import androidx.media3.ui.PlayerView;
 import androidx.media3.datasource.DataSource;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.webkit.internal.ApiFeature;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -75,6 +77,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.theflexproject.thunder.DetailActivity;
+import com.theflexproject.thunder.MainActivity;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
@@ -93,7 +97,7 @@ import java.util.List;
 import java.util.Objects;
 
 @UnstableApi
-public class PlayerFragment extends BaseFragment implements PlayerControlView.VisibilityListener {
+public class PlayerFragment extends BaseFragment implements PlayerControlView.VisibilityListener, MainActivity.OnUserLeaveHintListener {
 
     private static final String TAG = "PlayerFragment", OFFLINE = "offline",
             HISTORY_PATH = "History/", LAST_POSITION = "lastPosition",
@@ -136,17 +140,17 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private int episodeId;
     private RecyclerView similarView;
     private SimilarAdapter.OnItemClickListener similarListener;
+    private View view;
+    View customControls;
+
 
     public PlayerFragment() {
         // Default constructor
     }
-
     public PlayerFragment(int itemId, boolean isMovie) {
         this.itemId = itemId;
         this.isMovie = isMovie;
     }
-
-    // Konstruktor untuk Series
     public PlayerFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, int episodeId) {
         this.isMovie = false;
         this.tvShowDetails = tvShowDetails;
@@ -156,35 +160,23 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (isTVDevice(mActivity)){
-            View view = inflater.inflate(R.layout.video_tv, container, false);
-            initFirebase();
-            initViews(view);
-            navigationRailView = mActivity.findViewById(R.id.side_navigation);
-            navigationRailView.setVisibility(View.GONE);
-            fullscreen.setVisibility(View.GONE);
-            initPlayerState(savedInstanceState);
-            if (isMovie) {
-                loadMovieDetails(itemId);
-            }
-            setControlListeners();
-            movietitle.setVisibility(View.VISIBLE);
-            return view;
-        }else {
-            View view = inflater.inflate(R.layout.video_player, container, false);
-            initFirebase();
-            initViews(view);
-            initPlayerState(savedInstanceState);
-            if (isMovie) {
-                loadMovieDetails(itemId);
-            }else {
-                loadSeriesDetails(itemId);
-
-            }
-            setControlListeners();
-            return view;
+        if (isTVDevice(mActivity)) {
+            view = inflater.inflate(R.layout.video_tv, container, false);
+        } else {
+            view = inflater.inflate(R.layout.video_player, container, false);
         }
+        initFirebase();
+        initViews(view);
+        initPlayerState(savedInstanceState);
+        if (isMovie) {
+            loadMovieDetails(itemId);
+        } else {
+            loadSeriesDetails(itemId);
+        }
+        setControlListeners();
+        return view;
     }
+
     @SuppressLint("SetTextI18n")
     private void loadMovieDetails(final int movieId) {
         Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
@@ -338,7 +330,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         playerView = view.findViewById(R.id.video_view);
         playerView.setControllerVisibilityListener(this);
 
-        View customControls = playerView.findViewById(R.id.custom_controlss);
+        customControls = playerView.findViewById(R.id.custom_controlss);
         playPauseButton = customControls.findViewById(R.id.btn_play_pause);
         seekBar = customControls.findViewById(R.id.seek_bar);
         timer = customControls.findViewById(R.id.player_timer);
@@ -348,13 +340,13 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         epstitle = customControls.findViewById(R.id.playerEpsTitle);
         cc = customControls.findViewById(R.id.btn_cc);
         setting = customControls.findViewById(R.id.btn_setting);
-        bottomNavigationView = mActivity.findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setVisibility(View.GONE);
         imageView = view.findViewById(R.id.background_image);
         customBufferingIndicator = view.findViewById(R.id.custom_buffering_indicator);
         ff = customControls.findViewById(R.id.btn_ff);
         bw = customControls.findViewById(R.id.btn_bw);
         source = customControls.findViewById(R.id.btn_src);
+        bottomNavigationView = mActivity.findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setVisibility(View.GONE);
         Rational aspectRatio = new Rational(16, 9);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             pipParams = new PictureInPictureParams.Builder()
@@ -362,8 +354,11 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         .build();
         }
         similarView = view.findViewById(R.id.similarAndEpisode);
-
-
+        if (isTVDevice(mActivity)){
+            navigationRailView = mActivity.findViewById(R.id.side_navigation);
+            navigationRailView.setVisibility(View.GONE);
+            fullscreen.setVisibility(View.GONE);
+        }
     }
 
     private void setControlListeners() {
@@ -424,8 +419,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     }
 
-
-
     private void initPlayerState(Bundle savedInstanceState) {
 
 
@@ -446,9 +439,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         startItemIndex = C.INDEX_UNSET;
         startPosition = C.TIME_UNSET;
     }
-
-
-
     private void initializePlayer(String urlString) {
         if (player == null) {
             if (urlString == null || urlString.isEmpty()) {
@@ -488,33 +478,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Log.d("DetailFragment", "onDestroyView called");
         releasePlayer();
     }
 
-    private void releasePlayer() {
-        if (player != null) {
-            saveResume(player, tmdbId);
-            player.release();
-            player = null;
-            playerView.setPlayer(null);
-            stopSeekBarUpdate();
-            destroyAll();
-        }
-    }
-    private void destroyAll() {
-        if (lastPositionListener != null) {
-            databaseReference.removeEventListener(lastPositionListener);
-        }
-        if (isFullscreen) {
-            exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
-        }
-        bottomNavigationView.setVisibility(View.VISIBLE);
-        if (isTVDevice(mActivity)) {
-            navigationRailView.setVisibility(View.VISIBLE);
-            bottomNavigationView.setVisibility(View.GONE);
-        }
-    }
     @Override
     public void onVisibilityChange(int visibility) {
         // Handle UI visibility change
@@ -553,6 +519,36 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private void stopSeekBarUpdate() {
         handler.removeCallbacks(updateSeekBar);
     }
+
+    @Override
+    public void onUserLeaveHint() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mActivity.enterPictureInPictureMode(pipParams);
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof MainActivity){
+            ((MainActivity) context).setOnUserLeaveHintListener(this);
+        }
+    }
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+        if (isInPictureInPictureMode && player != null) {
+            customControls.setVisibility(View.GONE);
+        }else {
+            customControls.setVisibility(View.VISIBLE);
+        }
+        if (!isInPictureInPictureMode && player != null) {
+            // Ketika keluar dari mode PIP, destroy player
+            destroyAll();
+        }
+
+    }
+
     private class PlayerEventListener implements Player.Listener {
         @Override
         public void onTracksChanged(Tracks tracks) {
@@ -670,6 +666,31 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             stopSeekBarUpdate();
             customBufferingIndicator.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
+        }
+    }
+    private void releasePlayer() {
+        if (player != null) {
+            saveResume(player, tmdbId);
+            player.release();
+            player = null;
+            playerView.setPlayer(null);
+            stopSeekBarUpdate();
+            destroyAll();
+        }
+    }
+    private void destroyAll() {
+        if (lastPositionListener != null) {
+            databaseReference.removeEventListener(lastPositionListener);
+        }
+        if (isFullscreen) {
+            exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+        }
+        bottomNavigationView.setVisibility(View.VISIBLE);
+
+        if (isTVDevice(mActivity)) {
+            navigationRailView.setVisibility(View.VISIBLE);
+            bottomNavigationView.setVisibility(View.GONE);
+
         }
     }
 

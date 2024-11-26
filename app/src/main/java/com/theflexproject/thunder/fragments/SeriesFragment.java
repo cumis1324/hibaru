@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -63,6 +64,7 @@ public class SeriesFragment extends BaseFragment{
     private boolean isTitleVisible = true; // Flag untuk visibilitas title
     private Handler handler = new Handler(Looper.getMainLooper()); // Untuk debounce
     private Runnable scrollRunnable;
+    private FragmentManager fragmentManager;
 
     public SeriesFragment() {
     }
@@ -87,7 +89,7 @@ public class SeriesFragment extends BaseFragment{
         recommendedView = view.findViewById(R.id.topRatedTVShowsRecycler);
         homeTitle = mActivity.findViewById(R.id.homeTitle);
         nestedScrollView = view.findViewById(R.id.nestedSeriesHome);
-
+        fragmentManager = mActivity.getSupportFragmentManager();
         loadTrendingSeries();
         loadTopRatedShows();
         loadNewSeason();
@@ -149,7 +151,7 @@ public class SeriesFragment extends BaseFragment{
                             drakorTitle.setVisibility(View.VISIBLE);
                             drakorView.setLayoutManager(linearLayoutManager2);
                             drakorView.setHasFixedSize(true);
-                            drakorAdapter = new MediaAdapter(getContext(), (List<MyMedia>)(List<?>) limitedTrending , drakorListener);
+                            drakorAdapter = new MediaAdapter(getContext(), (List<MyMedia>)(List<?>) limitedTrending , fragmentManager);
                             drakorView.setAdapter(drakorAdapter);
                             drakorTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -193,7 +195,7 @@ public class SeriesFragment extends BaseFragment{
                             newSeasonRecyclerView.setVisibility(View.VISIBLE);
                             newSeasonRecyclerView.setLayoutManager(linearLayoutManager3);
                             newSeasonRecyclerView.setHasFixedSize(true);
-                            newSeasonRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , newSeasonListener);
+                            newSeasonRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , fragmentManager);
                             newSeasonRecyclerView.setAdapter(newSeasonRecyclerAdapter);
                             newSeasonRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -242,7 +244,7 @@ public class SeriesFragment extends BaseFragment{
                             Collections.shuffle(limitedTrending);
                             recommendedView.setLayoutManager(linearLayoutManager3);
                             recommendedView.setHasFixedSize(true);
-                            recommendedAdapter = new MediaAdapter(getContext() ,limitedTrending , recommendedListener);
+                            recommendedAdapter = new MediaAdapter(getContext() ,limitedTrending , fragmentManager);
                             recommendedView.setAdapter(recommendedAdapter);
                             recommendedText.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -295,36 +297,6 @@ public class SeriesFragment extends BaseFragment{
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                         .replace(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-        drakorListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(drakor.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-
-
-        newSeasonListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(newSeason.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-        recommendedListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                TVShow recomId = ((TVShow) recommended.get(position));
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(recomId.getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
             }
         };
     }

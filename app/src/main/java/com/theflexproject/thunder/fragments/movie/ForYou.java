@@ -93,7 +93,7 @@ public class ForYou extends BaseFragment {
                             Collections.shuffle(forYou);
                             recyclerViewMovies.setLayoutManager(new GridLayoutManager(mActivity , noOfItems));
                             recyclerViewMovies.setHasFixedSize(true);
-                            mediaAdapter = new MediaAdapter (getContext(), forYou , listenerMovie);
+                            mediaAdapter = new MediaAdapter (getContext(), forYou , mActivity.getSupportFragmentManager());
                             recyclerViewMovies.setAdapter(mediaAdapter);
                             mediaAdapter.notifyDataSetChanged();
                         }

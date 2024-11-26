@@ -56,9 +56,6 @@ public class ShowAllFragment extends BaseFragment {
         botnav = mActivity.findViewById(R.id.bottom_navigation);
         botnav.setVisibility(View.GONE);
 
-        // Set listener sebelum memuat UI
-        setOnClickListener();
-
         // Memanggil UI setup
         loadUI(view);
 
@@ -98,34 +95,10 @@ public class ShowAllFragment extends BaseFragment {
 
             allMoviesRecyclerView.setLayoutManager(new GridLayoutManager(mActivity, noOfItems));
             allMoviesRecyclerView.setHasFixedSize(true);
-            allMoviesAdapter = new MediaAdapter(getContext(), movieList, listener);
+            allMoviesAdapter = new MediaAdapter(getContext(), movieList, mActivity.getSupportFragmentManager());
             allMoviesRecyclerView.setAdapter(allMoviesAdapter);
             allMoviesAdapter.notifyDataSetChanged();
         });
     }
 
-    private void setOnClickListener() {
-        listener = (view, position) -> {
-            MyMedia mediaItem = movieList.get(position);
-
-            if (mediaItem instanceof Movie) {
-                Movie movie = (Movie) mediaItem;
-                MovieDetailsFragment movieDetailsFragment;
-
-                movieDetailsFragment = new MovieDetailsFragment(movie.getId());
-
-
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                        .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-            } else if (mediaItem instanceof TVShow) {
-                TVShow tvShow = (TVShow) mediaItem;
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(tvShow.getId());
-
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                        .add(R.id.container, tvShowDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-    }
 }

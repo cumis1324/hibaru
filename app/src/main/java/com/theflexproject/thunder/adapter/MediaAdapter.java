@@ -2,7 +2,9 @@
 package com.theflexproject.thunder.adapter;
 
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
@@ -15,6 +17,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
+import androidx.fragment.app.FragmentManager;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -28,6 +33,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.Constants;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.fragments.MovieDetailsFragment;
+import com.theflexproject.thunder.fragments.PlayerFragment;
+import com.theflexproject.thunder.fragments.TvShowDetailsFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
@@ -35,6 +43,8 @@ import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.Season;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.player.PlayerUtils;
+import com.theflexproject.thunder.utils.DetailsUtils;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -44,13 +54,12 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
 
     Context context;
     List<MyMedia> mediaList;
+    private final FragmentManager fragmentManager;
 
-    private MediaAdapter.OnItemClickListener listener;
-
-    public MediaAdapter(Context context, List<MyMedia> mediaList, MediaAdapter.OnItemClickListener listener) {
+    public MediaAdapter(Context context, List<MyMedia> mediaList, FragmentManager fragmentManager) {
         this.context = context;
         this.mediaList = mediaList;
-        this.listener= listener;
+        this.fragmentManager = fragmentManager;
     }
 
     @NonNull
@@ -63,8 +72,6 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull MediaAdapterHolder holder, int position) {
-
-
         if(mediaList.get(position) instanceof Movie) {
             Movie movie = ((Movie)mediaList.get(position));
            if(movie.getTitle()==null){
@@ -89,6 +96,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
             }
+            holder.itemView.setOnClickListener(v -> loadMovie(movie.getId()));
         }
         
         
@@ -110,6 +118,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
                 String roundedVoteAverage = decimalFormat.format(tvShow.getVote_average());
                 holder.textStar.setText(roundedVoteAverage);
             }
+            holder.itemView.setOnClickListener(v -> loadSeries(tvShow.getId()));
         }
         
         
@@ -138,16 +147,37 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
 
     }
 
+    private void loadSeries(int id) {
+        TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(id);
+        fragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
+    }
 
+    @OptIn(markerClass = UnstableApi.class)
+    private void loadMovie(int id) {
+        PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
+        if (isDeviceTv()) {
+            fragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
+        }else {
+            fragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                    .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
+        }
+    }
 
     @Override
     public int getItemCount() {
         return mediaList.size();
     }
+    private boolean isDeviceTv() {
+        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+    }
 
-
-
-    public class MediaAdapterHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class MediaAdapterHolder extends RecyclerView.ViewHolder {
 
         TextView name;
         TextView season2;
@@ -170,13 +200,6 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
             watched = itemView.findViewById(R.id.markWatchedMedia);
             season2 = itemView.findViewById(R.id.season2);
 
-            itemView.setOnClickListener(this);
-
-        }
-
-        @Override
-        public void onClick(View v) {
-            listener.onClick(v,getAbsoluteAdapterPosition());
         }
     }
 

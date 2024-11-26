@@ -24,6 +24,7 @@ import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -32,6 +33,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseUser;
+import com.theflexproject.thunder.DetailActivity;
+import com.theflexproject.thunder.MainActivity;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.RefreshJobService;
 import com.theflexproject.thunder.adapter.BannerRecyclerAdapter;
@@ -42,6 +45,7 @@ import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
+import com.theflexproject.thunder.model.SharedViewModel;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.utils.FetchMovie;
 import com.theflexproject.thunder.utils.tmdbTrending;
@@ -74,10 +78,6 @@ public class HomeFragment extends BaseFragment {
             trending, lastPlayedList, fav, played, ogMovies, topOld, filmIndo;
     List<MyMedia> ogtop, someRecom;
 
-    BannerRecyclerAdapter.OnItemClickListener recentlyAddedListener,topRatedMoviesListener;
-    MediaAdapter.OnItemClickListener recentlyReleasedListener,
-            trendingListener,lastPlayedListener,watchlistListener,filmIndoListener;
-
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -92,6 +92,7 @@ public class HomeFragment extends BaseFragment {
     private boolean isTitleVisible = true; // Flag untuk visibilitas title
     private Handler handler = new Handler(Looper.getMainLooper()); // Untuk debounce
     private Runnable scrollRunnable;
+    private FragmentManager fragmentManager;
 
     public HomeFragment() {
     }
@@ -111,7 +112,6 @@ public class HomeFragment extends BaseFragment {
         firebaseManager = new FirebaseManager();
         FirebaseUser currentUser;
         currentUser = firebaseManager.getCurrentUser();
-        setOnClickListner();
         verifTitle = view.findViewById(R.id.verifTitle);
         watchlistRecyclerView = view.findViewById(R.id.watchListMediaRecycler);
         trendingRecyclerView = view.findViewById(R.id.trendingRecycler);
@@ -129,6 +129,7 @@ public class HomeFragment extends BaseFragment {
         filmIndoTitle = view.findViewById(R.id.filmIndo);
         homeTitle = mActivity.findViewById(R.id.homeTitle);
         nestedScrollView = view.findViewById(R.id.nestedMovieHome);
+        fragmentManager = mActivity.getSupportFragmentManager();
         if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
             verifTitle.setVisibility(View.VISIBLE);
             recentlyAddedRecyclerViewTitle.setVisibility(View.GONE);
@@ -257,7 +258,7 @@ public class HomeFragment extends BaseFragment {
                             //watchlistRecyclerView.setVisibility(View.VISIBLE);
                             watchlistRecyclerView.setLayoutManager(linearLayoutManager3);
                             watchlistRecyclerView.setHasFixedSize(true);
-                            watchlistRecyclerViewAdapter = new MediaAdapter(getContext() ,limitedTrending , watchlistListener);
+                            watchlistRecyclerViewAdapter = new MediaAdapter(getContext() ,limitedTrending , fragmentManager);
                             watchlistRecyclerView.setAdapter(watchlistRecyclerViewAdapter);
                             watchlistRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -301,7 +302,7 @@ public class HomeFragment extends BaseFragment {
 
                             recentlyAddedRecyclerView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
                             recentlyAddedRecyclerView.setHasFixedSize(true);
-                            recentlyAddedRecyclerAdapter = new BannerRecyclerAdapter(getContext(), recentlyAddedMovies , recentlyAddedListener);
+                            recentlyAddedRecyclerAdapter = new BannerRecyclerAdapter(getContext(), recentlyAddedMovies , fragmentManager);
                             recentlyAddedRecyclerView.setAdapter(recentlyAddedRecyclerAdapter);
                             recentlyAddedRecyclerView.setNestedScrollingEnabled(false);
                         }
@@ -330,7 +331,7 @@ public class HomeFragment extends BaseFragment {
 
                             recentlyReleasedRecyclerView.setLayoutManager(linearLayoutManager1);
                             recentlyReleasedRecyclerView.setHasFixedSize(true);
-                            recentlyReleasedRecyclerViewAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) recentlyReleasedMovies, recentlyReleasedListener);
+                            recentlyReleasedRecyclerViewAdapter = new MediaAdapter(getContext(),(List<MyMedia>)(List<?>) recentlyReleasedMovies, fragmentManager);
                             recentlyReleasedRecyclerView.setAdapter(recentlyReleasedRecyclerViewAdapter);
                             recentlyReleasedRecyclerView.setNestedScrollingEnabled(false);
                             recentlyReleasedRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
@@ -369,7 +370,7 @@ public class HomeFragment extends BaseFragment {
 
                             topRatedMoviesRecyclerView.setLayoutManager(linearLayoutManager2);
                             topRatedMoviesRecyclerView.setHasFixedSize(true);
-                            topRatedMoviesRecyclerViewAdapter = new BannerRecyclerAdapter(getContext(), limitedTrending , topRatedMoviesListener);
+                            topRatedMoviesRecyclerViewAdapter = new BannerRecyclerAdapter(getContext(), limitedTrending , fragmentManager);
                             topRatedMoviesRecyclerView.setAdapter(topRatedMoviesRecyclerViewAdapter);
                             topRatedMoviesRecyclerView.setNestedScrollingEnabled(false);
                             topRatedMoviesRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
@@ -406,7 +407,7 @@ public class HomeFragment extends BaseFragment {
 
                             trendingRecyclerView.setLayoutManager(linearLayoutManager2);
                             trendingRecyclerView.setHasFixedSize(true);
-                            trendingMoviesRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) trending, trendingListener);
+                            trendingMoviesRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) trending, fragmentManager);
                             trendingRecyclerView.setAdapter(trendingMoviesRecyclerAdapter);
                             trendingRecyclerView.setNestedScrollingEnabled(false);
                             trendingTitle.setOnClickListener(new View.OnClickListener() {
@@ -455,7 +456,7 @@ public class HomeFragment extends BaseFragment {
                             //lastPlayedMoviesRecyclerView.setVisibility(View.VISIBLE);
                             lastPlayedMoviesRecyclerView.setLayoutManager(linearLayoutManager3);
                             lastPlayedMoviesRecyclerView.setHasFixedSize(true);
-                            lastPlayedMoviesRecyclerViewAdapter = new MediaAdapter(getContext() ,limitedTrending , lastPlayedListener);
+                            lastPlayedMoviesRecyclerViewAdapter = new MediaAdapter(getContext() ,limitedTrending , fragmentManager);
                             lastPlayedMoviesRecyclerView.setAdapter(lastPlayedMoviesRecyclerViewAdapter);
                             lastPlayedMoviesRecyclerView.setNestedScrollingEnabled(false);
                             lastPlayedMoviesRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
@@ -495,7 +496,7 @@ public class HomeFragment extends BaseFragment {
                             Collections.shuffle(limitedTrending);
                             filmIndoView.setLayoutManager(linearLayoutManager2);
                             filmIndoView.setHasFixedSize(true);
-                            filmIndoAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , filmIndoListener);
+                            filmIndoAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , fragmentManager);
                             filmIndoView.setAdapter(filmIndoAdapter);
                             filmIndoView.setNestedScrollingEnabled(false);
                             filmIndoTitle.setOnClickListener(new View.OnClickListener() {
@@ -514,83 +515,6 @@ public class HomeFragment extends BaseFragment {
                 }
             }});
         thread.start();
-    }
-
-
-    //KLIK LISTENER
-    private void setOnClickListner() {
-        filmIndoListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(filmIndo.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-
-            }
-        };
-
-        recentlyAddedListener = new BannerRecyclerAdapter.OnItemClickListener() {
-            @OptIn(markerClass = UnstableApi.class)
-            @Override
-            public void onClick(View view, int position) {
-                PlayerFragment movieDetailsFragment = new PlayerFragment(recentlyAddedMovies.get(position).getId(), true);
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-        recentlyReleasedListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(recentlyReleasedMovies.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-
-            }
-        };
-        topRatedMoviesListener =  new BannerRecyclerAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(topRatedMovies.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-        trendingListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(trending.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-        lastPlayedListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                Movie recomId = ((Movie) someRecom.get(position));
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(recomId.getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-
-        watchlistListener = new MediaAdapter.OnItemClickListener() {
-
-            @Override
-            public void onClick(View view, int position) {
-                Movie ogId = ((Movie) ogtop.get(position));
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(ogId.getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .add(R.id.container,movieDetailsFragment).addToBackStack(null).commit();
-            }
-        };
-
     }
 
 

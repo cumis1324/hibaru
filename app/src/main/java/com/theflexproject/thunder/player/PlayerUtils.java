@@ -109,6 +109,7 @@ public class PlayerUtils {
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
+
     @OptIn(markerClass = UnstableApi.class)
     public static boolean subOn(DefaultTrackSelector trackSelector){
         DefaultTrackSelector.Parameters builders = trackSelector.getParameters();

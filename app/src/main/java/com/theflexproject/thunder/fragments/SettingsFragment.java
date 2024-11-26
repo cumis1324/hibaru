@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -97,6 +98,7 @@ public class SettingsFragment extends BaseFragment {
     List<String> itemIds = new ArrayList<>();
     String userId;
     DatabaseReference userRef;
+    FragmentManager fragmentManager;
     public SettingsFragment() {}
 
     @Override
@@ -107,6 +109,7 @@ public class SettingsFragment extends BaseFragment {
         storageReference = FirebaseStorage.getInstance().getReference("profile_images");
         userId = currentUser.getUid();
         userRef = databaseReference.child(userId);
+        fragmentManager = mActivity.getSupportFragmentManager();
         super.onCreate(savedInstanceState);
     }
 
@@ -131,7 +134,6 @@ public class SettingsFragment extends BaseFragment {
         setStatesOfToggleSwitches();
 
         setMyOnClickListeners();
-        setOnClickListner();
         getHistoryFb();
         getFavorit();
 
@@ -391,7 +393,7 @@ public class SettingsFragment extends BaseFragment {
                             lastPlayedMoviesRecyclerView.setVisibility(View.VISIBLE);
                             lastPlayedMoviesRecyclerView.setLayoutManager(linearLayoutManager3);
                             lastPlayedMoviesRecyclerView.setHasFixedSize(true);
-                            lastPlayedMoviesRecyclerViewAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) lastPlayedList , lastPlayedListener);
+                            lastPlayedMoviesRecyclerViewAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) lastPlayedList , fragmentManager);
                             lastPlayedMoviesRecyclerView.setAdapter(lastPlayedMoviesRecyclerViewAdapter);
                         }
                     });
@@ -420,7 +422,7 @@ public class SettingsFragment extends BaseFragment {
                             watchlistRecyclerView.setVisibility(View.VISIBLE);
                             watchlistRecyclerView.setLayoutManager(linearLayoutManager3);
                             watchlistRecyclerView.setHasFixedSize(true);
-                            watchlistRecyclerViewAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) watchlist , watchlistListener);
+                            watchlistRecyclerViewAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) watchlist , fragmentManager);
                             watchlistRecyclerView.setAdapter(watchlistRecyclerViewAdapter);
                         }
                     });
@@ -430,38 +432,7 @@ public class SettingsFragment extends BaseFragment {
         thread.start();
 
     }
-    private void setOnClickListner() {
-        lastPlayedListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(lastPlayedList.get(position).getId());
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                        .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-            }
-        };
 
-        watchlistListener = new MediaAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                int id = 0;
-                if (watchlist.get(position) instanceof Movie) {
-                    id = ((Movie) watchlist.get(position)).getId();
-                    MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(id);
-                    mActivity.getSupportFragmentManager().beginTransaction()
-                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                            .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-                } else {
-                    id = ((TVShow) (watchlist.get(position))).getId();
-                    TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(id);
-                    mActivity.getSupportFragmentManager().beginTransaction()
-                            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                            .add(R.id.container, tvShowDetailsFragment).addToBackStack(null).commit();
-                }
-
-            }
-        };
-    }
     private void getFavorit() {
 
         String userId = currentUser.getUid();
