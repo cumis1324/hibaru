@@ -37,10 +37,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.theflexproject.thunder.MainActivity;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.model.FavHis;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
@@ -433,57 +435,26 @@ public class SettingsFragment extends BaseFragment {
 
     }
 
-    private void getFavorit() {
+    private void getHistoryFb() {
+        // Cek apakah historyList sudah terisi dari MainActivity
+        List<String> his = MainActivity.historyList;
 
-        String userId = currentUser.getUid();
-        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference("Favorit").child(userId);
-        List<String> itemIds = new ArrayList<>();
-
-        historyRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
-                    for (DataSnapshot item : dataSnapshot.getChildren()){
-                        String itemId = item.getKey();
-                        itemIds.add(itemId);
-                        Log.d("item", itemId);
-                        loadWatchlist(itemIds);
-                    }
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle possible errors.
-            }
-        });
+        if (his != null && !his.isEmpty()) {
+            loadLastPlayedMovies(his);  // Panggil metode untuk menampilkan movie
+        } else {
+            Log.d("History", "No history to display.");
+        }
     }
 
+    private void getFavorit() {
+        // Cek apakah favoritList sudah terisi dari MainActivity
+        List<String> favorit = MainActivity.favoritList;
 
-    private void getHistoryFb() {
-        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference("History").child(userId);
-        List<String> itemIds = new ArrayList<>();
-
-        historyRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
-                    for (DataSnapshot item : dataSnapshot.getChildren()){
-                    String itemId = item.getKey();
-                    itemIds.add(itemId);
-                    Log.d("item", itemId);
-                    loadLastPlayedMovies(itemIds);
-                    }
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle possible errors.
-            }
-        });
+        if (favorit != null && !favorit.isEmpty()) {
+            loadWatchlist(favorit);  // Panggil metode untuk menampilkan favorit
+        } else {
+            Log.d("Favorit", "No favorit to display.");
+        }
     }
 
 

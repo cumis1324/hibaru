@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
@@ -62,6 +63,7 @@ import com.theflexproject.thunder.fragments.SearchFragment;
 import com.theflexproject.thunder.fragments.SettingsFragment;
 import com.theflexproject.thunder.fragments.TvShowDetailsFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
+import com.theflexproject.thunder.utils.pembayaran.IklanPremium;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,8 +74,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -109,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
     AppDatabase dbs;
     NavigationRailView navigationRailView;
     private OnUserLeaveHintListener userLeaveHintListener;
+    public static List<String> historyList = new ArrayList<>();  // Menyimpan data history
+    public static List<String> favoritList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,12 +189,6 @@ public class MainActivity extends AppCompatActivity {
                 handleDemoUser();
                 bottomNavigationView.setVisibility(View.GONE);
             }
-
-            // Mulai proses restore dengan WorkManager
-            //AppDatabase db = Room.databaseBuilder(getApplicationContext() ,
-                           // AppDatabase.class , "MyToDos")
-                    //.build();
-
         }
         else {
             startActivity(new Intent(MainActivity.this, SignInActivity.class));
@@ -237,7 +237,24 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             bukaIntent();
+            IklanPremium.checkHistory(this, new IklanPremium.HistoryCallback() {
+                @Override
+                public void onHistoryLoaded(List<String> history) {
+                    // Simpan data history ke dalam variabel statis atau global
+                    historyList = history;
+                    Log.d("MainActivity", "History data loaded: " + history);
+                }
+            });
 
+            // Panggil checkFavorit() dan set callback untuk menerima data favorit
+            IklanPremium.checkFavorit(this, new IklanPremium.FavoritCallback() {
+                @Override
+                public void onFavoritLoaded(List<String> favorit) {
+                    // Simpan data favorit ke dalam variabel statis atau global
+                    favoritList = favorit;
+                    Log.d("MainActivity", "Favorit data loaded: " + favorit);
+                }
+            });
         }
     }
 

@@ -145,7 +145,7 @@ public class PlayerListener {
 
         // Create and show the AlertDialog
         new AlertDialog.Builder(mActivity)
-                .setTitle("Pengaturan Pemutar")
+                .setTitle("Settings")
                 .setView(dialogView)
                 .setPositiveButton("OK", (dialog, which) -> {
                     // Get selected values from spinners
