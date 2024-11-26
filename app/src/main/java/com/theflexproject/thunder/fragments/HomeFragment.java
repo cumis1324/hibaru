@@ -26,6 +26,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -53,6 +54,7 @@ import com.theflexproject.thunder.utils.tmdbTrending;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 
@@ -430,18 +432,29 @@ public class HomeFragment extends BaseFragment {
     }
     private void loadLastPlayedMovies() {
         Thread thread = new Thread(new Runnable() {
+            @OptIn(markerClass = UnstableApi.class)
             @Override
             public void run() {
                 lastPlayedList = FetchMovie.getRecommendation(mActivity);
-
-                played = FetchMovie.getMore(mActivity);
-
-                fav = FetchMovie.getRecombyFav(mActivity);
-
+                List<String> his = MainActivity.historyList;
+                if (his!=null) {played = FetchMovie.getMore(mActivity, his);}
+                List<String> favorit = MainActivity.favoritList;
+                if (favorit!=null) {fav = FetchMovie.getRecombyFav(mActivity, favorit);}
                 someRecom = new ArrayList<>();
-                someRecom.addAll(played);
-                someRecom.addAll(fav);
-                someRecom.addAll(lastPlayedList);
+                if ((played != null && !played.isEmpty()) || (fav != null && !fav.isEmpty())) {
+                    // Jika salah satu atau kedua daftar tidak kosong, tambahkan ke someRecom
+                    if (played != null && !played.isEmpty()) {
+                        Log.d("Recom", played.toString());
+                        someRecom.addAll(played);
+                    }
+                    if (fav != null && !fav.isEmpty()) {
+                        Log.d("Recom", fav.toString());
+                        someRecom.addAll(fav);
+                    }
+                } else {
+                    someRecom.addAll(lastPlayedList);
+                }
+
                 List<MyMedia> limitedTrending = someRecom.size() > 10 ? someRecom.subList(0, 10) : someRecom;
                 if(someRecom!=null && someRecom.size()>0){
                     mActivity.runOnUiThread(new Runnable() {

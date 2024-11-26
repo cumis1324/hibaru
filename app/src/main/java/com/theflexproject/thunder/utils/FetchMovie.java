@@ -253,15 +253,20 @@ public class FetchMovie {
             executor.shutdown();
         }
     }
-    public static List<Movie> getMore(Context mActivity) {
+    public static List<Movie> getMore(Context mActivity, List<String> historyId) {
+        tmdbTrending movieSimilar = new tmdbTrending();
+        List<String> similarId = movieSimilar.getRecommendation(historyId);
         ExecutorService executor = Executors.newSingleThreadExecutor();
+        if (similarId == null || similarId.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         // Tugas untuk mendapatkan data dari database
         Callable<List<Movie>> callable = () -> DatabaseClient
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getMoreMovied();
+                .loadAllByIds(similarId);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -277,7 +282,17 @@ public class FetchMovie {
             executor.shutdown();
         }
     }
-    public static List<Movie> getRecombyFav(Context mActivity) {
+    public static List<Movie> getRecombyFav(Context mActivity, List<String> favId) {
+        tmdbTrending movieSimilar = new tmdbTrending();
+
+        // Mengambil ID rekomendasi berdasarkan favorit
+        List<String> similarId = movieSimilar.getRecommendation(favId);
+
+        // Jika tidak ada ID rekomendasi, kembalikan daftar kosong
+        if (similarId == null || similarId.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         // Tugas untuk mendapatkan data dari database
@@ -285,7 +300,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getRecombyfav();
+                .loadAllByIds(similarId);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -293,7 +308,11 @@ public class FetchMovie {
         try {
             // Tunggu hasilnya
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Set status interrupted
+            e.printStackTrace();
+            return new ArrayList<>(); // Kembalikan daftar kosong jika terjadi kesalahan
+        } catch (ExecutionException e) {
             e.printStackTrace();
             return new ArrayList<>(); // Kembalikan daftar kosong jika terjadi kesalahan
         } finally {
@@ -301,5 +320,6 @@ public class FetchMovie {
             executor.shutdown();
         }
     }
+
 
 }
