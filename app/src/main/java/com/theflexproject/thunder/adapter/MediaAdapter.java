@@ -18,7 +18,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -149,32 +151,33 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
 
     private void loadSeries(int id) {
         TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(id);
-        fragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                .add(R.id.container,tvShowDetailsFragment).addToBackStack(null).commit();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+        Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+        if (oldFragment != null) {
+            transaction.hide(oldFragment);
+        }
+        transaction.add(R.id.container, tvShowDetailsFragment).addToBackStack(null);
+        transaction.commit();
     }
 
     @OptIn(markerClass = UnstableApi.class)
     private void loadMovie(int id) {
         PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
-        if (isDeviceTv()) {
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                    .replace(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-        }else {
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-                    .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
-        }
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+            Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+            if (oldFragment != null) {
+                transaction.hide(oldFragment);
+            }
+            transaction.add(R.id.container, movieDetailsFragment).addToBackStack(null);
+            transaction.commit();
+
     }
 
     @Override
     public int getItemCount() {
         return mediaList.size();
-    }
-    private boolean isDeviceTv() {
-        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
-        return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
     public class MediaAdapterHolder extends RecyclerView.ViewHolder {

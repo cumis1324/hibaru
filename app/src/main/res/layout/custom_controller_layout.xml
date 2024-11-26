@@ -175,6 +175,7 @@
             <SeekBar
                 android:focusable="true"
                 android:clickable="true"
+                android:background="@drawable/button_selector"
                 android:id="@+id/seek_bar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

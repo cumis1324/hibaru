@@ -46,6 +46,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.OptIn;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
@@ -142,6 +143,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private SimilarAdapter.OnItemClickListener similarListener;
     private View view;
     View customControls;
+    private NestedScrollView nestedScrollView;
 
 
     public PlayerFragment() {
@@ -162,6 +164,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (isTVDevice(mActivity)) {
             view = inflater.inflate(R.layout.video_tv, container, false);
+            nestedScrollView = view.findViewById(R.id.nestedPlayerTv);
         } else {
             view = inflater.inflate(R.layout.video_player, container, false);
         }
@@ -257,6 +260,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                     int movieId = movie.getId();
                     if (!Objects.equals(url, urlString)) {
                         initializePlayer(url);
+                    }
+                    if (isTVDevice(mActivity)){
+
+                    nestedScrollView.smoothScrollTo(0, 0);
                     }
                     newSource();
                     loadMovieDetails(movieId);
@@ -575,6 +582,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 customBufferingIndicator.setVisibility(View.GONE);
                 ff.setOnClickListener(v -> fastForward(player, ff));
                 bw.setOnClickListener(v -> rewind(player, bw));
+                if (isTVDevice(mActivity)){
+                    movietitle.setVisibility(View.VISIBLE);
+                }
                 playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
             }
             if (playbackState != Player.STATE_READY) {
