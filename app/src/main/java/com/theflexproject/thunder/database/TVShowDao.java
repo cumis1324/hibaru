@@ -4,8 +4,8 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
-
-import com.theflexproject.thunder.model.Movie;
+import androidx.sqlite.db.SupportSQLiteQuery;
+import androidx.room.RawQuery;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 
 import java.util.List;
@@ -65,4 +65,7 @@ public interface TVShowDao {
 
     @Query("UPDATE TVShow SET addToList=0 WHERE id=:tvShowId")
     void updateRemoveFromList(int tvShowId);
+
+    @RawQuery
+    List<TVShow> getTvSeriesByGenreAndSort(SupportSQLiteQuery query);
 }

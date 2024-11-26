@@ -9,7 +9,40 @@
         android:id="@+id/recyclerMovieGenre"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:listitem="@layout/item_genre"/>
+        />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:paddingVertical="7dp"
+        android:paddingHorizontal="25dp"
+        android:background="@drawable/rounded_layout">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sort By"
+            android:paddingBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/sortBy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Order By"
+            android:paddingBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/orderBy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerLibraryMovies"
         android:layout_width="match_parent"

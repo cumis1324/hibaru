@@ -4,6 +4,8 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.RawQuery;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import com.theflexproject.thunder.model.Movie;
 
@@ -13,9 +15,6 @@ import java.util.List;
 public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE genres LIKE '%' || :genreId || '%' and disabled=0 GROUP BY id")
     List<Movie> getMoviesByGenre(String genreId);
-
-
-
     @Query("SELECT * FROM Movie WHERE title is not null and disabled=0 GROUP BY id ")
     List<Movie> getAll();
 
@@ -120,4 +119,8 @@ public interface MovieDao {
 
     @Query("UPDATE Movie SET addToList=0 WHERE id=:movieId")
     void updateRemoveFromList(int movieId);
+
+    @RawQuery
+    List<Movie> getMoviesByGenreAndSort(SupportSQLiteQuery query);
+
 }

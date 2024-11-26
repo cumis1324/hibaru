@@ -12,6 +12,17 @@
     <string name="play">Play</string>
     <string name="available_files">Available Files</string>
     <string name="default_web_client_id">482142495652-lf62g37hob4pms6kc8pl1ecmosgufb30.apps.googleusercontent.com</string>
+        <string-array name="order_by_options">
+            <item>Ascending</item>
+            <item>Descending</item>
+        </string-array>
+
+        <string-array name="sort_by_options">
+            <item>Title</item>
+            <item>Year</item>
+            <item>Popularity</item>
+            <item>Rating</item>
+        </string-array>
 
 
     <string-array name="sort_methods">
