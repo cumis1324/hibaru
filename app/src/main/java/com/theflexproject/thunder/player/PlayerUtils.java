@@ -1,5 +1,8 @@
 package com.theflexproject.thunder.player;
 
+import static com.theflexproject.thunder.player.PlayerListener.fastForward;
+import static com.theflexproject.thunder.player.PlayerListener.rewind;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -10,6 +13,8 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.util.Log;
 import android.util.Rational;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;

@@ -363,14 +363,14 @@ public class MovieDetailsFragment extends BaseFragment{
                                rating.setOnClickListener(new View.OnClickListener() {
                                    @Override
                                    public void onClick(View view) {
-                                       VideoDetailsBottomSheet bottomSheet = VideoDetailsBottomSheet.newInstance(movieDetails.getId(), "movie");
+                                       VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(movieDetails.getId(), true);
                                        bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
                                    }
                                });
                                titleLayout.setOnClickListener(new View.OnClickListener() {
                                    @Override
                                    public void onClick(View view) {
-                                       VideoDetailsBottomSheet bottomSheet = VideoDetailsBottomSheet.newInstance(movieDetails.getId(), "movie");
+                                       VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(movieDetails.getId(), true);
                                        bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
                                    }
                                });
@@ -659,6 +659,8 @@ public class MovieDetailsFragment extends BaseFragment{
                         DownloadManager.Request request = new DownloadManager.Request(uri);
                         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
                         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                                .setTitle(selectedFile.getTitle())
+                                .setVisibleInDownloadsUi(true)
                                 .setDescription("Downloading " + selectedFile.getTitle() + " " + huntu);
                         long downloadId = manager.enqueue(request);
                         List<DownloadItem> downloadItems = new ArrayList<>();

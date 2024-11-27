@@ -162,6 +162,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ((MainActivity) mActivity).setOnUserLeaveHintListener(this);
         if (isTVDevice(mActivity)) {
             view = inflater.inflate(R.layout.video_tv, container, false);
             nestedScrollView = view.findViewById(R.id.nestedPlayerTv);
@@ -174,146 +175,12 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         if (isMovie) {
             loadMovieDetails(itemId);
         } else {
-            loadSeriesDetails(itemId);
+            loadSeriesDetails();
         }
         setControlListeners();
         return view;
     }
 
-    @SuppressLint("SetTextI18n")
-    private void loadMovieDetails(final int movieId) {
-        Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
-        if (movieDetails != null) {
-            String titleText = movieDetails.getTitle();
-            String year = movieDetails.getRelease_date();
-            urlString = movieDetails.getUrlString();
-            String yearCrop = year.substring(0,year.indexOf('-'));
-            tmdbId = String.valueOf(movieDetails.getId());
-            movietitle.setText(titleText + " ("+yearCrop+")");
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container, new DetailFragment(movieId, true))
-                    .commit();
-            if(movieDetails.getBackdrop_path()!=null) {
-                Glide.with(mActivity)
-                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
-                        .apply(new RequestOptions()
-                                .fitCenter()
-                                .override(Target.SIZE_ORIGINAL))
-                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .into(imageView);
-            }else {
-                if(movieDetails.getPoster_path()!=null) {
-                    Glide.with(mActivity)
-                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
-                            .apply(new RequestOptions()
-                                    .fitCenter()
-                                    .override(Target.SIZE_ORIGINAL))
-                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .into(imageView);
-                }
-            }
-            initializePlayer(urlString);
-        }
-        sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
-        loadSimilar(movieId);
-    }
-
-    private void loadSimilar(int id) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                List<Movie> similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
-                List<Movie> recommendationMovie = DetailsUtils.getRecommendationMovies(mActivity, id);
-                if (similarMovie!=null){
-                    movieListener();
-                    similarOrEpisode = new ArrayList<>();
-                    similarOrEpisode.addAll(similarMovie);
-                    similarOrEpisode.addAll(recommendationMovie);
-                    mActivity.runOnUiThread(new Runnable() {
-                        @SuppressLint("NotifyDataSetChanged")
-                        @Override
-                        public void run() {
-                            similarView.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-                            similarView.setLayoutManager(linearLayoutManager);
-                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
-                            similarView.setAdapter(moreMovieRecycler);
-                            moreMovieRecycler.notifyDataSetChanged();
-
-                        }
-                    });
-                }
-            }});
-        thread.start();
-    }
-    private void movieListener() {
-        similarListener = new SimilarAdapter.OnItemClickListener() {
-            @OptIn(markerClass = UnstableApi.class)
-            @Override
-            public void onClick(View view, int position) {
-                if (similarOrEpisode.get(position) instanceof Movie){
-                    Movie movie = (Movie) similarOrEpisode.get(position);
-                    String url = movie.getUrlString();
-                    int movieId = movie.getId();
-                    if (!Objects.equals(url, urlString)) {
-                        initializePlayer(url);
-                    }
-                    if (isTVDevice(mActivity)){
-
-                    nestedScrollView.smoothScrollTo(0, 0);
-                    }
-                    newSource();
-                    loadMovieDetails(movieId);
-                }
-
-            }
-        };
-    }
-
-    @SuppressLint("SetTextI18n")
-    private void loadSeriesDetails(int itemId) {
-
-        if (tvShowDetails!=null){
-            String title = tvShowDetails.getName();
-            int seasonId = season.getId();
-            TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
-            movietitle.setText(title);
-            Episode nextEpisode = DetailsUtils.getNextEpisode(mActivity, episodeId);
-            if (nextEpisode!=null){
-                epstitle.setText("Season "+seasonDetails.getSeason_number()
-                        +" Episode "+ nextEpisode.getName());
-                tmdbId = String.valueOf(nextEpisode.getId());
-                urlString = nextEpisode.getUrlString();
-                initializePlayer(urlString);
-                sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, nextEpisode.getId());
-            }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
-            if(tvShowDetails.getBackdrop_path()!=null) {
-                Glide.with(mActivity)
-                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
-                        .apply(new RequestOptions()
-                                .fitCenter()
-                                .override(Target.SIZE_ORIGINAL))
-                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .into(imageView);
-            }else {
-                if(tvShowDetails.getPoster_path()!=null) {
-                    Glide.with(mActivity)
-                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
-                            .apply(new RequestOptions()
-                                    .fitCenter()
-                                    .override(Target.SIZE_ORIGINAL))
-                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .into(imageView);
-                }
-            }
-
-        }
-    }
 
     private void initFirebase() {
         manager = new FirebaseManager();
@@ -499,12 +366,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             player.pause();
         }
     }
+
     @Override
     public void onResume() {
         super.onResume();
         if (player != null) {
             player.play();
+            bottomNavigationView.setVisibility(View.GONE);
         }
+
     }
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable updateSeekBar = new Runnable() {
@@ -529,18 +399,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     @Override
     public void onUserLeaveHint() {
+            handleUserLeaveHint();
+
+    }
+    private void handleUserLeaveHint() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mActivity.enterPictureInPictureMode(pipParams);
         }
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof MainActivity){
-            ((MainActivity) context).setOnUserLeaveHintListener(this);
-        }
-    }
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
@@ -689,6 +556,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
     }
     private void destroyAll() {
+        ((MainActivity) mActivity).setOnUserLeaveHintListener(null);
         if (lastPositionListener != null) {
             databaseReference.removeEventListener(lastPositionListener);
         }
@@ -702,6 +570,180 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             bottomNavigationView.setVisibility(View.GONE);
 
         }
+    }
+    @SuppressLint("SetTextI18n")
+    private void loadMovieDetails(final int movieId) {
+        Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
+        if (movieDetails != null) {
+            String titleText = movieDetails.getTitle();
+            String year = movieDetails.getRelease_date();
+            urlString = movieDetails.getUrlString();
+            String yearCrop = year.substring(0,year.indexOf('-'));
+            tmdbId = String.valueOf(movieDetails.getId());
+            movietitle.setText(titleText + " ("+yearCrop+")");
+            mActivity.getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_container, new DetailFragment(movieId, true))
+                    .commit();
+            if(movieDetails.getBackdrop_path()!=null) {
+                Glide.with(mActivity)
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
+                        .apply(new RequestOptions()
+                                .fitCenter()
+                                .override(Target.SIZE_ORIGINAL))
+                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(imageView);
+            }else {
+                if(movieDetails.getPoster_path()!=null) {
+                    Glide.with(mActivity)
+                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
+                            .apply(new RequestOptions()
+                                    .fitCenter()
+                                    .override(Target.SIZE_ORIGINAL))
+                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .into(imageView);
+                }
+            }
+            initializePlayer(urlString);
+        }
+        sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
+        loadSimilar(movieId);
+    }
+
+    private void loadSimilar(int id) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<Movie> similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
+                List<Movie> recommendationMovie = DetailsUtils.getRecommendationMovies(mActivity, id);
+                if (similarMovie!=null){
+                    movieListener();
+                    similarOrEpisode = new ArrayList<>();
+                    similarOrEpisode.addAll(similarMovie);
+                    similarOrEpisode.addAll(recommendationMovie);
+                    mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void run() {
+                            similarView.setVisibility(View.VISIBLE);
+                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            similarView.setLayoutManager(linearLayoutManager);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
+                            similarView.setAdapter(moreMovieRecycler);
+                            moreMovieRecycler.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }});
+        thread.start();
+    }
+    private void movieListener() {
+        similarListener = new SimilarAdapter.OnItemClickListener() {
+            @OptIn(markerClass = UnstableApi.class)
+            @Override
+            public void onClick(View view, int position) {
+                if (similarOrEpisode.get(position) instanceof Movie){
+                    Movie movie = (Movie) similarOrEpisode.get(position);
+                    String url = movie.getUrlString();
+                    int movieId = movie.getId();
+                    if (!Objects.equals(url, urlString)) {
+                        initializePlayer(url);
+                    }
+                    if (isTVDevice(mActivity)){
+
+                        nestedScrollView.smoothScrollTo(0, 0);
+                    }
+                    newSource();
+                    loadMovieDetails(movieId);
+                }
+                if (similarOrEpisode.get(position) instanceof Episode){
+                    Episode episode = (Episode) similarOrEpisode.get(position);
+                    String url = episode.getUrlString();
+                    if (!Objects.equals(url, urlString)) {
+                        initializePlayer(url);
+                    }
+                    if (isTVDevice(mActivity)){
+
+                        nestedScrollView.smoothScrollTo(0, 0);
+                    }
+                    newSource();
+                    loadSeriesDetails();
+                }
+
+            }
+        };
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void loadSeriesDetails() {
+
+        if (tvShowDetails!=null){
+            String title = tvShowDetails.getName();
+            int seasonId = season.getId();
+            TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
+            movietitle.setText(title);
+            Episode nextEpisode = DetailsUtils.getNextEpisode(mActivity, episodeId);
+            if (nextEpisode!=null){
+                mActivity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container, new DetailFragment(tvShowDetails, seasonDetails, nextEpisode))
+                        .commit();
+                epstitle.setText("Season: "+seasonDetails.getSeason_number()
+                        +" Episode: "+ nextEpisode.getName());
+                epstitle.setVisibility(View.VISIBLE);
+                tmdbId = String.valueOf(nextEpisode.getId());
+                urlString = nextEpisode.getUrlString();
+                initializePlayer(urlString);
+                sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, nextEpisode.getId());
+            }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
+            if(tvShowDetails.getBackdrop_path()!=null) {
+                Glide.with(mActivity)
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
+                        .apply(new RequestOptions()
+                                .fitCenter()
+                                .override(Target.SIZE_ORIGINAL))
+                        .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(imageView);
+            }else {
+                if(tvShowDetails.getPoster_path()!=null) {
+                    Glide.with(mActivity)
+                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
+                            .apply(new RequestOptions()
+                                    .fitCenter()
+                                    .override(Target.SIZE_ORIGINAL))
+                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .into(imageView);
+                }
+            }
+            loadEpisodes(seasonId);
+        }
+    }
+    private void loadEpisodes(int seasonId) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<Episode> listEpisode = DetailsUtils.getListEpisode(mActivity, tvShowDetails.getId(), seasonId);
+                if (listEpisode!=null){
+                    movieListener();
+                    similarOrEpisode = new ArrayList<>();
+                    similarOrEpisode.addAll(listEpisode);
+                    mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void run() {
+                            similarView.setVisibility(View.VISIBLE);
+                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            similarView.setLayoutManager(linearLayoutManager);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
+                            similarView.setAdapter(moreMovieRecycler);
+                            moreMovieRecycler.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }});
+        thread.start();
     }
 
 }

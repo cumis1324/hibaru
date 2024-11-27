@@ -222,7 +222,7 @@ public class TvShowDetailsFragment extends BaseFragment {
                             titleLayout.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
-                                    VideoDetailsBottomSheet bottomSheet = VideoDetailsBottomSheet.newInstance(tvShowDetails.getId(), "tvshow");
+                                    VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(tvShowDetails);
                                     bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
                                 }
                             });

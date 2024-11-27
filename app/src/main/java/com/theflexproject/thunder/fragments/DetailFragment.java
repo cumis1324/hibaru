@@ -32,10 +32,14 @@ import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
+import com.theflexproject.thunder.model.TVShowInfo.Episode;
+import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
 import com.theflexproject.thunder.utils.tmdbTrending;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +55,14 @@ public class DetailFragment extends BaseFragment{
     RelativeLayout frameDeskripsi;
     private List<Movie> similarMovie;
     MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
+    private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
     public DetailFragment(){
+    }
+    public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode){
+        this.isMovie = false;
+        this.tvShowDetails = tvShowDetails;
+        this.season = seasonDetails;
+        this.episode = episode;
     }
     public DetailFragment (int id, boolean isMovie){
         this.id = id;
@@ -68,7 +79,47 @@ public class DetailFragment extends BaseFragment{
         if (isMovie) {
             loadMovieDetails(id);
         }
+        else {
+            loadTvDetails();
+        }
+        listener();
         return view;
+    }
+
+    private void listener() {
+        frameDeskripsi.setOnClickListener(v ->  {
+            if (isMovie){
+                VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(movieDetails.getId(), true);
+                bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+            }else {
+                VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(tvShowDetails);
+                bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+            }
+        });
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void loadTvDetails() {
+        if (tvShowDetails!=null) {
+            String titleText = tvShowDetails.getName();
+            String year = tvShowDetails.getFirst_air_date();
+            String yearCrop = year.substring(0,year.indexOf('-'));
+            DecimalFormat decimalFormat = new DecimalFormat("0.0");
+            String ratings = (decimalFormat.format(tvShowDetails.getVote_average()));
+            String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVote_count());
+            rating.setText(ratings + " from " + result + " Votes");
+            judul.setText(titleText + " ("+yearCrop+")" +"\n" + "Season " + season.getSeason_number() + " Episode " + episode.getEpisode_number());
+            deskripsi.setText(tvShowDetails.getOverview());
+            Glide.with(mActivity)
+                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
+                    .apply(new RequestOptions()
+                            .fitCenter()
+                            .override(Target.SIZE_ORIGINAL))
+                    .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(poster);
+
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -78,10 +129,11 @@ public class DetailFragment extends BaseFragment{
             String titleText = movieDetails.getTitle();
             String year = movieDetails.getRelease_date();
             String yearCrop = year.substring(0,year.indexOf('-'));
-            String ratings = (int)(movieDetails.getVote_average()*10)+"%";
-            String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
-            rating.setText(ratings + " - " + result);
-            judul.setText(titleText + " ("+yearCrop+")");
+            DecimalFormat decimalFormat = new DecimalFormat("0.0");
+            String ratings = (decimalFormat.format(movieDetails.getVote_average()));
+            String result = StringUtils.runtimeIntegerToString(movieDetails.getVote_count());
+            rating.setText(ratings + " from " + result + " Votes");
+            judul.setText(titleText + " ("+yearCrop+")" +"\n" + movieDetails.getOriginal_title());
             deskripsi.setText(movieDetails.getOverview());
             Glide.with(mActivity)
                     .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
@@ -97,49 +149,6 @@ public class DetailFragment extends BaseFragment{
 
     }
 
-    private void similarListener() {
-        moreMoviesListener = new MoreMoviesAdapterr.OnItemClickListener() {
-            @OptIn(markerClass = UnstableApi.class)
-            @Override
-            public void onClick(View view, int position) {
-                Movie more = (similarMovie.get(position));
-                PlayerFragment playerFragment = new PlayerFragment(more.getId(), true);
-                mActivity.getSupportFragmentManager()
-                        .beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                        .replace(R.id.container,playerFragment)
-                        .addToBackStack(null)
-                        .commit();
-            }
-        };
-    }
-
-    private void loadSimilar() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
-                if (similarMovie!=null){
-                    mActivity.runOnUiThread(new Runnable() {
-                        @SuppressLint("NotifyDataSetChanged")
-                        @Override
-                        public void run() {
-                            moreItem.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-                            moreItem.setLayoutManager(linearLayoutManager);
-                            moreItem.setHasFixedSize(true);
-                            MoreMoviesAdapterr moreMovieRecycler = new MoreMoviesAdapterr(mActivity, (List<MyMedia>) (List<?>) similarMovie, moreMoviesListener);
-                            moreItem.setAdapter(moreMovieRecycler);
-                            moreMovieRecycler.notifyDataSetChanged();
-
-                        }
-                    });
-                }
-            }});
-        thread.start();
-    }
 
     private void initWidget(View view) {
         deskripsi = view.findViewById(R.id.deskJudul);
