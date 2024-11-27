@@ -89,7 +89,8 @@ public class PlayerUtils {
     public static void exitFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
         View decorView = mActivity.getWindow().getDecorView();
         movietitle.setVisibility(View.GONE);
-        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+        int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN| View.SYSTEM_UI_FLAG_FULLSCREEN;
         // Set height kembali ke 250dp
         playerFrame.post(() -> {
             int width = playerFrame.getWidth(); // Lebar FrameLayout

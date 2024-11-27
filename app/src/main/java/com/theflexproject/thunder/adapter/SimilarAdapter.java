@@ -63,8 +63,13 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull SimilarAdapterHolder holder, int position) {
-
-
+        holder.backdrop.post(() -> {
+            int width = holder.backdrop.getWidth(); // Lebar FrameLayout
+            int height = (int) (width / 16.0 * 9.0); // Hitung tinggi sesuai rasio 16:9
+            ViewGroup.LayoutParams params = holder.backdrop.getLayoutParams();
+            params.height = height;
+            holder.backdrop.setLayoutParams(params);
+        });
         if(mediaList.get(position) instanceof Movie) {
             Movie movie = ((Movie)mediaList.get(position));
             if(movie.getTitle()==null){

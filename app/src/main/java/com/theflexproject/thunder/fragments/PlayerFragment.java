@@ -20,7 +20,6 @@ import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
-import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -47,7 +46,6 @@ import android.widget.Toast;
 
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
@@ -68,7 +66,6 @@ import androidx.media3.ui.PlayerView;
 import androidx.media3.datasource.DataSource;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.webkit.internal.ApiFeature;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -78,10 +75,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.theflexproject.thunder.DetailActivity;
 import com.theflexproject.thunder.MainActivity;
 import com.theflexproject.thunder.R;
-import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.adapter.SimilarAdapter;
 import com.theflexproject.thunder.model.FirebaseManager;
@@ -144,6 +139,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private View view;
     View customControls;
     private NestedScrollView nestedScrollView;
+    private Episode episode;
 
 
     public PlayerFragment() {
@@ -175,7 +171,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         if (isMovie) {
             loadMovieDetails(itemId);
         } else {
-            loadSeriesDetails();
+            episode = DetailsUtils.getNextEpisode(mActivity, episodeId);
+            loadSeriesDetails(episode);
         }
         setControlListeners();
         return view;
@@ -501,29 +498,38 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle("Select Source");
 
-        // Membuat daftar opsi kualitas untuk ditampilkan
+// Membuat daftar opsi kualitas untuk ditampilkan
         List<String> sourcesOptions = new ArrayList<>();
         for (MyMedia source : sourceList) {
             if (source instanceof Movie) {
                 String qualityStr = MovieQualityExtractor.extractQualtiy(((Movie) source).getFileName());
                 sourcesOptions.add(qualityStr);
-            }else if (source instanceof Episode) {
+            } else if (source instanceof Episode) {
                 String qualityStr = MovieQualityExtractor.extractQualtiy(((Episode) source).getFileName());
                 sourcesOptions.add(qualityStr);
             } else {
                 sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
             }
         }
-        builder.setItems(sourcesOptions.toArray(new String[0]), (dialog, which) -> {
-            MyMedia selectedSource = sourceList.get(which);
+
+// Menyimpan indeks aktif secara default
+        final int[] selectedIndex = {0};
+
+// Gunakan setSingleChoiceItems untuk menyoroti item pertama
+        builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
+            selectedIndex[0] = which; // Simpan indeks pilihan terbaru
+        });
+
+// Tombol OK untuk mengonfirmasi pilihan
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            MyMedia selectedSource = sourceList.get(selectedIndex[0]);
             if (selectedSource instanceof Movie) {
                 String selectedUrl = ((Movie) selectedSource).getUrlString();
                 if (!Objects.equals(selectedUrl, urlString)) {
                     newSource();
                     new Handler(Looper.getMainLooper()).post(() -> initializePlayer(selectedUrl));
                 }
-            }
-            if (selectedSource instanceof Episode) {
+            } else if (selectedSource instanceof Episode) {
                 String selectedUrl = ((Episode) selectedSource).getUrlString();
                 if (!Objects.equals(selectedUrl, urlString)) {
                     newSource();
@@ -532,7 +538,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             }
         });
 
+// Tampilkan dialog
         builder.create().show();
+
     }
     protected void newSource() {
         if (player != null) {
@@ -658,8 +666,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                     loadMovieDetails(movieId);
                 }
                 if (similarOrEpisode.get(position) instanceof Episode){
-                    Episode episode = (Episode) similarOrEpisode.get(position);
-                    String url = episode.getUrlString();
+                    Episode episodeSelected = (Episode) similarOrEpisode.get(position);
+                    String url = episodeSelected.getUrlString();
                     if (!Objects.equals(url, urlString)) {
                         initializePlayer(url);
                     }
@@ -668,7 +676,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         nestedScrollView.smoothScrollTo(0, 0);
                     }
                     newSource();
-                    loadSeriesDetails();
+                    episode = episodeSelected;
+                    loadSeriesDetails(episodeSelected);
                 }
 
             }
@@ -676,25 +685,25 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     }
 
     @SuppressLint("SetTextI18n")
-    private void loadSeriesDetails() {
+    private void loadSeriesDetails(Episode episode) {
 
         if (tvShowDetails!=null){
             String title = tvShowDetails.getName();
             int seasonId = season.getId();
             TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
             movietitle.setText(title);
-            Episode nextEpisode = DetailsUtils.getNextEpisode(mActivity, episodeId);
-            if (nextEpisode!=null){
+
+            if (episode!=null){
                 mActivity.getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new DetailFragment(tvShowDetails, seasonDetails, nextEpisode))
+                        .replace(R.id.detail_container, new DetailFragment(tvShowDetails, seasonDetails, episode))
                         .commit();
                 epstitle.setText("Season: "+seasonDetails.getSeason_number()
-                        +" Episode: "+ nextEpisode.getName());
+                        +" Episode: "+ episode.getName());
                 epstitle.setVisibility(View.VISIBLE);
-                tmdbId = String.valueOf(nextEpisode.getId());
-                urlString = nextEpisode.getUrlString();
+                tmdbId = String.valueOf(episode.getId());
+                urlString = episode.getUrlString();
                 initializePlayer(urlString);
-                sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, nextEpisode.getId());
+                sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
             }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
             if(tvShowDetails.getBackdrop_path()!=null) {
                 Glide.with(mActivity)

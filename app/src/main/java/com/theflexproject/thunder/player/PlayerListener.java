@@ -137,6 +137,7 @@ public class PlayerListener {
         ArrayAdapter<String> speedAdapter = new ArrayAdapter<>(mActivity, android.R.layout.simple_spinner_item, playbackSpeeds);
         speedAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerPlaybackSpeed.setAdapter(speedAdapter);
+        spinnerPlaybackSpeed.setSelection(1);
 
         // Remove dialogView parent if exists
         if (dialogView.getParent() != null) {
