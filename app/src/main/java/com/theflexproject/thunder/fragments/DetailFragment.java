@@ -24,6 +24,12 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
+import com.google.android.ads.nativetemplates.NativeTemplateStyle;
+import com.google.android.ads.nativetemplates.TemplateView;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textview.MaterialTextView;
@@ -37,6 +43,7 @@ import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
+import com.theflexproject.thunder.utils.pembayaran.BillingManager;
 import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.text.DecimalFormat;
@@ -53,8 +60,10 @@ public class DetailFragment extends BaseFragment{
     private MaterialButton rating, donasi, watchlist, download, share;
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
+    private TemplateView template;
     private List<Movie> similarMovie;
     MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
+    private BillingManager billingManager;
     private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
     public DetailFragment(){
     }
@@ -83,6 +92,7 @@ public class DetailFragment extends BaseFragment{
             loadTvDetails();
         }
         listener();
+        loadNative();
         return view;
     }
 
@@ -161,6 +171,27 @@ public class DetailFragment extends BaseFragment{
         moreItem = view.findViewById(R.id.moreItem);
         frameDeskripsi = view.findViewById(R.id.framedeskripsi);
         rating = view.findViewById(R.id.ratingsIkon);
+        template = view.findViewById(R.id.iklan_kecil);
+        billingManager = new BillingManager(mActivity);
+        donasi.setOnClickListener(v -> billingManager.startPurchase(mActivity));
 
     }
+    private void loadNative() {
+        MobileAds.initialize(mActivity);
+        AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
+                .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
+                    @Override
+                    public void onNativeAdLoaded(NativeAd nativeAd) {
+                        NativeTemplateStyle styles = new
+                                NativeTemplateStyle.Builder().build();
+                        template.setStyles(styles);
+                        template.setNativeAd(nativeAd);
+                    }
+                })
+                .build();
+
+        adLoader.loadAd(new AdRequest.Builder().build());
+
+    }
+
 }

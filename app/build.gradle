@@ -12,7 +12,7 @@ android {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 34
-        versionCode 58
+        versionCode 59
         versionName "astha pancadasa"
 
 
@@ -106,13 +106,8 @@ dependencies {
     implementation "androidx.work:work-runtime:2.8.0"
     implementation 'com.google.android.play:app-update:2.1.0'
     implementation 'org.jsoup:jsoup:1.15.4'
-
-
-
-
-
+    implementation 'com.android.billingclient:billing:7.1.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
-
     implementation 'org.apache.commons:commons-text:1.9'
 
 

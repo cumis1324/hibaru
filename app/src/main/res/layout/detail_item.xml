@@ -13,6 +13,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+            <com.google.android.ads.nativetemplates.TemplateView
+                android:id="@+id/iklan_kecil"
+                app:gnt_template_type="@layout/iklan_kecil_layout"
+                android:layout_width="match_parent"
+                android:layout_height="80dp" />
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -42,6 +47,7 @@
                     android:textSize="14sp"
                     android:focusable="false"
                     android:clickable="false"
+                    android:textAllCaps="false"
                     android:visibility="visible"
                     app:icon="@drawable/star"
                     app:iconTint="@color/yellow"

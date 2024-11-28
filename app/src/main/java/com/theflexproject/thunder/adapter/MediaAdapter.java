@@ -215,6 +215,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
         Animation popIn = AnimationUtils.loadAnimation(context,R.anim.pop_in);
         itemView.startAnimation(popIn);
     }
+
 }
 
 

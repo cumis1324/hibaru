@@ -21,6 +21,7 @@ import com.theflexproject.thunder.model.Genre;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.player.PlayerUtils;
 import com.theflexproject.thunder.utils.StringUtils;
 
 import java.util.ArrayList;
@@ -141,6 +142,11 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
             BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
 
             // Mengatur BottomSheet ke state expanded secara otomatis
+            if (PlayerUtils.isTVDevice(requireActivity())){
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }else {
+                behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
 
             // Optional: Mengatur tinggi Bottom Sheet ke full-screen
             bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;

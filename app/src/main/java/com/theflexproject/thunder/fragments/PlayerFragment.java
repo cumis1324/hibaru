@@ -635,7 +635,13 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         @Override
                         public void run() {
                             similarView.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            ScaleCenterItemLayoutManager linearLayoutManager;
+                            if (isTVDevice(mActivity)){
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+                            }
+                            else {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            }
                             similarView.setLayoutManager(linearLayoutManager);
                             SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
                             similarView.setAdapter(moreMovieRecycler);
@@ -743,7 +749,14 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         @Override
                         public void run() {
                             similarView.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            ScaleCenterItemLayoutManager linearLayoutManager;
+                            if (isTVDevice(mActivity)){
+
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+                            }
+                            else {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            }
                             similarView.setLayoutManager(linearLayoutManager);
                             SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
                             similarView.setAdapter(moreMovieRecycler);

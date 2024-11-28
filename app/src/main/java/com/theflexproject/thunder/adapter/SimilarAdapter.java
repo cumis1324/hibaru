@@ -2,7 +2,9 @@
 package com.theflexproject.thunder.adapter;
 
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -35,6 +38,7 @@ import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.Season;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.player.PlayerUtils;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -63,6 +67,22 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull SimilarAdapterHolder holder, int position) {
+        if (isTVDevice(context)) {
+            // Tetapkan lebar dalam dp
+            int widthInDp = 360;
+            int heightInDp = 246;
+            float density = context.getResources().getDisplayMetrics().density;
+            int width = (int) (widthInDp * density); // Lebar dalam px
+            int height = (int) (heightInDp * density);
+            int heightB = (int) (width / 16.0 * 9.0);
+            ViewGroup.LayoutParams params = holder.cardView.getLayoutParams();
+            params.width = width;
+            holder.cardView.setLayoutParams(params);
+            ViewGroup.LayoutParams paramsB = holder.backdrop.getLayoutParams();
+            paramsB.height = heightB; // Tinggi dalam piksel
+            holder.backdrop.setLayoutParams(paramsB);
+        }
+
         holder.backdrop.post(() -> {
             int width = holder.backdrop.getWidth(); // Lebar FrameLayout
             int height = (int) (width / 16.0 * 9.0); // Hitung tinggi sesuai rasio 16:9
@@ -128,6 +148,7 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
 
         TextView name, desc;
         ImageView backdrop, poster;
+        CardView cardView;
 
 
 
@@ -138,6 +159,7 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
             desc = itemView.findViewById(R.id.season_details);
             poster= itemView.findViewById(R.id.sPoster);
             backdrop = itemView.findViewById(R.id.moviepostersimilar);
+            cardView = itemView.findViewById(R.id.tvEpisodeCard);
 
             itemView.setOnClickListener(this);
 
@@ -157,6 +179,14 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
     private void setAnimation(View itemView , int position){
         Animation popIn = AnimationUtils.loadAnimation(context,R.anim.pop_in);
         itemView.startAnimation(popIn);
+    }
+    private boolean isTVDevice(Context context) {
+        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+        if (uiModeManager != null) {
+            int modeType = uiModeManager.getCurrentModeType();
+            return modeType == Configuration.UI_MODE_TYPE_TELEVISION;
+        }
+        return false;
     }
 }
 
