@@ -3,6 +3,8 @@ package com.theflexproject.thunder.fragments;
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
@@ -20,16 +23,21 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.SkuDetails;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import com.google.android.ads.nativetemplates.NativeTemplateStyle;
 import com.google.android.ads.nativetemplates.TemplateView;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.nativead.NativeAd;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textview.MaterialTextView;
@@ -41,23 +49,26 @@ import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
 import com.theflexproject.thunder.utils.pembayaran.BillingManager;
 import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DetailFragment extends BaseFragment{
+
+public class DetailFragment extends BaseFragment implements BillingManager.BillingCallback{
     private Movie movieDetails;
     private int id;
     private boolean isMovie;
     private MaterialTextView deskripsi, judul;
     private ShapeableImageView poster;
-    private MaterialButton rating, donasi, watchlist, download, share;
+    private MaterialButton rating, donasi, watchlist, download, share, subscribe;
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
     private TemplateView template;
@@ -65,6 +76,8 @@ public class DetailFragment extends BaseFragment{
     MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
     private BillingManager billingManager;
     private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
+    private List<SkuDetails> skuDetailsList = new ArrayList<>();
+    private AdRequest adRequest;
     public DetailFragment(){
     }
     public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode){
@@ -84,6 +97,7 @@ public class DetailFragment extends BaseFragment{
                              Bundle savedInstanceState) {
         // Inflate layout untuk fragment
         View view = inflater.inflate(R.layout.detail_item, container, false);
+        adRequest = AdHelper.getAdRequest(mActivity);
         initWidget(view);
         if (isMovie) {
             loadMovieDetails(id);
@@ -92,7 +106,18 @@ public class DetailFragment extends BaseFragment{
             loadTvDetails();
         }
         listener();
-        loadNative();
+        SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        if (!isSubscribed) {
+            template.setVisibility(View.GONE);
+            // Jika tidak berlangganan, muat iklan
+
+        } else {
+            // Jika berlangganan, sembunyikan AdView
+
+            AdHelper.loadNative(mActivity, adRequest, template);
+        }
+
         return view;
     }
 
@@ -161,37 +186,79 @@ public class DetailFragment extends BaseFragment{
 
 
     private void initWidget(View view) {
+        template = view.findViewById(R.id.iklan_kecil);
         deskripsi = view.findViewById(R.id.deskJudul);
         judul = view.findViewById(R.id.judulNama);
         poster = view.findViewById(R.id.gambarPoster);
         donasi = view.findViewById(R.id.donasi);
+        subscribe = view.findViewById(R.id.subscibe);
         watchlist = view.findViewById(R.id.watchlist);
         download = view.findViewById(R.id.download);
         share = view.findViewById(R.id.share);
         moreItem = view.findViewById(R.id.moreItem);
         frameDeskripsi = view.findViewById(R.id.framedeskripsi);
         rating = view.findViewById(R.id.ratingsIkon);
-        template = view.findViewById(R.id.iklan_kecil);
-        billingManager = new BillingManager(mActivity);
-        donasi.setOnClickListener(v -> billingManager.startPurchase(mActivity));
-
-    }
-    private void loadNative() {
-        MobileAds.initialize(mActivity);
-        AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
-                .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
-                    @Override
-                    public void onNativeAdLoaded(NativeAd nativeAd) {
-                        NativeTemplateStyle styles = new
-                                NativeTemplateStyle.Builder().build();
-                        template.setStyles(styles);
-                        template.setNativeAd(nativeAd);
-                    }
-                })
-                .build();
-
-        adLoader.loadAd(new AdRequest.Builder().build());
+        billingManager = new BillingManager(mActivity, this);
+        billingManager.startConnection();
+        donasi.setOnClickListener(v -> showThankYouOptions());
+        subscribe.setOnClickListener(v -> billingManager.loadSubscriptionDetails(this::showSubscriptionOptions));
 
     }
 
+
+    @OptIn(markerClass = UnstableApi.class)
+    @Override
+    public void onProductsLoaded(List<SkuDetails> products) {
+        skuDetailsList.clear();
+        skuDetailsList.addAll(products);
+        Log.d("DetailFragment", "Products loaded: " + skuDetailsList.size());
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    @Override
+    public void onPurchaseCompleted(Purchase purchase) {
+        Log.d("DetailFragment", "Purchase completed: " + purchase.getSkus());
+        Toast.makeText(mActivity, "Pembayaran berhasil", Toast.LENGTH_SHORT).show();
+    }
+    private void showThankYouOptions() {
+        if (skuDetailsList.isEmpty()) {
+            Toast.makeText(requireContext(), "Produk belum tersedia. Coba lagi nanti.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View bottomSheetView = LayoutInflater.from(requireContext()).inflate(R.layout.bottom_sheet_thank_you, null);
+        LinearLayout container = bottomSheetView.findViewById(R.id.skuContainer);
+
+        for (SkuDetails skuDetails : skuDetailsList) {
+            MaterialButton priceButton = new MaterialButton(mActivity, null, R.style.CustomMaterialButton);
+            priceButton.setText(skuDetails.getPrice());
+            priceButton.setOnClickListener(v -> billingManager.startPurchase(mActivity, skuDetails));
+            container.addView(priceButton);
+        }
+
+        bottomSheetDialog.setContentView(bottomSheetView);
+        bottomSheetDialog.show();
+    }
+    private void showSubscriptionOptions(List<SkuDetails> skuDetailsList) {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View bottomSheetView = LayoutInflater.from(requireContext()).inflate(R.layout.bottom_sheet_thank_you, null);
+        LinearLayout container = bottomSheetView.findViewById(R.id.skuContainer);
+
+        for (SkuDetails skuDetails : skuDetailsList) {
+            MaterialButton subscribeButton = new MaterialButton(requireContext());
+            subscribeButton.setText(skuDetails.getPrice());
+            subscribeButton.setOnClickListener(v -> billingManager.startSubscription(requireActivity(), skuDetails));
+            container.addView(subscribeButton);
+        }
+
+        bottomSheetDialog.setContentView(bottomSheetView);
+        bottomSheetDialog.show();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        billingManager.endConnection();
+    }
 }

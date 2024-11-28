@@ -46,6 +46,8 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.SkuDetails;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -68,6 +70,8 @@ import com.theflexproject.thunder.fragments.SearchFragment;
 import com.theflexproject.thunder.fragments.SettingsFragment;
 import com.theflexproject.thunder.fragments.TvShowDetailsFragment;
 import com.theflexproject.thunder.model.FirebaseManager;
+import com.theflexproject.thunder.utils.AdHelper;
+import com.theflexproject.thunder.utils.pembayaran.BillingManager;
 import com.theflexproject.thunder.utils.pembayaran.IklanPremium;
 
 import java.io.File;
@@ -91,7 +95,7 @@ import eightbitlab.com.blurview.BlurView;
 import eightbitlab.com.blurview.RenderScriptBlur;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BillingManager.BillingCallback {
 
     BottomNavigationView bottomNavigationView;
     HomeNewFragment homeFragment = new HomeNewFragment();
@@ -120,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
     private OnUserLeaveHintListener userLeaveHintListener;
     public static List<String> historyList = new ArrayList<>();  // Menyimpan data history
     public static List<String> favoritList = new ArrayList<>();
+    private BillingManager billingManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +141,22 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Notifikasi diizinkan!", Toast.LENGTH_SHORT).show();
         }
+        billingManager = new BillingManager(this, this);
+
+        // Periksa status langganan saat fragment dibuka
+        billingManager.checkSubscriptionStatus(isSubscribed -> {
+            SharedPreferences prefs = getSharedPreferences("langgananUser", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("isSubscribed", isSubscribed);
+            editor.apply();
+            if (isSubscribed) {
+                Log.d("DetailFragment", "User has an active subscription");
+            } else {
+                Log.d("DetailFragment", "User does not have an active subscription");
+
+            }
+        });
+
         // Daftarkan receiver untuk menerima pembaruan dari ModifiedCheckWorker
 
 
@@ -477,6 +498,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void setOnUserLeaveHintListener(OnUserLeaveHintListener listener) {
         this.userLeaveHintListener = listener;
+    }
+
+    @Override
+    public void onProductsLoaded(List<SkuDetails> products) {
+
+    }
+
+    @Override
+    public void onPurchaseCompleted(Purchase purchase) {
+
     }
 
     public interface OnUserLeaveHintListener {

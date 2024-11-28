@@ -230,6 +230,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             navigationRailView.setVisibility(View.GONE);
             fullscreen.setVisibility(View.GONE);
         }
+        exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
     }
 
     private void setControlListeners() {

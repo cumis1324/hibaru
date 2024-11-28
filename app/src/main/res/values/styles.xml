@@ -9,5 +9,10 @@
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+    <style name="CustomMaterialButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/gnt_blue</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
 
 </resources>

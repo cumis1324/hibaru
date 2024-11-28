@@ -2,9 +2,11 @@ package com.theflexproject.thunder.utils.pembayaran;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.android.billingclient.api.Purchase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -15,7 +17,9 @@ import com.theflexproject.thunder.model.FavHis;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class IklanPremium {
     private static final String TAG = "SubscriptionUtils";
@@ -121,6 +125,7 @@ public class IklanPremium {
             }
         });
     }
+
 
 
 }
