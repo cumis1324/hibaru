@@ -47,6 +47,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
 import androidx.media3.common.AudioAttributes;
@@ -74,6 +75,13 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
+import com.google.ads.interactivemedia.v3.api.AdDisplayContainer;
+import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
+import com.google.ads.interactivemedia.v3.api.AdPodInfo;
+import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
+import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo;
+import com.google.ads.interactivemedia.v3.api.player.ContentProgressProvider;
+import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
@@ -97,6 +105,13 @@ import com.theflexproject.thunder.utils.MovieQualityExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import com.google.ads.interactivemedia.v3.api.AdEvent;
+import com.google.ads.interactivemedia.v3.api.AdsLoader;
+import com.google.ads.interactivemedia.v3.api.AdsManager;
+import com.google.ads.interactivemedia.v3.api.AdsRequest;
+import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
+import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer;
 
 @UnstableApi
 public class PlayerFragment extends BaseFragment implements PlayerControlView.VisibilityListener, MainActivity.OnUserLeaveHintListener {
@@ -148,6 +163,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private Episode episode;
     private AdRequest adRequest;
     private boolean isSubscribed;
+    private AdsLoader adsLoader;
+    private AdsManager adsManager;
+    private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
 
     public PlayerFragment() {
@@ -186,10 +204,31 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             loadSeriesDetails(episode);
         }
         setControlListeners();
+        // Initialize IMA SDK
+        // Initialize IMA SDK
+        ImaSdkFactory sdkFactory = ImaSdkFactory.getInstance();
+        ImaSdkSettings imaSdkSettings = sdkFactory.createImaSdkSettings();
+        imaSdkSettings.setDebugMode(true); // Enable debug mode if needed
+        imaSdkSettings.setLanguage("en"); // Set language for ads
+        AdDisplayContainer adDisplayContainer = sdkFactory.createAdDisplayContainer();
+        ViewGroup playerLayout = (ViewGroup) playerView.getParent();
+        adDisplayContainer.setAdContainer(playerLayout);  // Set the parent ViewGroup here
+
+        adsLoader = sdkFactory.createAdsLoader(requireContext(), imaSdkSettings, adDisplayContainer);
+        adsLoader.addAdsLoadedListener(adsManagerLoadedEvent -> {
+            adsManager = adsManagerLoadedEvent.getAdsManager();
+            adsManager.addAdEventListener(this::onAdEvent);
+            adsManager.addAdErrorListener(this::onAdError);
+            adsManager.init();
+        });
+
+        adsLoader.addAdErrorListener(this::onAdError);
+
+        // Request ads
+
 
         return view;
     }
-
 
     private void initFirebase() {
         manager = new FirebaseManager();
@@ -467,8 +506,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 if (isTVDevice(mActivity)){
                     movietitle.setVisibility(View.VISIBLE);
                 }
-                if (isSubscribed){
-                    AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
+                if (!isSubscribed){
+                    requestAds();
+                    //AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
                     PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
                 }
                 playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
@@ -789,5 +829,119 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             }});
         thread.start();
     }
+
+    private void requestAds() {
+        // Membuat VideoAdPlayer menggunakan ExoPlayer
+        VideoAdPlayer videoAdPlayer = new VideoAdPlayer() {
+            @Override
+            public int getVolume() {
+                return 0;  // Set volume to 0 or as required
+            }
+
+            @NonNull
+            @Override
+            public VideoProgressUpdate getAdProgress() {
+                // Return valid progress update
+                return new VideoProgressUpdate(player.getCurrentPosition(), player.getDuration());
+            }
+
+            @Override
+            public void addCallback(@NonNull VideoAdPlayerCallback videoAdPlayerCallback) {
+                // Add callback if needed
+            }
+
+            @Override
+            public void loadAd(@NonNull AdMediaInfo adMediaInfo, @NonNull AdPodInfo adPodInfo) {
+                // Ensure ad is loaded before playing
+                player.prepare();  // Prepare the player with the ad media
+                player.play();  // Start ad playback
+            }
+
+            @Override
+            public void pauseAd(@NonNull AdMediaInfo adMediaInfo) {
+                // Pause the ad
+                player.setPlayWhenReady(false);
+            }
+
+            @Override
+            public void playAd(@NonNull AdMediaInfo adMediaInfo) {
+                // Play the ad
+                player.setPlayWhenReady(true);
+                player.seekTo(0);  // Start from the beginning of the ad
+            }
+
+            @Override
+            public void release() {
+                // Release the player
+                player.release();
+            }
+
+            @Override
+            public void removeCallback(@NonNull VideoAdPlayerCallback videoAdPlayerCallback) {
+                // Remove callback if needed
+            }
+
+            @Override
+            public void stopAd(@NonNull AdMediaInfo adMediaInfo) {
+                // Stop the ad
+                player.seekTo(0);
+                player.setPlayWhenReady(false);
+            }
+        };
+
+        // Membuat dan menyetel AdDisplayContainer dengan VideoAdPlayer
+        ImaSdkFactory sdkFactory = ImaSdkFactory.getInstance();
+        AdDisplayContainer adDisplayContainer = sdkFactory.createAdDisplayContainer();
+        ViewGroup playerLayout = (ViewGroup) playerView.getParent();
+        adDisplayContainer.setAdContainer(playerLayout);  // Set the parent ViewGroup here
+        adDisplayContainer.setPlayer(videoAdPlayer);  // Set VideoAdPlayer
+
+        // Membuat AdsRequest
+        AdsRequest adsRequest = sdkFactory.createAdsRequest();
+        adsRequest.setAdTagUrl(vastUrl);
+        adsRequest.setContentProgressProvider(new ContentProgressProvider() {
+            @NonNull
+            @Override
+            public VideoProgressUpdate getContentProgress() {
+                return new VideoProgressUpdate(player.getCurrentPosition(), player.getDuration());
+            }
+        });
+
+        // Meminta iklan
+        adsLoader.requestAds(adsRequest);
+    }
+
+
+
+
+    private void playContent() {
+        player.setPlayWhenReady(true);
+    }
+
+    private void onAdEvent(AdEvent adEvent) {
+        switch (adEvent.getType()) {
+            case LOADED:
+                adsManager.start();
+                break;
+
+            case CONTENT_PAUSE_REQUESTED:
+                requireActivity().runOnUiThread(() -> player.setPlayWhenReady(false)); // Pause content
+                break;
+
+            case CONTENT_RESUME_REQUESTED:
+                requireActivity().runOnUiThread(this::playContent); // Resume content playback
+                break;
+
+            default:
+                break;
+        }
+    }
+
+
+    private void onAdError(AdErrorEvent adErrorEvent) {
+        // Handle ad error and proceed to content playback
+        requireActivity().runOnUiThread(this::playContent);
+    }
+
 
 }

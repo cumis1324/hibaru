@@ -109,6 +109,7 @@ dependencies {
     implementation 'com.android.billingclient:billing:7.1.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation 'org.apache.commons:commons-text:1.9'
+    implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
 
 
 }

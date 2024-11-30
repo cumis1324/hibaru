@@ -74,7 +74,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private MaterialButton rating, donasi, watchlist, download, share, subscribe;
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
-    private TemplateView template;
+    private TemplateView template, templateBesar;
     private List<Movie> similarMovie;
     MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
     private BillingManager billingManager;
@@ -112,13 +112,17 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
         boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
         if (!isSubscribed) {
-            template.setVisibility(View.GONE);
+            AdHelper.loadNative(mActivity, adRequest, template);
+            AdHelper.loadNative(mActivity, adRequest, templateBesar);
+
             // Jika tidak berlangganan, muat iklan
 
         } else {
             // Jika berlangganan, sembunyikan AdView
+            template.setVisibility(View.GONE);
+            templateBesar.setVisibility(View.GONE);
 
-            AdHelper.loadNative(mActivity, adRequest, template);
+
         }
 
         return view;
@@ -190,6 +194,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
 
     private void initWidget(View view) {
         template = view.findViewById(R.id.iklan_kecil);
+        templateBesar = view.findViewById(R.id.iklan_besar);
         deskripsi = view.findViewById(R.id.deskJudul);
         judul = view.findViewById(R.id.judulNama);
         poster = view.findViewById(R.id.gambarPoster);
@@ -198,7 +203,6 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         watchlist = view.findViewById(R.id.watchlist);
         download = view.findViewById(R.id.download);
         share = view.findViewById(R.id.share);
-        moreItem = view.findViewById(R.id.moreItem);
         frameDeskripsi = view.findViewById(R.id.framedeskripsi);
         rating = view.findViewById(R.id.ratingsIkon);
         billingManager = new BillingManager(mActivity, this);
