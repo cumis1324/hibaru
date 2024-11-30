@@ -8,11 +8,14 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -243,9 +246,38 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private void showSubscriptionOptions(List<SkuDetails> skuDetailsList) {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
         View bottomSheetView = LayoutInflater.from(requireContext()).inflate(R.layout.bottom_sheet_thank_you, null);
+        TextView title = bottomSheetView.findViewById(R.id.title);
         LinearLayout container = bottomSheetView.findViewById(R.id.skuContainer);
 
         for (SkuDetails skuDetails : skuDetailsList) {
+            title.setText("Langganan 15ribu perbulan \n untuk menikmati nfgplus tanpa iklan \n" + skuDetails.getTitle());
+            // Buat ImageView untuk menampilkan gambar dari URL
+            ImageView imageView = new ImageView(requireContext());
+            LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,  // width match_parent
+                    ViewGroup.LayoutParams.WRAP_CONTENT  // height wrap_content
+            );
+            imageLayoutParams.setMargins(0, 16, 0, 16); // Tambahkan margin opsional
+            imageView.setLayoutParams(imageLayoutParams);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP); // Atur skala gambar agar terlihat proporsional
+
+            // Tambahkan padding 5dp ke ImageView
+            int paddingInPx = (int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP,
+                    5,
+                    requireContext().getResources().getDisplayMetrics()
+            );
+            imageView.setPadding(paddingInPx, paddingInPx, paddingInPx, paddingInPx);
+
+            // Muat gambar dari URL menggunakan Glide
+            Glide.with(requireContext())
+                    .load("https://drive3.nfgplusmirror.workers.dev/0:/photo_2024-11-01_18-36-55_7432395722672046100.jpg") // Ganti dengan URL gambar
+                    .into(imageView);
+
+            // Tambahkan ImageView ke container sebelum tombol
+            container.addView(imageView);
+
+            // Buat tombol untuk langganan
             MaterialButton subscribeButton = new MaterialButton(requireContext());
             subscribeButton.setText(skuDetails.getPrice());
             subscribeButton.setOnClickListener(v -> billingManager.startSubscription(requireActivity(), skuDetails));
@@ -255,6 +287,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         bottomSheetDialog.setContentView(bottomSheetView);
         bottomSheetDialog.show();
     }
+
 
     @Override
     public void onDestroy() {

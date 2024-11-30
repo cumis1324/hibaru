@@ -40,6 +40,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import androidx.media3.ui.PlayerView;
 
+import com.google.android.gms.ads.AdRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,6 +48,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.model.FirebaseManager;
+import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.LanguageUtils;
 
 import java.time.ZonedDateTime;
@@ -63,6 +65,9 @@ public class PlayerUtils {
     static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(HISTORY_PATH);
     static String userId = manager.getCurrentUser().getUid();
     public static ValueEventListener lastPositionListener;
+    private static boolean ad25;
+    private static boolean ad50;
+    private static boolean ad75;
 
     public static void enterFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
 
@@ -186,5 +191,25 @@ public class PlayerUtils {
         return new DefaultMediaSourceFactory(mActivity)
                 .setDataSourceFactory(dataSourceFactory)
                 .setDrmSessionManagerProvider(drmProvider);
+    }
+    public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView, AdRequest adRequest) {
+        if (player != null){
+            long cp = player.getCurrentPosition();
+            long tp = player.getDuration();
+            if (tp > 0){
+                if (!ad25 && cp >= tp * 0.25){
+                    AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                    ad25 = true;
+                }
+                if (!ad50 && cp >= tp * 0.50){
+                    AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                    ad50 = true;
+                }
+                if (!ad75 && cp >= tp * 0.75){
+                    AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                    ad75 = true;
+                }
+            }
+        }
     }
 }

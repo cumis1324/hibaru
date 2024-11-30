@@ -20,6 +20,9 @@ import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -71,6 +74,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
+import com.google.android.gms.ads.AdRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.firebase.database.DatabaseReference;
@@ -85,6 +89,8 @@ import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.player.PlayerUtils;
+import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.MovieQualityExtractor;
 
@@ -140,6 +146,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     View customControls;
     private NestedScrollView nestedScrollView;
     private Episode episode;
+    private AdRequest adRequest;
+    private boolean isSubscribed;
 
 
     public PlayerFragment() {
@@ -159,6 +167,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ((MainActivity) mActivity).setOnUserLeaveHintListener(this);
+        adRequest = AdHelper.getAdRequest(mActivity);
+        SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+        isSubscribed = prefs.getBoolean("isSubscribed", false);
         if (isTVDevice(mActivity)) {
             view = inflater.inflate(R.layout.video_tv, container, false);
             nestedScrollView = view.findViewById(R.id.nestedPlayerTv);
@@ -175,6 +186,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             loadSeriesDetails(episode);
         }
         setControlListeners();
+
         return view;
     }
 
@@ -412,6 +424,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         if (isInPictureInPictureMode && player != null) {
             customControls.setVisibility(View.GONE);
         }else {
+            if (!isTVDevice(mActivity)) {
+                // Terapkan logika orientasi untuk perangkat non-TV
+                mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
             customControls.setVisibility(View.VISIBLE);
         }
         if (!isInPictureInPictureMode && player != null) {
@@ -447,8 +463,13 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 customBufferingIndicator.setVisibility(View.GONE);
                 ff.setOnClickListener(v -> fastForward(player, ff));
                 bw.setOnClickListener(v -> rewind(player, bw));
+
                 if (isTVDevice(mActivity)){
                     movietitle.setVisibility(View.VISIBLE);
+                }
+                if (isSubscribed){
+                    AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
+                    PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
                 }
                 playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
             }
