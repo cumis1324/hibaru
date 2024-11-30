@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+*.log
+*.mpdp
+/nativetemplates/build
+/.github
+/app/release
