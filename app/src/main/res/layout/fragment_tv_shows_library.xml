@@ -22,23 +22,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Sort By"
-                    android:paddingBottom="8dp" />
+                    android:paddingBottom="8dp"
+                    android:textColor="@color/black"/>
 
                 <Spinner
                     android:id="@+id/sortBy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:spinnerMode="dropdown"
+                    android:popupTheme="@style/SpinnerDropdownStyle"
                     />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Order By"
-                    android:paddingBottom="8dp" />
+                    android:paddingBottom="8dp"
+                    color="@color/black"/>
 
                 <Spinner
                     android:id="@+id/orderBy"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:spinnerMode="dropdown"
+                    android:popupTheme="@style/SpinnerDropdownStyle"
                     />
 
         </LinearLayout>

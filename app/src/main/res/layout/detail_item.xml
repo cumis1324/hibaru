@@ -113,7 +113,7 @@
                     app:cornerRadius="12dp"
                     android:layout_centerVertical="true"
                     app:iconTint="@color/black"
-                    app:backgroundTint="@color/white"
+                    app:backgroundTint="#DCDCDC"
                     android:text="Subcribe"
                     android:textAllCaps="false"
                     android:layout_alignParentEnd="true"/>
@@ -135,7 +135,7 @@
                         app:cornerRadius="12dp"
                         app:icon="@drawable/ic_donasi"
                         app:iconTint="@color/black"
-                        app:backgroundTint="@color/white"
+                        app:backgroundTint="@color/abu_terang"
                         android:text="Terima Kasih"
                         android:textAllCaps="false"/>
 
@@ -146,7 +146,7 @@
                         android:layout_marginHorizontal="5dp"
                         android:text="Add Watchlist"
                         android:textAllCaps="false"
-                        app:backgroundTint="@color/white"
+                        app:backgroundTint="@color/abu_terang"
                         app:cornerRadius="12dp"
                         app:icon="@drawable/ic_add"
                         app:iconTint="@color/black" />
@@ -159,7 +159,7 @@
                         app:cornerRadius="12dp"
                         app:icon="@drawable/ic_download"
                         app:iconTint="@color/black"
-                        app:backgroundTint="@color/white"
+                        app:backgroundTint="@color/abu_terang"
                         android:text="Download"
                         android:textAllCaps="false"/>
                     <com.google.android.material.button.MaterialButton
@@ -170,7 +170,7 @@
                         app:cornerRadius="12dp"
                         app:icon="@drawable/ic_send"
                         app:iconTint="@color/black"
-                        app:backgroundTint="@color/white"
+                        app:backgroundTint="@color/abu_terang"
                         android:text="Share"
                         android:textAllCaps="false"/>
                 </LinearLayout>

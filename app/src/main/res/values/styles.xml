@@ -13,6 +13,18 @@
         <item name="backgroundTint">@color/gnt_blue</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
+    <style name="SpinnerTextStyle">
+        <item name="android:textColor">@color/black</item> <!-- Warna teks -->
+        <item name="android:padding">8dp</item> <!-- Opsional: Padding -->
+        <item name="android:textSize">16sp</item> <!-- Ukuran teks -->
+    </style>
+
+    <!-- Gaya untuk teks Spinner di dropdown -->
+    <style name="SpinnerDropdownStyle">
+        <item name="android:textColor">@color/black</item> <!-- Warna teks dropdown -->
+        <item name="android:padding">8dp</item> <!-- Opsional: Padding -->
+        <item name="android:textSize">16sp</item> <!-- Ukuran teks -->
+    </style>
 
 
 </resources>

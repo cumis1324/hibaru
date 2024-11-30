@@ -54,6 +54,7 @@
                     android:layout_weight="1"
                     android:textSize="14sp"
                     android:maxLines="2"
+                    android:textColor="@color/black"
                     android:text="Season Name" />
         </LinearLayout>
     </LinearLayout>
