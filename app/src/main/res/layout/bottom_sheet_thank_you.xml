@@ -13,10 +13,14 @@
         android:textColor="@color/black"
         android:gravity="center"
         android:paddingBottom="8dp" />
-
-    <LinearLayout
-        android:id="@+id/skuContainer"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:id="@+id/skuContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </androidx.core.widget.NestedScrollView>
+
 </LinearLayout>

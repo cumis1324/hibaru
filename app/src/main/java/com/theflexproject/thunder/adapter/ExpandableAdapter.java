@@ -211,7 +211,7 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         void bind(TVShowSeasonDetails season, Episode episode) {
             if (episode.getEpisode_number()!=0) {
                 episodeName.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
-                episodeName.setOnClickListener(v -> {
+                itemView.setOnClickListener(v -> {
                     PlayerFragment playerFragment = new PlayerFragment(tvShow, season, episode.id);
                         FragmentTransaction transaction = fragmentManager.beginTransaction();
 

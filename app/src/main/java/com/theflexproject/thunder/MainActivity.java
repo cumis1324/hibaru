@@ -46,6 +46,7 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.SkuDetails;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -499,9 +500,15 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     public void setOnUserLeaveHintListener(OnUserLeaveHintListener listener) {
         this.userLeaveHintListener = listener;
     }
+    
 
     @Override
     public void onProductsLoaded(List<SkuDetails> products) {
+
+    }
+
+    @Override
+    public void onSubscriptionLoaded(List<SkuDetails> subscriptions) {
 
     }
 

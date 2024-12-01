@@ -32,6 +32,8 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.SkuDetails;
 import com.bumptech.glide.Glide;
@@ -87,6 +89,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private BillingManager billingManager;
     private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
     private List<SkuDetails> skuDetailsList = new ArrayList<>();
+    private List<SkuDetails> skuSubList = new ArrayList<>();
     private AdRequest adRequest;
     private List<MyMedia> sources;
     private List<MyMedia> mediaList;
@@ -241,11 +244,16 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         billingManager = new BillingManager(mActivity, this);
         billingManager.startConnection();
         donasi.setText("Send Gift");
-        donasi.setOnClickListener(v -> showThankYouOptions());
-        subscribe.setOnClickListener(v -> billingManager.loadSubscriptionDetails(this::showSubscriptionOptions));
+        donasi.setOnClickListener(v -> {
+            showThankYouOptions();
+        });
+        subscribe.setOnClickListener(v -> {
+
+            showSubscriptionOptions();
+        });
+
 
     }
-
 
     @OptIn(markerClass = UnstableApi.class)
     @Override
@@ -253,6 +261,12 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         skuDetailsList.clear();
         skuDetailsList.addAll(products);
         Log.d("DetailFragment", "Products loaded: " + skuDetailsList.size());
+    }
+
+    @Override
+    public void onSubscriptionLoaded(List<SkuDetails> subscriptions) {
+        skuSubList.clear();
+        skuSubList.addAll(subscriptions);
     }
 
     @OptIn(markerClass = UnstableApi.class)
@@ -271,9 +285,12 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         View bottomSheetView = LayoutInflater.from(requireContext()).inflate(R.layout.bottom_sheet_thank_you, null);
         LinearLayout container = bottomSheetView.findViewById(R.id.skuContainer);
 
-        for (SkuDetails skuDetails : skuDetailsList) {
-            MaterialButton priceButton = new MaterialButton(mActivity, null, R.style.CustomMaterialButton);
+        for (int i = 0; i < skuDetailsList.size(); i++) {
+            SkuDetails skuDetails = skuDetailsList.get(i);
+            MaterialButton priceButton = new MaterialButton(getContext());
             priceButton.setText(skuDetails.getPrice());
+            priceButton.setBackgroundColor(getResources().getColor(R.color.blue)); // Button color
+            priceButton.setTextColor(getResources().getColor(R.color.white));
             priceButton.setOnClickListener(v -> billingManager.startPurchase(mActivity, skuDetails));
             container.addView(priceButton);
         }
@@ -281,50 +298,80 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         bottomSheetDialog.setContentView(bottomSheetView);
         bottomSheetDialog.show();
     }
-    private void showSubscriptionOptions(List<SkuDetails> skuDetailsList) {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
-        View bottomSheetView = LayoutInflater.from(requireContext()).inflate(R.layout.bottom_sheet_thank_you, null);
+
+    @OptIn(markerClass = UnstableApi.class)
+    private void showSubscriptionOptions() {
+        if (skuSubList == null || skuSubList.isEmpty()) {
+            Log.d("BillingManager", "No subscription details available.");
+            return; // Jangan lanjut jika tidak ada data
+        }
+
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(getContext());
+        View bottomSheetView = LayoutInflater.from(getContext()).inflate(R.layout.bottom_sheet_thank_you, null);
         TextView title = bottomSheetView.findViewById(R.id.title);
         LinearLayout container = bottomSheetView.findViewById(R.id.skuContainer);
 
-        for (SkuDetails skuDetails : skuDetailsList) {
-            title.setText("Langganan 15ribu perbulan \n untuk menikmati nfgplus tanpa iklan \n" + skuDetails.getTitle());
-            // Buat ImageView untuk menampilkan gambar dari URL
-            ImageView imageView = new ImageView(requireContext());
-            LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,  // width match_parent
-                    ViewGroup.LayoutParams.WRAP_CONTENT  // height wrap_content
-            );
-            imageLayoutParams.setMargins(0, 16, 0, 16); // Tambahkan margin opsional
-            imageView.setLayoutParams(imageLayoutParams);
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP); // Atur skala gambar agar terlihat proporsional
+        // Set title
+        title.setText("Langganan 15ribu perbulan \n untuk menikmati nfgplus tanpa iklan");
 
-            // Tambahkan padding 5dp ke ImageView
+        // Gunakan for loop dengan index untuk menghindari ConcurrentModificationException
+        for (int i = 0; i < skuSubList.size(); i++) {
+            SkuDetails skuDetails = skuSubList.get(i);
+
+            // Create ImageView for displaying the image
+            ImageView imageView = new ImageView(getContext());
+            LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            imageLayoutParams.setMargins(0, 16, 0, 16); // Optional margin
+            imageView.setLayoutParams(imageLayoutParams);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            // Add padding to ImageView
             int paddingInPx = (int) TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
                     5,
-                    requireContext().getResources().getDisplayMetrics()
+                    getResources().getDisplayMetrics()
             );
             imageView.setPadding(paddingInPx, paddingInPx, paddingInPx, paddingInPx);
 
-            // Muat gambar dari URL menggunakan Glide
-            Glide.with(requireContext())
-                    .load("https://drive3.nfgplusmirror.workers.dev/0:/photo_2024-11-01_18-36-55_7432395722672046100.jpg") // Ganti dengan URL gambar
+            // Load image using Glide
+            String imageUrl = "https://drive3.nfgplusmirror.workers.dev/0:/photo_2024-11-01_18-36-55_7432395722672046100.jpg"; // Replace with your image URL
+            Glide.with(getContext())
+                    .load(imageUrl)
                     .into(imageView);
 
-            // Tambahkan ImageView ke container sebelum tombol
+            // Add ImageView to container before the button
             container.addView(imageView);
 
-            // Buat tombol untuk langganan
-            MaterialButton subscribeButton = new MaterialButton(requireContext());
+            // Create subscribe button
+            MaterialButton subscribeButton = new MaterialButton(getContext());
             subscribeButton.setText(skuDetails.getPrice());
-            subscribeButton.setOnClickListener(v -> billingManager.startSubscription(requireActivity(), skuDetails));
+            subscribeButton.setBackgroundColor(getResources().getColor(R.color.blue)); // Button color
+            subscribeButton.setTextColor(getResources().getColor(R.color.white)); // Button text color
+            subscribeButton.setOnClickListener(v -> billingManager.startSubscription(getActivity(), skuDetails));
+
+            // Add margins and layout params to button
+            LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            buttonLayoutParams.setMargins(0, 16, 0, 16); // Optional margin for button
+            subscribeButton.setLayoutParams(buttonLayoutParams);
+
+            // Add button to container
             container.addView(subscribeButton);
         }
 
+        // Set the content view for the BottomSheetDialog
         bottomSheetDialog.setContentView(bottomSheetView);
+
+        // Show the BottomSheetDialog
         bottomSheetDialog.show();
     }
+
+
 
 
     @Override

@@ -44,11 +44,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(deepLink));
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                this,
+                getApplicationContext(),
                 0,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
+
 
         // Membuat dan menampilkan notifikasi
         createNotificationChannel();

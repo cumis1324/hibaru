@@ -23,6 +23,7 @@ public class BillingManager {
     private static final String TAG = "BillingManager";
     private final BillingClient billingClient;
     private final List<SkuDetails> skuDetailsList = new ArrayList<>();
+    private final List<SkuDetails> skuSubList = new ArrayList<>();
     private final BillingCallback billingCallback;
 
     public BillingManager(Context context, BillingCallback callback) {
@@ -49,10 +50,10 @@ public class BillingManager {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "Billing setup successful");
                     loadProductDetails();
+                    loadSubscriptionDetails();
+
                 } else {
-                    Log.e(TAG, "Billing setup failed: " + billingResult.getDebugMessage());
                 }
             }
 
@@ -63,7 +64,7 @@ public class BillingManager {
         });
     }
 
-    private void loadProductDetails() {
+    public void loadProductDetails() {
         List<String> skuList = new ArrayList<>();
         skuList.add("thank_you_message");
         skuList.add("super_thanks_50");
@@ -106,25 +107,35 @@ public class BillingManager {
 
     public interface BillingCallback {
         void onProductsLoaded(List<SkuDetails> products);
+        void onSubscriptionLoaded(List<SkuDetails> subscriptions);
 
         void onPurchaseCompleted(Purchase purchase);
     }
-    public void loadSubscriptionDetails(OnSkuDetailsLoadedListener listener) {
-        List<String> skuList = Collections.singletonList("langganan_1_bulan");
+    public void loadSubscriptionDetails() {
+        List<String> skuList = new ArrayList<>();
+        String sku = "langganan_1_bulan";
+        skuList.add(sku);
         SkuDetailsParams params = SkuDetailsParams.newBuilder()
                 .setSkusList(skuList)
                 .setType(BillingClient.SkuType.SUBS)
                 .build();
 
+        Log.d("BillingManager", "Loading subscription details...");
         billingClient.querySkuDetailsAsync(params, (billingResult, skuDetails) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetails != null) {
-                skuDetailsList.clear();
-                skuDetailsList.addAll(skuDetails);
-                listener.onSkuDetailsLoaded(skuDetails);
+                Log.d("BillingManager", "Loaded SKU details: " + skuDetails.size());
+                for (SkuDetails detail : skuDetails) {
+                    Log.d("BillingManager", "SKU: " + detail.getSku() + ", Price: " + detail.getPrice());
+                }
+                skuSubList.clear();
+                skuSubList.addAll(skuDetails);
+                billingCallback.onSubscriptionLoaded(skuSubList);
             } else {
-                Log.e("BillingManager", "Failed to load subscriptions");
+                Log.e("BillingManager", "Failed to load subscriptions: " + billingResult.getDebugMessage());
             }
         });
+
+
     }
 
     public void startSubscription(Activity activity, SkuDetails skuDetails) {
@@ -136,9 +147,7 @@ public class BillingManager {
     }
 
 
-    public interface OnSkuDetailsLoadedListener {
-        void onSkuDetailsLoaded(List<SkuDetails> skuDetails);
-    }
+
     public void checkSubscriptionStatus(OnSubscriptionStatusListener listener) {
         billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS, (billingResult, purchasesList) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchasesList != null) {
