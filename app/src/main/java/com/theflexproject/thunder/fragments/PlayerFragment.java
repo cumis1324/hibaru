@@ -211,8 +211,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         imaSdkSettings.setDebugMode(true); // Enable debug mode if needed
         imaSdkSettings.setLanguage("en"); // Set language for ads
         AdDisplayContainer adDisplayContainer = sdkFactory.createAdDisplayContainer();
-        ViewGroup playerLayout = (ViewGroup) playerView.getParent();
-        adDisplayContainer.setAdContainer(playerLayout);  // Set the parent ViewGroup here
+        adDisplayContainer.setAdContainer(playerView.getOverlayFrameLayout());  // Set the parent ViewGroup here
 
         adsLoader = sdkFactory.createAdsLoader(requireContext(), imaSdkSettings, adDisplayContainer);
         adsLoader.addAdsLoadedListener(adsManagerLoadedEvent -> {
@@ -559,8 +558,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private void showSources() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle("Select Source");
-
-// Membuat daftar opsi kualitas untuk ditampilkan
         List<String> sourcesOptions = new ArrayList<>();
         for (MyMedia source : sourceList) {
             if (source instanceof Movie) {
@@ -573,16 +570,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
             }
         }
-
-// Menyimpan indeks aktif secara default
         final int[] selectedIndex = {0};
-
-// Gunakan setSingleChoiceItems untuk menyoroti item pertama
         builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
             selectedIndex[0] = which; // Simpan indeks pilihan terbaru
         });
-
-// Tombol OK untuk mengonfirmasi pilihan
         builder.setPositiveButton("OK", (dialog, which) -> {
             MyMedia selectedSource = sourceList.get(selectedIndex[0]);
             if (selectedSource instanceof Movie) {
@@ -599,8 +590,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 }
             }
         });
-
-// Tampilkan dialog
         builder.create().show();
 
     }
@@ -892,8 +881,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         // Membuat dan menyetel AdDisplayContainer dengan VideoAdPlayer
         ImaSdkFactory sdkFactory = ImaSdkFactory.getInstance();
         AdDisplayContainer adDisplayContainer = sdkFactory.createAdDisplayContainer();
-        ViewGroup playerLayout = (ViewGroup) playerView.getParent();
-        adDisplayContainer.setAdContainer(playerLayout);  // Set the parent ViewGroup here
+        adDisplayContainer.setAdContainer(playerView.getOverlayFrameLayout());  // Set the parent ViewGroup here
         adDisplayContainer.setPlayer(videoAdPlayer);  // Set VideoAdPlayer
 
         // Membuat AdsRequest

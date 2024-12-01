@@ -76,6 +76,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import com.google.firebase.database.FirebaseDatabase;
+import com.theflexproject.thunder.utils.AdHelper;
 
 public class TvShowDetailsFragment extends BaseFragment {
 
@@ -100,6 +101,7 @@ public class TvShowDetailsFragment extends BaseFragment {
     FirebaseManager manager;
     DatabaseReference databaseReference;
     BottomNavigationView botnav;
+    private AdRequest adRequest;
 
 
     public TvShowDetailsFragment() {
@@ -119,12 +121,20 @@ public class TvShowDetailsFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view , savedInstanceState);
+        adRequest = AdHelper.getAdRequest(mActivity);
         saweria = view.findViewById(R.id.saweria);
         template = view.findViewById(R.id.my_template);
         botnav = mActivity.findViewById(R.id.bottom_navigation);
         botnav.setVisibility(View.GONE);
         manager = new FirebaseManager();
-        loadNative();
+        SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        if (!isSubscribed) {
+            AdHelper.loadNative(mActivity, adRequest, template);
+        } else {
+            // Jika berlangganan, sembunyikan AdView
+            template.setVisibility(View.GONE);
+        }
 
         initWidgets(view);
         loadDetails();
@@ -162,23 +172,6 @@ public class TvShowDetailsFragment extends BaseFragment {
         rating = view.findViewById(R.id.ratingsShow);
     }
 
-    private void loadNative() {
-        MobileAds.initialize(mActivity);
-        AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
-                .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
-                    @Override
-                    public void onNativeAdLoaded(NativeAd nativeAd) {
-                        NativeTemplateStyle styles = new
-                                NativeTemplateStyle.Builder().build();
-                        template.setStyles(styles);
-                        template.setNativeAd(nativeAd);
-                    }
-                })
-                .build();
-
-        adLoader.loadAd(new AdRequest.Builder().build());
-
-    }
 
 
     private void loadDetails(){

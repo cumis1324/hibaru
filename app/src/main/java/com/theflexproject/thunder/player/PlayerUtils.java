@@ -1,16 +1,25 @@
 package com.theflexproject.thunder.player;
 
+import static android.content.Context.DOWNLOAD_SERVICE;
 import static com.theflexproject.thunder.player.PlayerListener.fastForward;
 import static com.theflexproject.thunder.player.PlayerListener.rewind;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
 import android.app.PictureInPictureParams;
 import android.app.UiModeManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Rational;
 import android.view.GestureDetector;
@@ -26,6 +35,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
+import androidx.core.content.FileProvider;
+import androidx.fragment.app.FragmentActivity;
 import androidx.media3.common.C;
 import androidx.media3.common.Format;
 import androidx.media3.common.Player;
@@ -41,16 +52,30 @@ import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import androidx.media3.ui.PlayerView;
 
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.model.DownloadItem;
 import com.theflexproject.thunder.model.FirebaseManager;
+import com.theflexproject.thunder.model.Movie;
+import com.theflexproject.thunder.model.MyMedia;
+import com.theflexproject.thunder.model.TVShowInfo.Episode;
+import com.theflexproject.thunder.model.TVShowInfo.TVShow;
+import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.LanguageUtils;
+import com.theflexproject.thunder.utils.MovieQualityExtractor;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -58,6 +83,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public class PlayerUtils {
     static final String HISTORY_PATH = "History/", LAST_POSITION = "lastPosition", OFFLINE = "offline";
@@ -209,6 +235,257 @@ public class PlayerUtils {
                     AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
                     ad75 = true;
                 }
+            }
+        }
+    }
+    public static void download(Context mActivity, List<MyMedia> sourceList, TVShow tvshow, TVShowSeasonDetails season){
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle("Select File to Download");
+        List<String> sourcesOptions = new ArrayList<>();
+        for (MyMedia source : sourceList) {
+            if (source instanceof Movie) {
+                String qualityStr = MovieQualityExtractor.extractQualtiy(((Movie) source).getFileName());
+                sourcesOptions.add(qualityStr);
+            } else if (source instanceof Episode) {
+                String qualityStr = MovieQualityExtractor.extractQualtiy(((Episode) source).getFileName());
+                sourcesOptions.add(qualityStr);
+            } else {
+                sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
+            }
+        }
+        final int[] selectedIndex = {0};
+        builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
+            selectedIndex[0] = which; // Simpan indeks pilihan terbaru
+        });
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            MyMedia selectedSource = sourceList.get(selectedIndex[0]);
+            if (selectedSource instanceof Movie) {
+                Movie selectedFile = (Movie) selectedSource;
+                String huntu = MovieQualityExtractor.extractQualtiy(((Movie) selectedSource).getFileName());
+                String customFolderPath = "/nfgplus/movies/";
+                DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
+                Uri uri = Uri.parse(selectedFile.getUrlString());
+                DownloadManager.Request request = new DownloadManager.Request(uri);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                        .setTitle(selectedFile.getTitle())
+                        .setVisibleInDownloadsUi(true)
+                        .setDescription("Downloading " + selectedFile.getTitle() + " " + huntu);
+                long downloadId = manager.enqueue(request);
+                List<DownloadItem> downloadItems = new ArrayList<>();
+                downloadItems.add(new DownloadItem(selectedFile.getFileName(), downloadId));
+            } else if (selectedSource instanceof Episode) {
+                Episode selectedFile = (Episode) selectedSource;
+                String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
+                String customFolderPath = "/nfgplus/series/";
+                DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
+                Uri uri = Uri.parse(selectedFile.getUrlString());
+                DownloadManager.Request request = new DownloadManager.Request(uri);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                        .setTitle(tvshow.getName() + " S"+season.getSeason_number()+" E" + selectedFile.getEpisode_number() + ": " +selectedFile.getName())
+                        .setVisibleInDownloadsUi(true)
+                        .setDescription("Downloading " + tvshow.getName() + " S"+season.getSeason_number()+" E" + selectedFile.getEpisode_number() + ": " +selectedFile.getName() + " " + huntu);
+                long downloadId = manager.enqueue(request);
+                List<DownloadItem> downloadItems = new ArrayList<>();
+                downloadItems.add(new DownloadItem(selectedFile.getFileName(), downloadId));
+            }
+        });
+        builder.create().show();
+    }
+    public static void share(Context mActivity, Activity activity, List<MyMedia> sourceList, TVShow tvShow, TVShowSeasonDetails season){
+        for (MyMedia source : sourceList) {
+            if (source instanceof Movie) {
+                Movie movieDetails = (Movie) source;
+                String title = movieDetails.getTitle();
+                String originalTitle = movieDetails.getOriginal_title();
+                String date = movieDetails.getRelease_date();
+                String year = date.substring(0,date.indexOf('-'));
+                String overview = movieDetails.getOverview();
+                String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPoster_path();
+                String movieId = String.valueOf(movieDetails.getId());
+                String deepLink = "https://nfgplus.my.id/reviews.html?id=" + movieId + "&type=movie";
+                String shareText = title + " (" + year + ")\n" + "\n" +
+                        "Judul Asli: " + originalTitle + "\n" +
+                        "Deskripsi: " + overview + "\n" +
+                        deepLink + "\n";
+                new Thread(() -> {
+                    try {
+                        // Mengunduh gambar dari URL
+                        URL url = new URL(posterPath);
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setDoInput(true);
+                        connection.connect();
+                        InputStream input = connection.getInputStream();
+                        Bitmap bitmap = BitmapFactory.decodeStream(input);
+
+                        // Menyimpan gambar ke penyimpanan lokal
+                        File file = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "shared_image.jpg");
+                        FileOutputStream outputStream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+                        outputStream.flush();
+                        outputStream.close();
+
+                        // Dapatkan URI lokal menggunakan FileProvider
+                        Uri imageUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileprovider", file);
+
+                        // Buat intent untuk berbagi teks dan gambar
+                        Intent shareIntent = new Intent();
+                        shareIntent.setAction(Intent.ACTION_SEND);
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
+                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+                        shareIntent.setType("image/*");
+                        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                        // Menjalankan intent di UI thread
+                        activity.runOnUiThread(() -> mActivity.startActivity(Intent.createChooser(shareIntent, "Bagikan " + title)));
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } else if (source instanceof Episode) {
+                Episode episode = (Episode) source;
+                String title = tvShow.getName() + ": Season " + season.getSeason_number() + " Episode " + episode.getEpisode_number(); // Ganti dengan movieDetails.getTitle()
+                String originalTitle = episode.getName(); // Ganti dengan movieDetails.getOriginal_title()
+                String overview = tvShow.getOverview(); // Ganti dengan movieDetails.getOverview()
+                String posterPath = "https://image.tmdb.org/t/p/w500/" + tvShow.getPoster_path();
+                String movieId = String.valueOf(tvShow.getId()); // Ganti dengan movieDetails.getId()
+
+                // Tautan deep link lengkap
+                String deepLink = "https://nfgplus.my.id/reviews.html?id=" + movieId + "&type=tv";
+
+
+                // Menyusun teks yang ingin dibagikan
+                String shareText = title + "\n" +
+                        "Judul Asli: " + originalTitle + "\n" +
+                        "Deskripsi: " + overview + "\n" +
+                        deepLink + "\n";
+
+                new Thread(() -> {
+                    try {
+                        // Mengunduh gambar dari URL
+                        URL url = new URL(posterPath);
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setDoInput(true);
+                        connection.connect();
+                        InputStream input = connection.getInputStream();
+                        Bitmap bitmap = BitmapFactory.decodeStream(input);
+
+                        // Menyimpan gambar ke penyimpanan lokal
+                        File file = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "shared_image.jpg");
+                        FileOutputStream outputStream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+                        outputStream.flush();
+                        outputStream.close();
+
+                        // Dapatkan URI lokal menggunakan FileProvider
+                        Uri imageUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileprovider", file);
+
+                        // Buat intent untuk berbagi teks dan gambar
+                        Intent shareIntent = new Intent();
+                        shareIntent.setAction(Intent.ACTION_SEND);
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
+                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+                        shareIntent.setType("image/*");
+                        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                        // Menjalankan intent di UI thread
+                        activity.runOnUiThread(() ->
+                                mActivity.startActivity(Intent.createChooser(shareIntent, "Bagikan " + title))
+                        );
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+
+            }
+        }
+
+    }
+
+    public static void watchlist(Context mActivity, List<MyMedia> sourceList, TVShow tvShowDetails, TVShowSeasonDetails season) {
+        for (MyMedia source : sourceList) {
+            if (source instanceof Movie) {
+                Movie movieDetails = (Movie) source;
+                String tmdbId = String.valueOf(movieDetails.getId());
+                String userId = manager.getCurrentUser().getUid();
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference value = userReference.child("value");
+                value.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(!snapshot.exists()){
+
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("value", 1);
+                            userReference.setValue(userMap);
+
+                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+
+                        }else{
+                            userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()){
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                    else {
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                }
+                            });
+
+                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+            } else if (source instanceof Episode) {
+                String tmdbId = String.valueOf(tvShowDetails.getId());
+                String userId = manager.getCurrentUser().getUid();
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference value = userReference.child("value");
+                value.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(!snapshot.exists()){
+
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("value", 1);
+                            userReference.setValue(userMap);
+
+                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+
+                        }else{
+                            userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()){
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                    else {
+                                        System.out.println("Favorit dihapus");
+                                    }
+                                }
+                            });
+
+                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
             }
         }
     }

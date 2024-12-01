@@ -1,12 +1,16 @@
 package com.theflexproject.thunder.fragments;
 
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
+import static com.theflexproject.thunder.fragments.EpisodeDetailsFragment.REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -20,6 +24,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
@@ -52,6 +58,7 @@ import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.player.PlayerUtils;
 import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
@@ -81,6 +88,8 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
     private List<SkuDetails> skuDetailsList = new ArrayList<>();
     private AdRequest adRequest;
+    private List<MyMedia> sources;
+    private List<MyMedia> mediaList;
     public DetailFragment(){
     }
     public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode){
@@ -114,19 +123,37 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         if (!isSubscribed) {
             AdHelper.loadNative(mActivity, adRequest, template);
             AdHelper.loadNative(mActivity, adRequest, templateBesar);
-
-            // Jika tidak berlangganan, muat iklan
-
         } else {
             // Jika berlangganan, sembunyikan AdView
             template.setVisibility(View.GONE);
             templateBesar.setVisibility(View.GONE);
-
-
         }
+        buttonListener();
 
         return view;
     }
+
+    @OptIn(markerClass = UnstableApi.class)
+    private void buttonListener() {
+        download.setOnClickListener(v -> {
+            if (Build.VERSION.SDK_INT < 32) {
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(requireActivity(),
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION);
+                }else {
+                    PlayerUtils.download(mActivity, sources, tvShowDetails, season);
+                }
+            }
+            else {
+                PlayerUtils.download(mActivity, sources, tvShowDetails, season);
+            }
+        });
+        share.setOnClickListener(v -> PlayerUtils.share(mActivity, mActivity, mediaList, tvShowDetails, season));
+        watchlist.setOnClickListener(v -> PlayerUtils.watchlist(mActivity, mediaList, tvShowDetails, season));
+    }
+
 
     private void listener() {
         frameDeskripsi.setOnClickListener(v ->  {
@@ -160,6 +187,9 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(poster);
+            sources = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
+            mediaList = new ArrayList<>();
+            mediaList.add(episode);
 
         }
     }
@@ -185,13 +215,16 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(poster);
-
+            sources = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, id);
+            mediaList = new ArrayList<>();
+            mediaList.add(movieDetails);
 
         }
 
     }
 
 
+    @SuppressLint("SetTextI18n")
     private void initWidget(View view) {
         template = view.findViewById(R.id.iklan_kecil);
         templateBesar = view.findViewById(R.id.iklan_besar);
@@ -207,6 +240,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         rating = view.findViewById(R.id.ratingsIkon);
         billingManager = new BillingManager(mActivity, this);
         billingManager.startConnection();
+        donasi.setText("Send Gift");
         donasi.setOnClickListener(v -> showThankYouOptions());
         subscribe.setOnClickListener(v -> billingManager.loadSubscriptionDetails(this::showSubscriptionOptions));
 

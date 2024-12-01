@@ -275,9 +275,9 @@
                         android:background="@drawable/button_selector"
                         android:nextFocusUp="@id/overviewDescTVShow"
                         android:nextFocusDown="@id/recyclerSeasons"
-                        app:gnt_template_type="@layout/gnt_medium_template_view"
+                        app:gnt_template_type="@layout/iklan_besar"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_height="wrap_content" />
 
 
                 </LinearLayout>
