@@ -91,9 +91,12 @@ public class PlayerUtils {
     static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(HISTORY_PATH);
     static String userId = manager.getCurrentUser().getUid();
     public static ValueEventListener lastPositionListener;
-    private static boolean ad25;
-    private static boolean ad50;
-    private static boolean ad75;
+    private static boolean adStart = false;
+    private static boolean ad25 = false;
+    private static boolean ad50 = false;
+    private static boolean ad75 = false;
+    private static List<DownloadItem> downloadItems = new ArrayList<>();
+
 
     public static void enterFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
 
@@ -222,6 +225,10 @@ public class PlayerUtils {
         if (player != null){
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
+            if (!adStart && cp <= 5000) {
+                AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                adStart = true; // Flag untuk mencegah pemanggilan ulang
+            }
             if (tp > 0){
                 if (!ad25 && cp >= tp * 0.25){
                     AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
@@ -272,8 +279,13 @@ public class PlayerUtils {
                         .setVisibleInDownloadsUi(true)
                         .setDescription("Downloading " + selectedFile.getTitle() + " " + huntu);
                 long downloadId = manager.enqueue(request);
-                List<DownloadItem> downloadItems = new ArrayList<>();
-                downloadItems.add(new DownloadItem(selectedFile.getFileName(), downloadId));
+                downloadItems.add(new DownloadItem(
+                        selectedFile.getFileName(),
+                        downloadId,
+                        selectedFile.getTitle(),
+                        -1,
+                        0
+                ));
             } else if (selectedSource instanceof Episode) {
                 Episode selectedFile = (Episode) selectedSource;
                 String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
@@ -287,8 +299,15 @@ public class PlayerUtils {
                         .setVisibleInDownloadsUi(true)
                         .setDescription("Downloading " + tvshow.getName() + " S"+season.getSeason_number()+" E" + selectedFile.getEpisode_number() + ": " +selectedFile.getName() + " " + huntu);
                 long downloadId = manager.enqueue(request);
-                List<DownloadItem> downloadItems = new ArrayList<>();
-                downloadItems.add(new DownloadItem(selectedFile.getFileName(), downloadId));
+                downloadItems.add(new DownloadItem(
+                        selectedFile.getFileName(),
+                        downloadId,
+                        selectedFile.getName(),
+                        -1,
+                        0
+                ));
+
+
             }
         });
         builder.create().show();

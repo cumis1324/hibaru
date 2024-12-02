@@ -433,20 +433,39 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     }
 
     private void blurBottom() {
+        // Aktifkan FLAG_LAYOUT_NO_LIMITS untuk memungkinkan layout meluas di luar batas normal
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS , WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        // Setel status bar menjadi transparan
         getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+        // Dapatkan tinggi status bar
+        int statusBarHeight = getStatusBarHeight();
+
+        // Tambahkan padding pada rootView untuk menghindari overlap dengan status bar
+        rootView.setPadding(0, statusBarHeight, 0, 0);
+
+        // Blur konfigurasi
         final float radius = 12f;
         final Drawable windowBackground = getWindow().getDecorView().getBackground();
 
-        blurView.setupWith(rootView , new RenderScriptBlur(this))
+        blurView.setupWith(rootView, new RenderScriptBlur(this))
                 .setFrameClearDrawable(windowBackground)
                 .setBlurRadius(radius);
         blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
         blurView.setClipToOutline(true);
-
-
     }
+
+    // Fungsi untuk mendapatkan tinggi status bar
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
     private void checkForAppUpdate() {
         AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(this);
 

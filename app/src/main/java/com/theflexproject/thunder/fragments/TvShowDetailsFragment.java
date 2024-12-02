@@ -121,7 +121,7 @@ public class TvShowDetailsFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view , savedInstanceState);
-        adRequest = AdHelper.getAdRequest(mActivity);
+
         saweria = view.findViewById(R.id.saweria);
         template = view.findViewById(R.id.my_template);
         botnav = mActivity.findViewById(R.id.bottom_navigation);
@@ -129,11 +129,13 @@ public class TvShowDetailsFragment extends BaseFragment {
         manager = new FirebaseManager();
         SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
         boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
-        if (!isSubscribed) {
-            AdHelper.loadNative(mActivity, adRequest, template);
-        } else {
+        if (isSubscribed) {
             // Jika berlangganan, sembunyikan AdView
             template.setVisibility(View.GONE);
+        } else {
+            adRequest = AdHelper.getAdRequest(mActivity);
+            AdHelper.loadNative(mActivity, adRequest, template);
+
         }
 
         initWidgets(view);

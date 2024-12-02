@@ -154,8 +154,7 @@ public class BillingManager {
                 boolean isSubscribed = false;
 
                 for (Purchase purchase : purchasesList) {
-                    if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED
-                            && !purchase.isAcknowledged()) {
+                    if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                         // Jika ada langganan aktif dan belum diakui
                         isSubscribed = true;
                         break;

@@ -93,6 +93,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private AdRequest adRequest;
     private List<MyMedia> sources;
     private List<MyMedia> mediaList;
+    private boolean isSubscribed;
     public DetailFragment(){
     }
     public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode){
@@ -106,13 +107,21 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         this.isMovie = isMovie;
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+        isSubscribed = prefs.getBoolean("isSubscribed", false);
+    }
+
+    @SuppressLint("SetTextI18n")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         // Inflate layout untuk fragment
         View view = inflater.inflate(R.layout.detail_item, container, false);
-        adRequest = AdHelper.getAdRequest(mActivity);
         initWidget(view);
         if (isMovie) {
             loadMovieDetails(id);
@@ -121,16 +130,6 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             loadTvDetails();
         }
         listener();
-        SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
-        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
-        if (!isSubscribed) {
-            AdHelper.loadNative(mActivity, adRequest, template);
-            AdHelper.loadNative(mActivity, adRequest, templateBesar);
-        } else {
-            // Jika berlangganan, sembunyikan AdView
-            template.setVisibility(View.GONE);
-            templateBesar.setVisibility(View.GONE);
-        }
         buttonListener();
 
         return view;
@@ -251,6 +250,18 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
 
             showSubscriptionOptions();
         });
+        if (isSubscribed) {
+            subscribe.setText("Subscribed");
+            subscribe.setEnabled(false);
+            // Jika berlangganan, sembunyikan AdView
+            template.setVisibility(View.GONE);
+            templateBesar.setVisibility(View.GONE);
+
+        } else {
+            adRequest = AdHelper.getAdRequest(mActivity);
+            AdHelper.loadNative(mActivity, adRequest, template);
+            AdHelper.loadNative(mActivity, adRequest, templateBesar);
+        }
 
 
     }
@@ -274,6 +285,12 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     public void onPurchaseCompleted(Purchase purchase) {
         Log.d("DetailFragment", "Purchase completed: " + purchase.getSkus());
         Toast.makeText(mActivity, "Pembayaran berhasil", Toast.LENGTH_SHORT).show();
+        billingManager.checkSubscriptionStatus(isSubscribed -> {
+            SharedPreferences prefs = mActivity.getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("isSubscribed", isSubscribed);
+            editor.apply();
+        });
     }
     private void showThankYouOptions() {
         if (skuDetailsList.isEmpty()) {

@@ -48,6 +48,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
 import androidx.media3.common.AudioAttributes;
@@ -183,11 +184,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        ((MainActivity) mActivity).setOnUserLeaveHintListener(this);
-        adRequest = AdHelper.getAdRequest(mActivity);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
         isSubscribed = prefs.getBoolean("isSubscribed", false);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ((MainActivity) mActivity).setOnUserLeaveHintListener(this);
         if (isTVDevice(mActivity)) {
             view = inflater.inflate(R.layout.video_tv, container, false);
             nestedScrollView = view.findViewById(R.id.nestedPlayerTv);
@@ -411,7 +416,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     public void onPause() {
         super.onPause();
         if (player != null) {
-            player.pause();
+            player.setPlayWhenReady(false);
         }
     }
 
@@ -419,8 +424,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     public void onResume() {
         super.onResume();
         if (player != null) {
-            player.play();
+            player.setPlayWhenReady(true);
             bottomNavigationView.setVisibility(View.GONE);
+            startSeekBarUpdate();
         }
 
     }
@@ -490,9 +496,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             playPauseButton.requestFocus();
         }
 
+
         @Override
         public void onPlaybackStateChanged(@Player.State int playbackState) {
-            playerView.onPause();
             if (playbackState == Player.STATE_READY) {
                 mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
                 cc.setOnClickListener(v -> showSubtitleSelectionDialog(mActivity, mappedTrackInfo, trackSelector));
@@ -501,13 +507,13 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 customBufferingIndicator.setVisibility(View.GONE);
                 ff.setOnClickListener(v -> fastForward(player, ff));
                 bw.setOnClickListener(v -> rewind(player, bw));
-
                 if (isTVDevice(mActivity)){
                     movietitle.setVisibility(View.VISIBLE);
                 }
                 if (!isSubscribed){
-                    requestAds();
+                    //requestAds();
                     //AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
+                    adRequest = AdHelper.getAdRequest(mActivity);
                     PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
                 }
                 playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));

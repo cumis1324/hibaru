@@ -664,7 +664,13 @@ public class MovieDetailsFragment extends BaseFragment{
                                 .setDescription("Downloading " + selectedFile.getTitle() + " " + huntu);
                         long downloadId = manager.enqueue(request);
                         List<DownloadItem> downloadItems = new ArrayList<>();
-                        downloadItems.add(new DownloadItem(selectedFile.getFileName(), downloadId));
+                        downloadItems.add(new DownloadItem(
+                                selectedFile.getFileName(),
+                                downloadId,
+                                selectedFile.getTitle(),
+                                -1,
+                                0
+                        ));
                         Toast.makeText(getContext(), "Download Started", Toast.LENGTH_LONG).show();
                     }
                 };

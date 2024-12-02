@@ -341,7 +341,13 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                     .setDescription("Downloading");
             long downloadId = manager.enqueue(request);
             List<DownloadItem> downloadItems = new ArrayList<>();
-            downloadItems.add(new DownloadItem(episode.getFileName(), downloadId));
+            downloadItems.add(new DownloadItem(
+                    episode.getFileName(),
+                    downloadId,
+                    episode.getName(),
+                    -1,
+                    0
+            ));
             Toast.makeText(context, "Download Started", Toast.LENGTH_LONG).show();
         }
 
