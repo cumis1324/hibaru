@@ -146,7 +146,10 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
                                     final int progress = (int) ((bytesDownloaded * 100L) / bytesTotal);
                                     mActivity.runOnUiThread(() -> downloadAdapter.updateProgress(downloadId, progress));
                                 } else if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                                    mActivity.runOnUiThread(() -> removeDownloadItem(downloadId));
+                                    mActivity.runOnUiThread(() -> {
+                                        checkPermisi();
+                                        removeDownloadItem(downloadId);
+                                    });
                                 }
                             } while (cursor.moveToNext());
 
@@ -213,10 +216,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
             } else {
                 Log.d(TAG, "Direktori sudah ada: " + movieDir.getAbsolutePath());
             }
-        }
-
-        // Cek direktori series
-        if (!seriesDir.exists()) {
+        }else if (!seriesDir.exists()) {
             if (!seriesDir.exists() || !seriesDir.isDirectory()) {
                 if (seriesDir.mkdirs()) {
                     Log.d(TAG, "Direktori berhasil dibuat: " + seriesDir.getAbsolutePath());
@@ -226,8 +226,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
             } else {
                 Log.d(TAG, "Direktori sudah ada: " + seriesDir.getAbsolutePath());
             }
-        }
-
+        }else {
             Log.d(TAG, "Memuat file media dari direktori: " + movieDir.getAbsolutePath());
             addFilesFromDirectory(movieDir, "movies");
             addFilesFromDirectory(seriesDir, "series");
@@ -240,7 +239,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
                 recyclerView.setAdapter(mediaAdapter);
                 mediaAdapter.notifyDataSetChanged();
             }
-
+        }
     }
 
 

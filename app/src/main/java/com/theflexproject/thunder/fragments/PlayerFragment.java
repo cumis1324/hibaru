@@ -166,6 +166,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private boolean isSubscribed;
     private AdsLoader adsLoader;
     private AdsManager adsManager;
+    private ViewGroup rootView;
+    private View decorView;
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
 
@@ -621,6 +623,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
     }
     private void destroyAll() {
+        decorView = mActivity.getWindow().getDecorView();
+        rootView = decorView.findViewById(android.R.id.content);
+        rootView.setPadding(0, 0, 0, 0);
         ((MainActivity) mActivity).setOnUserLeaveHintListener(null);
         if (lastPositionListener != null) {
             databaseReference.removeEventListener(lastPositionListener);

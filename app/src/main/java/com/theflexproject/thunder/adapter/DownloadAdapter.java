@@ -34,7 +34,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.Downlo
     @Override
     public void onBindViewHolder(@NonNull DownloadViewHolder holder, int position) {
         DownloadItem item = downloadItems.get(position);
-        holder.tvFileName.setText(item.getFileName());
+        holder.tvFileName.setText(item.getFilename());
         holder.progressBar.setProgress(item.getProgress());
     }
 

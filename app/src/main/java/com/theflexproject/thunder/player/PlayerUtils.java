@@ -16,6 +16,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -96,14 +97,15 @@ public class PlayerUtils {
     private static boolean ad50 = false;
     private static boolean ad75 = false;
     private static List<DownloadItem> downloadItems = new ArrayList<>();
+    private static View decorView;
+    private static ViewGroup rootView;
 
 
     public static void enterFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
-
-        View decorView;
         int uiOptions;
         decorView = mActivity.getWindow().getDecorView();
-        // Set height ke match_parent
+        rootView = decorView.findViewById(android.R.id.content);
+        rootView.setPadding(0, 0, 0, 0);
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) playerFrame.getLayoutParams();
         params.height = LinearLayout.LayoutParams.MATCH_PARENT;
         playerFrame.setLayoutParams(params);
@@ -121,7 +123,11 @@ public class PlayerUtils {
         fullscreen.setImageResource(R.drawable.ic_exit_fullscreen);
     }
     public static void exitFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
-        View decorView = mActivity.getWindow().getDecorView();
+        decorView = mActivity.getWindow().getDecorView();
+        rootView = decorView.findViewById(android.R.id.content);
+        int statusBarHeight = getStatusBarHeight(mActivity);
+        rootView.setPadding(0, statusBarHeight, 0, 0);
+        rootView.setBackgroundColor(Color.BLACK);
         movietitle.setVisibility(View.GONE);
         int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
         // Set height kembali ke 250dp
@@ -190,6 +196,14 @@ public class PlayerUtils {
                 userReference.setValue(userMap);
             }
         }
+    }
+    private static int getStatusBarHeight(Activity mActivity) {
+        int result = 0;
+        int resourceId = mActivity.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = mActivity.getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 
     @SuppressLint("SetTextI18n")
