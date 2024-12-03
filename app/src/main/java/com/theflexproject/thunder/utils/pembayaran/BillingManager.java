@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
+import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
@@ -34,6 +35,7 @@ public class BillingManager {
                     if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
                         for (Purchase purchase : purchases) {
                             callback.onPurchaseCompleted(purchase);
+
                         }
                     } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
                         Log.d(TAG, "User canceled the purchase");
@@ -52,14 +54,61 @@ public class BillingManager {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     loadProductDetails();
                     loadSubscriptionDetails();
+                    Log.d("BillingManager", "Connected: " + billingResult.getDebugMessage());
 
                 } else {
+                    Log.d("BillingManager", "Query Purchases Debug Message: " + billingResult.getDebugMessage());
                 }
             }
 
             @Override
             public void onBillingServiceDisconnected() {
                 Log.e(TAG, "Billing service disconnected");
+            }
+        });
+    }
+    public void startChecking(){
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(BillingResult billingResult) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    checkSubscriptionStatus();
+                    checkItemStatus();
+
+                } else {
+                    Log.d("BillingManager", "Query Purchases Debug Message: " + billingResult.getDebugMessage());
+                }
+            }
+
+            @Override
+            public void onBillingServiceDisconnected() {
+                Log.e(TAG, "Billing service disconnected");
+            }
+        });
+    }
+
+    private void checkItemStatus() {
+        billingClient.queryPurchasesAsync(BillingClient.SkuType.INAPP, (billingResult, purchasesList) -> {
+            Log.d("BillingManager", "Query Purchases Result: " + billingResult.getResponseCode());
+            Log.d("BillingManager", "Query Purchases Debug Message: " + billingResult.getDebugMessage());
+
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchasesList != null) {
+                Log.d("BillingManager", "Number of purchases found: " + purchasesList.size());
+                for (Purchase purchase : purchasesList) {
+                    Log.d("BillingManager", "Purchase found: " + purchase.getSkus());
+                    Log.d("BillingManager", "Purchase State: " + purchase.getPurchaseState());
+                    Log.d("BillingManager", "Purchase Token: " + purchase.getPurchaseToken());
+
+                    if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged()) {
+                        Log.d("BillingManager", "Valid item found for SKU: " + purchase.getSkus());
+                            acknowledgePurchase(purchase); // Hanya akui jika belum diakui
+                        Log.d("BillingManager", "item telah diakui: " + purchase.getSkus());
+                        break; // Hentikan iterasi setelah langganan ditemukan
+                    }
+                }
+
+            } else {
+                Log.e("BillingManager", "Failed to query purchases: " + billingResult.getDebugMessage());
             }
         });
     }
@@ -110,6 +159,7 @@ public class BillingManager {
         void onSubscriptionLoaded(List<SkuDetails> subscriptions);
 
         void onPurchaseCompleted(Purchase purchase);
+        void onSubscriptionStatus(boolean isSubscribed);
     }
     public void loadSubscriptionDetails() {
         List<String> skuList = new ArrayList<>();
@@ -120,13 +170,10 @@ public class BillingManager {
                 .setType(BillingClient.SkuType.SUBS)
                 .build();
 
-        Log.d("BillingManager", "Loading subscription details...");
         billingClient.querySkuDetailsAsync(params, (billingResult, skuDetails) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetails != null) {
-                Log.d("BillingManager", "Loaded SKU details: " + skuDetails.size());
-                for (SkuDetails detail : skuDetails) {
-                    Log.d("BillingManager", "SKU: " + detail.getSku() + ", Price: " + detail.getPrice());
-                }
+
+
                 skuSubList.clear();
                 skuSubList.addAll(skuDetails);
                 billingCallback.onSubscriptionLoaded(skuSubList);
@@ -148,26 +195,56 @@ public class BillingManager {
 
 
 
-    public void checkSubscriptionStatus(OnSubscriptionStatusListener listener) {
+    public void checkSubscriptionStatus() {
+        Log.d("BillingManager", "Starting to query purchases...");
         billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS, (billingResult, purchasesList) -> {
+            Log.d("BillingManager", "Query Purchases Result: " + billingResult.getResponseCode());
+            Log.d("BillingManager", "Query Purchases Debug Message: " + billingResult.getDebugMessage());
+
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchasesList != null) {
+                Log.d("BillingManager", "Number of purchases found: " + purchasesList.size());
                 boolean isSubscribed = false;
 
                 for (Purchase purchase : purchasesList) {
+                    Log.d("BillingManager", "Purchase found: " + purchase.getSkus());
+                    Log.d("BillingManager", "Purchase State: " + purchase.getPurchaseState());
+                    Log.d("BillingManager", "Purchase Token: " + purchase.getPurchaseToken());
+
                     if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-                        // Jika ada langganan aktif dan belum diakui
+                        Log.d("BillingManager", "Valid subscription found for SKU: " + purchase.getSkus());
                         isSubscribed = true;
-                        break;
+
+                        if (!purchase.isAcknowledged()) {
+                            acknowledgePurchase(purchase); // Hanya akui jika belum diakui
+                        }
+
+                        break; // Hentikan iterasi setelah langganan ditemukan
                     }
                 }
 
-                listener.onSubscriptionStatusChecked(isSubscribed);
+                Log.d("BillingManager", "Subscription status: " + isSubscribed);
+                billingCallback.onSubscriptionStatus(isSubscribed);
             } else {
                 Log.e("BillingManager", "Failed to query purchases: " + billingResult.getDebugMessage());
-                listener.onSubscriptionStatusChecked(false);
+                billingCallback.onSubscriptionStatus(false);
             }
         });
     }
+    private void acknowledgePurchase(Purchase purchase) {
+        AcknowledgePurchaseParams params = AcknowledgePurchaseParams.newBuilder()
+                .setPurchaseToken(purchase.getPurchaseToken())
+                .build();
+
+        billingClient.acknowledgePurchase(params, billingResult -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                Log.d("BillingManager", "Purchase acknowledged successfully.");
+            } else {
+                Log.e("BillingManager", "Failed to acknowledge purchase: " + billingResult.getDebugMessage());
+            }
+        });
+    }
+
+
 
     private void onPurchaseUpdated(BillingResult billingResult, List<Purchase> purchases) {
         // Proses pembaruan pembelian

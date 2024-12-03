@@ -285,13 +285,18 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     public void onPurchaseCompleted(Purchase purchase) {
         Log.d("DetailFragment", "Purchase completed: " + purchase.getSkus());
         Toast.makeText(mActivity, "Pembayaran berhasil", Toast.LENGTH_SHORT).show();
-        billingManager.checkSubscriptionStatus(isSubscribed -> {
-            SharedPreferences prefs = mActivity.getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putBoolean("isSubscribed", isSubscribed);
-            editor.apply();
-        });
+        billingManager.startChecking();
     }
+
+    @Override
+    public void onSubscriptionStatus(boolean isSubscribed) {
+        SharedPreferences prefs = mActivity.getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("isSubscribed", isSubscribed);
+        editor.apply();
+        this.isSubscribed = isSubscribed;
+    }
+
     private void showThankYouOptions() {
         if (skuDetailsList.isEmpty()) {
             Toast.makeText(requireContext(), "Produk belum tersedia. Coba lagi nanti.", Toast.LENGTH_SHORT).show();

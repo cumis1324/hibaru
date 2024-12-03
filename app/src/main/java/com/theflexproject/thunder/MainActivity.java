@@ -143,20 +143,9 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
             Toast.makeText(this, "Notifikasi diizinkan!", Toast.LENGTH_SHORT).show();
         }
         billingManager = new BillingManager(this, this);
+        billingManager.startChecking();
 
-        // Periksa status langganan saat fragment dibuka
-        billingManager.checkSubscriptionStatus(isSubscribed -> {
-            SharedPreferences prefs = getSharedPreferences("langgananUser", MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putBoolean("isSubscribed", isSubscribed);
-            editor.apply();
-            if (isSubscribed) {
-                Log.d("DetailFragment", "User has an active subscription");
-            } else {
-                Log.d("DetailFragment", "User does not have an active subscription");
 
-            }
-        });
 
         // Daftarkan receiver untuk menerima pembaruan dari ModifiedCheckWorker
 
@@ -517,6 +506,21 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     public void onPurchaseCompleted(Purchase purchase) {
 
     }
+
+    @Override
+    public void onSubscriptionStatus(boolean isSubscribed) {
+        SharedPreferences prefs = getSharedPreferences("langgananUser", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("isSubscribed", isSubscribed);
+        editor.apply();
+        if (isSubscribed) {
+            Log.d("DetailFragment", "User has an active subscription");
+        } else {
+            Log.d("DetailFragment", "User does not have an active subscription");
+
+        }
+    }
+
 
     public interface OnUserLeaveHintListener {
         void onUserLeaveHint();
