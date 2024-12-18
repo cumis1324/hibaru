@@ -175,6 +175,12 @@
                         android:textAllCaps="false"/>
                 </LinearLayout>
             </HorizontalScrollView>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/cast"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@layout/item_credits"
+                android:padding="15dp"/>
             <com.google.android.ads.nativetemplates.TemplateView
                 android:id="@+id/iklan_besar"
                 app:gnt_template_type="@layout/iklan_besar"

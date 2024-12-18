@@ -29,6 +29,7 @@ import androidx.annotation.OptIn;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
@@ -56,9 +57,13 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.textview.MaterialTextView;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.adapter.CreditsAdapter;
 import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.adapter.SimilarAdapter;
+import com.theflexproject.thunder.model.Cast;
+import com.theflexproject.thunder.model.Credits;
+import com.theflexproject.thunder.model.Crew;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
@@ -90,7 +95,8 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
     private TemplateView template, templateBesar;
-    private RecyclerView similarView;
+    private RecyclerView similarView, castView;
+    private CreditsAdapter creditsAdapter;
     private SimilarAdapter.OnItemClickListener similarListener;
     private List<MyMedia> similarOrEpisode;
     private BillingManager billingManager;
@@ -99,8 +105,9 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private List<SkuDetails> skuSubList = new ArrayList<>();
     private AdRequest adRequest;
     private List<MyMedia> sources;
-    private List<MyMedia> mediaList;
+    private List<MyMedia> mediaList, castList;
     private boolean isSubscribed;
+    private Credits credits;
     public DetailFragment(){
     }
     public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode){
@@ -200,6 +207,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             mediaList = new ArrayList<>();
             mediaList.add(episode);
             loadEpisodes(season.getId());
+            loadCast(tvShowDetails.getId(), false);
         }
     }
 
@@ -229,9 +237,35 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             mediaList = new ArrayList<>();
             mediaList.add(movieDetails);
             loadSimilar(id);
+            loadCast(movieDetails.getId(), true);
 
         }
 
+    }
+
+    private void loadCast(int id, boolean isMovie) {
+        new Thread(() -> {
+            tmdbTrending credit = new tmdbTrending();
+            if (isMovie){
+            credits = credit.getMovieCredits(id);
+            }else {
+                credits = credit.getTvCredits(id);
+            }
+            List<Cast> cast = credits.getCastList();
+            int limit = Math.min(cast.size(), 5);
+            List<Cast> limitedCast = cast.subList(0, limit);
+            castList = new ArrayList<>();
+            castList.addAll(limitedCast);
+            getActivity().runOnUiThread(() -> {
+                FragmentManager fragmentManager;
+                fragmentManager = getActivity().getSupportFragmentManager();
+                castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                castView.setHasFixedSize(true);
+                creditsAdapter = new CreditsAdapter(getContext(), castList , fragmentManager);
+                castView.setAdapter(creditsAdapter);
+                castView.setNestedScrollingEnabled(false);
+            });
+        }).start();
     }
 
 
@@ -249,6 +283,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         share = view.findViewById(R.id.share);
         frameDeskripsi = view.findViewById(R.id.framedeskripsi);
         rating = view.findViewById(R.id.ratingsIkon);
+        castView = view.findViewById(R.id.cast);
         billingManager = new BillingManager(mActivity, this);
         billingManager.startConnection();
         donasi.setText("Send Gift");
