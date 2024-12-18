@@ -23,6 +23,38 @@
           }
         },
         {
+          "client_id": "482142495652-4lbnr32e5rlcur8qkqn1k2e29hc1tgu3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gelaskaca.nfgplus",
+            "certificate_hash": "ca16860f20b219933255e83d808c613e67197f1f"
+          }
+        },
+        {
+          "client_id": "482142495652-c8ibuqj214dsebi3pebrl4mv2vu1ee0r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gelaskaca.nfgplus",
+            "certificate_hash": "fd0f533edc6790e61339a1e6b667171dba09aabe"
+          }
+        },
+        {
+          "client_id": "482142495652-h8drikr7egqn3omo9jp6m86difpfpqvk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gelaskaca.nfgplus",
+            "certificate_hash": "1486c30d5f458d63ee7abc11f7ce235c95bc888c"
+          }
+        },
+        {
+          "client_id": "482142495652-hca3hfiu282e0i6h3jvnl4p15etjp7iv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gelaskaca.nfgplus",
+            "certificate_hash": "d6684922006e052d7350b1c67a4c7cee4a99b527"
+          }
+        },
+        {
           "client_id": "482142495652-plj0n55msb2509s8pbbkmmsohm0qpkk5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -31,13 +63,24 @@
           }
         },
         {
-          "client_id": "482142495652-eg3o4jed06raos720s9bieqsaseb7hik.apps.googleusercontent.com",
+          "client_id": "482142495652-sg1rbrk7e25eq0pa4frmqtp4f5d10vae.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gelaskaca.nfgplus",
+            "certificate_hash": "1c0dad5dafa505e8574fc3a21c483950a352d7e6"
+          }
+        },
+        {
+          "client_id": "482142495652-lf62g37hob4pms6kc8pl1ecmosgufb30.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
           "current_key": "AIzaSyC6MV1H1ScENiIW0K2X_VFru9gjj3T-f80"
+        },
+        {
+          "current_key": "AIzaSyCVS8gzPKTNqfjy-fJMCRrwzjGY1RINmME"
         }
       ],
       "services": {
@@ -51,6 +94,46 @@
         }
       },
       "admob_app_id": "ca-app-pub-7142401354409440~1389765379"
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482142495652:android:c78e79e11b646aecfe9731",
+        "android_client_info": {
+          "package_name": "com.gelaskaca.nfgplusAdmin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "482142495652-5g78e5magcg7aq9e2tstl271duhv7leq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gelaskaca.nfgplusAdmin",
+            "certificate_hash": "1c0dad5dafa505e8574fc3a21c483950a352d7e6"
+          }
+        },
+        {
+          "client_id": "482142495652-lf62g37hob4pms6kc8pl1ecmosgufb30.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6MV1H1ScENiIW0K2X_VFru9gjj3T-f80"
+        },
+        {
+          "current_key": "AIzaSyCVS8gzPKTNqfjy-fJMCRrwzjGY1RINmME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "482142495652-eg3o4jed06raos720s9bieqsaseb7hik.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

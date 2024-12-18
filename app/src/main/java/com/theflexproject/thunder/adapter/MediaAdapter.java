@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -164,14 +165,26 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
     @OptIn(markerClass = UnstableApi.class)
     private void loadMovie(int id) {
         PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        Fragment currentFragment = fragmentManager.findFragmentById(R.id.container);
+        List<Fragment> fragments = fragmentManager.getFragments();
+        for (Fragment fragment : fragments) {
+            if (fragment instanceof BottomSheetDialogFragment && fragment.isVisible()) {
+                ((BottomSheetDialogFragment) fragment).dismiss();  // Dismiss BottomSheet
+            }
+        }
 
+        if (currentFragment instanceof PlayerFragment) {
+            ((PlayerFragment) currentFragment).updateMovie(id, true);
+
+        } else {
             Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
             if (oldFragment != null) {
                 transaction.hide(oldFragment);
             }
             transaction.add(R.id.container, movieDetailsFragment).addToBackStack(null);
             transaction.commit();
+        }
 
     }
 

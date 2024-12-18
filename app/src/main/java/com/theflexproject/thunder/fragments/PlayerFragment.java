@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -62,6 +63,8 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 
+import androidx.media3.exoplayer.RenderersFactory;
+import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
@@ -98,6 +101,7 @@ import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
+import com.theflexproject.thunder.player.DemoUtil;
 import com.theflexproject.thunder.player.PlayerUtils;
 import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
@@ -120,7 +124,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private static final String TAG = "PlayerFragment", OFFLINE = "offline",
             HISTORY_PATH = "History/", LAST_POSITION = "lastPosition",
             KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters", KEY_ITEM_INDEX = "item_index",
-            KEY_POSITION = "position", KEY_AUTO_PLAY = "auto_play";
+            KEY_POSITION = "position", KEY_AUTO_PLAY = "auto_play", PREFER_EXTENSION_DECODERS_EXTRA = "prefer_extension_decoders";
 
     private int itemId;
     private boolean isMovie;
@@ -132,7 +136,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private PlayerView playerView;
     private ImageButton playPauseButton, setting, fullscreen, cc, ff, bw, source;
     private SeekBar seekBar;
-    private TextView timer, movietitle, epstitle;
+    private TextView timer, movietitle, epstitle, bufferText;
 
     private boolean startAutoPlay;
     private int startItemIndex;
@@ -168,6 +172,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private AdsManager adsManager;
     private ViewGroup rootView;
     private View decorView;
+    private Intent intent;
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
 
@@ -178,11 +183,30 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         this.itemId = itemId;
         this.isMovie = isMovie;
     }
+    public void updateMovie(int itemId, boolean isMovie) {
+        this.itemId = itemId;
+        this.isMovie = isMovie;
+        if (player != null){
+        newSource();
+        }
+        loadMovieDetails(itemId);
+    }
     public PlayerFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, int episodeId) {
         this.isMovie = false;
         this.tvShowDetails = tvShowDetails;
         this.season = seasonDetails;
         this.episodeId = episodeId;
+    }
+    public void updateEpisode(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, int episodeId) {
+        this.isMovie = false;
+        this.tvShowDetails = tvShowDetails;
+        this.season = seasonDetails;
+        this.episodeId = episodeId;
+        if (player != null){
+            newSource();
+        }
+        episode = DetailsUtils.getNextEpisode(mActivity, episodeId);
+        loadSeriesDetails(episode);
     }
 
     @Override
@@ -195,9 +219,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ((MainActivity) mActivity).setOnUserLeaveHintListener(this);
+        intent = mActivity.getIntent();
         if (isTVDevice(mActivity)) {
             view = inflater.inflate(R.layout.video_tv, container, false);
-            nestedScrollView = view.findViewById(R.id.nestedPlayerTv);
         } else {
             view = inflater.inflate(R.layout.video_player, container, false);
         }
@@ -257,6 +281,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         });
         playerView = view.findViewById(R.id.video_view);
         playerView.setControllerVisibilityListener(this);
+        bufferText = view.findViewById(R.id.buffer_text);
 
         customControls = playerView.findViewById(R.id.custom_controlss);
         playPauseButton = customControls.findViewById(R.id.btn_play_pause);
@@ -379,19 +404,21 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             trackSelector = new DefaultTrackSelector(mActivity);
             trackSelector.setParameters(
                     new DefaultTrackSelector.ParametersBuilder(mActivity)
-                            .setForceHighestSupportedBitrate(true) // Pilih bitrate tertinggi
+                            .setExceedRendererCapabilitiesIfNecessary(false)
                             .build()
             );
-            player = new ExoPlayer.Builder(mActivity)
-                    .setTrackSelector(trackSelector)
-                    .setMediaSourceFactory(createMediaSourceFactory(mActivity))
-                    .setRenderersFactory(new DefaultRenderersFactory(mActivity)
-                            .setEnableDecoderFallback(true)
-                            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF))
-                    .build();
+            ExoPlayer.Builder playerBuilder =
+                    new ExoPlayer.Builder(/* context= */ mActivity)
+                            .setMediaSourceFactory(createMediaSourceFactory(mActivity));
+            setRenderersFactory(playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
+            player = playerBuilder.setTrackSelector(trackSelector).build();
 
             player.setTrackSelectionParameters(trackSelectionParameters);
-            player.setAudioAttributes(AudioAttributes.DEFAULT, true);
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build();
+            player.setAudioAttributes(audioAttributes, true);
             player.setPlayWhenReady(startAutoPlay);
             playerView.setPlayer(player);
             player.setMediaItem(mediaItem);
@@ -401,7 +428,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 player.seekTo(startItemIndex, startPosition);
             }
             player.addListener(new PlayerEventListener());
+
         }
+    }
+    @OptIn(markerClass = UnstableApi.class)
+    private void setRenderersFactory(
+            ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
+        RenderersFactory renderersFactory =
+                DemoUtil.buildRenderersFactory(/* context= */ mActivity, preferExtensionDecoders);
+        playerBuilder.setRenderersFactory(renderersFactory);
     }
 
     @Override
@@ -540,6 +575,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
         @Override
         public void onPlayerError(PlaybackException error) {
+            Log.e("ExoPlayerError", error.getMessage());
+            bufferText.setText(error.getMessage());
             if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
                 player.seekToDefaultPosition();
                 player.prepare();
@@ -678,78 +715,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             initializePlayer(urlString);
         }
         sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
-        loadSimilar(movieId);
-    }
-
-    private void loadSimilar(int id) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<Movie> similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
-                List<Movie> recommendationMovie = DetailsUtils.getRecommendationMovies(mActivity, id);
-                if (similarMovie!=null){
-                    movieListener();
-                    similarOrEpisode = new ArrayList<>();
-                    similarOrEpisode.addAll(similarMovie);
-                    similarOrEpisode.addAll(recommendationMovie);
-                    mActivity.runOnUiThread(new Runnable() {
-                        @SuppressLint("NotifyDataSetChanged")
-                        @Override
-                        public void run() {
-                            similarView.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager;
-                            if (isTVDevice(mActivity)){
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-                            }
-                            else {
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-                            }
-                            similarView.setLayoutManager(linearLayoutManager);
-                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
-                            similarView.setAdapter(moreMovieRecycler);
-                            moreMovieRecycler.notifyDataSetChanged();
-                        }
-                    });
-                }
-            }});
-        thread.start();
-    }
-    private void movieListener() {
-        similarListener = new SimilarAdapter.OnItemClickListener() {
-            @OptIn(markerClass = UnstableApi.class)
-            @Override
-            public void onClick(View view, int position) {
-                if (similarOrEpisode.get(position) instanceof Movie){
-                    Movie movie = (Movie) similarOrEpisode.get(position);
-                    String url = movie.getUrlString();
-                    int movieId = movie.getId();
-                    if (!Objects.equals(url, urlString)) {
-                        initializePlayer(url);
-                    }
-                    if (isTVDevice(mActivity)){
-
-                        nestedScrollView.smoothScrollTo(0, 0);
-                    }
-                    newSource();
-                    loadMovieDetails(movieId);
-                }
-                if (similarOrEpisode.get(position) instanceof Episode){
-                    Episode episodeSelected = (Episode) similarOrEpisode.get(position);
-                    String url = episodeSelected.getUrlString();
-                    if (!Objects.equals(url, urlString)) {
-                        initializePlayer(url);
-                    }
-                    if (isTVDevice(mActivity)){
-
-                        nestedScrollView.smoothScrollTo(0, 0);
-                    }
-                    newSource();
-                    episode = episodeSelected;
-                    loadSeriesDetails(episodeSelected);
-                }
-
-            }
-        };
     }
 
     @SuppressLint("SetTextI18n")
@@ -794,41 +759,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                             .into(imageView);
                 }
             }
-            loadEpisodes(seasonId);
         }
     }
-    private void loadEpisodes(int seasonId) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<Episode> listEpisode = DetailsUtils.getListEpisode(mActivity, tvShowDetails.getId(), seasonId);
-                if (listEpisode!=null){
-                    movieListener();
-                    similarOrEpisode = new ArrayList<>();
-                    similarOrEpisode.addAll(listEpisode);
-                    mActivity.runOnUiThread(new Runnable() {
-                        @SuppressLint("NotifyDataSetChanged")
-                        @Override
-                        public void run() {
-                            similarView.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager;
-                            if (isTVDevice(mActivity)){
 
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-                            }
-                            else {
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-                            }
-                            similarView.setLayoutManager(linearLayoutManager);
-                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
-                            similarView.setAdapter(moreMovieRecycler);
-                            moreMovieRecycler.notifyDataSetChanged();
-                        }
-                    });
-                }
-            }});
-        thread.start();
-    }
 
     private void requestAds() {
         // Membuat VideoAdPlayer menggunakan ExoPlayer

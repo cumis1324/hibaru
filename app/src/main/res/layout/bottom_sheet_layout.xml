@@ -69,6 +69,45 @@
                     android:layout_height="wrap_content"
                     android:text="Deskripsi video secara lengkap akan muncul di sini..."
                     android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/castTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Cast"
+                    android:focusable="true"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:paddingVertical="8dp"/>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/castRecycler"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:scrollbars="horizontal"
+                    android:background="@drawable/button_selector"
+                    />
+                <TextView
+                    android:id="@+id/crewTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Crew"
+                    android:focusable="true"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:paddingVertical="8dp"/>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/crewRecycler"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:scrollbars="horizontal"
+                    android:background="@drawable/button_selector"
+                    />
+
             </LinearLayout></androidx.core.widget.NestedScrollView>
 
     </LinearLayout>

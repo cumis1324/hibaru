@@ -4,6 +4,10 @@ import static com.theflexproject.thunder.Constants.TMDB_API_KEY;
 
 import android.util.Log;
 
+import com.theflexproject.thunder.model.Cast;
+import com.theflexproject.thunder.model.Credits;
+import com.theflexproject.thunder.model.Crew;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -379,6 +383,80 @@ public class tmdbTrending {
         return trendingIds;
     }
 
+    public Credits getMovieCredits(int id) {
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+        Credits movieCredits = null;
+
+        try {
+            String apiUrl = String.format("https://api.themoviedb.org/3/movie/%d/credits?api_key=%s", id, API_KEY);
+            URL url = new URL(apiUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+
+            if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                InputStream inputStream = urlConnection.getInputStream();
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder buffer = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line);
+                }
+
+                movieCredits = parseCreditsJson(buffer.toString());
+            } else {
+                System.err.println("HTTP Error: " + urlConnection.getResponseCode());
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+        } finally {
+            if (urlConnection != null) urlConnection.disconnect();
+            if (reader != null) try { reader.close(); } catch (IOException e) { e.printStackTrace(); }
+        }
+
+        return movieCredits;
+    }
+    public Credits getTvCredits(int id) {
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+        Credits movieCredits = null;
+
+        try {
+            String apiUrl = String.format("https://api.themoviedb.org/3/tv/%d/credits?api_key=%s", id, API_KEY);
+            URL url = new URL(apiUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+
+            if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                InputStream inputStream = urlConnection.getInputStream();
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder buffer = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line);
+                }
+
+                movieCredits = parseCreditsJson(buffer.toString());
+            } else {
+                System.err.println("HTTP Error: " + urlConnection.getResponseCode());
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+        } finally {
+            if (urlConnection != null) urlConnection.disconnect();
+            if (reader != null) try { reader.close(); } catch (IOException e) { e.printStackTrace(); }
+        }
+
+        return movieCredits;
+    }
+
+
 
     private List<String> parseTrendingIdsJson(String json) {
         List<String> trendingIds = new ArrayList<>();
@@ -401,4 +479,47 @@ public class tmdbTrending {
 
         return trendingIds;
     }
+    private Credits parseCreditsJson(String json) {
+        List<Cast> castList = new ArrayList<>();
+        List<Crew> crewList = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+
+            // Ambil array 'cast'
+            JSONArray castArray = jsonObject.optJSONArray("cast");
+            if (castArray != null) {
+                for (int i = 0; i < castArray.length(); i++) {
+                    JSONObject castMember = castArray.getJSONObject(i);
+                    int id = castMember.optInt("id", -1);
+                    String name = castMember.optString("name", null);
+                    String character = castMember.optString("character", null);
+                    String profilePath = castMember.optString("profile_path", null);
+
+                    castList.add(new Cast(id, name, character, profilePath));
+                }
+            }
+
+            // Ambil array 'crew'
+            JSONArray crewArray = jsonObject.optJSONArray("crew");
+            if (crewArray != null) {
+                for (int i = 0; i < crewArray.length(); i++) {
+                    JSONObject crewMember = crewArray.getJSONObject(i);
+                    int id = crewMember.optInt("id", -1);
+                    String name = crewMember.optString("name", null);
+                    String job = crewMember.optString("job", null);
+                    String departement = crewMember.optString("departement", null);
+                    String profilePath = crewMember.optString("profile_path", null);
+
+                    crewList.add(new Crew(id, name, job, departement, profilePath));
+                }
+            }
+
+        } catch (JSONException e) {
+            System.err.println("Error: Failed to parse JSON response - " + e.getMessage());
+        }
+
+        return new Credits(castList, crewList);
+    }
+
 }

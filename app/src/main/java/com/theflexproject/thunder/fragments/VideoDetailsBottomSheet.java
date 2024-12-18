@@ -1,5 +1,7 @@
 package com.theflexproject.thunder.fragments;
 
+import static com.theflexproject.thunder.Constants.language;
+
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,21 +12,33 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.theflexproject.thunder.R;
+import com.theflexproject.thunder.adapter.BannerRecyclerAdapter;
+import com.theflexproject.thunder.adapter.CreditsAdapter;
+import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.database.DatabaseClient;
+import com.theflexproject.thunder.model.Cast;
+import com.theflexproject.thunder.model.Credits;
+import com.theflexproject.thunder.model.Crew;
 import com.theflexproject.thunder.model.Genre;
 import com.theflexproject.thunder.model.Movie;
+import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 import com.theflexproject.thunder.player.PlayerUtils;
 import com.theflexproject.thunder.utils.StringUtils;
+import com.theflexproject.thunder.utils.Translate;
+import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
 
@@ -34,6 +48,11 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
     private TVShow tvShowDetails;
     private TVShow tvShow;
     private int movieId;
+    private RecyclerView castView, crewView;
+    private CreditsAdapter castAdapter, crewAdapter;
+    private Credits credits;
+    private FragmentManager fragmentManager;
+    private List<MyMedia> castList, crewList;
 
     private boolean isMovie;
     private TVShowSeasonDetails season; private int episodeId;
@@ -61,6 +80,9 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
         TextView descriptionView = view.findViewById(R.id.bottom_sheet_description);
         MaterialButton rating = view.findViewById(R.id.ratingsSheet);
         TextView genreSheet = view.findViewById(R.id.genreSheet);
+        castView = view.findViewById(R.id.castRecycler);
+        crewView = view.findViewById(R.id.crewRecycler);
+        fragmentManager = getActivity().getSupportFragmentManager();
 
 
             // Lakukan query database di thread terpisah
@@ -71,13 +93,21 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                             .getAppDatabase()
                             .movieDao()
                             .byId(movieId);
-
+                    tmdbTrending credit = new tmdbTrending();
+                    credits = credit.getMovieCredits(movieId);
+                    List<Cast> cast = credits.getCastList();
+                    List<Crew> crew = credits.getCrewList();
+                    castList = new ArrayList<>();
+                    castList.addAll(cast);
+                    crewList = new ArrayList<>();
+                    crewList.addAll(crew);
                     if (movieDetails != null) {
                         getActivity().runOnUiThread(() -> {
                             String year = movieDetails.getRelease_date();
                             String yearCrop = year.substring(0, year.indexOf('-'));
                             titleView.setText(movieDetails.getTitle() + " (" + yearCrop + ") ");
-                            descriptionView.setText(movieDetails.getOverview());
+                            String description = movieDetails.getOverview();
+                            descriptionView.setText(description);
                             String ratings = String.valueOf((int) (movieDetails.getVote_average() * 10));
                             String result = StringUtils.runtimeIntegerToString(movieDetails.getVote_count());
                             rating.setText(ratings + " from " + result + " Votes");
@@ -93,6 +123,16 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                                 }
                             }
                             genreSheet.setText(sb.toString());
+                            castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                            castView.setHasFixedSize(true);
+                            crewView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                            crewView.setHasFixedSize(true);
+                            castAdapter = new CreditsAdapter(getContext(), castList , fragmentManager);
+                            crewAdapter = new CreditsAdapter(getContext(), crewList , fragmentManager);
+                            castView.setAdapter(castAdapter);
+                            castView.setNestedScrollingEnabled(false);
+                            crewView.setAdapter(crewAdapter);
+                            crewView.setNestedScrollingEnabled(false);
 
                         });
                     }
@@ -103,6 +143,14 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                             .getAppDatabase()
                             .tvShowDao()
                             .find(tvShow.getId());
+                    tmdbTrending credit = new tmdbTrending();
+                    credits = credit.getTvCredits(tvShowDetails.getId());
+                    List<Cast> cast = credits.getCastList();
+                    List<Crew> crew = credits.getCrewList();
+                    castList = new ArrayList<>();
+                    castList.addAll(cast);
+                    crewList = new ArrayList<>();
+                    crewList.addAll(crew);
 
                     if (tvShowDetails != null) {
                         getActivity().runOnUiThread(() -> {
@@ -125,6 +173,16 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                                 }
                             }
                             genreSheet.setText(sb.toString());
+                            castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                            castView.setHasFixedSize(true);
+                            crewView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                            crewView.setHasFixedSize(true);
+                            castAdapter = new CreditsAdapter(getContext(), castList , fragmentManager);
+                            crewAdapter = new CreditsAdapter(getContext(), crewList , fragmentManager);
+                            castView.setAdapter(castAdapter);
+                            castView.setNestedScrollingEnabled(false);
+                            crewView.setAdapter(crewAdapter);
+                            crewView.setNestedScrollingEnabled(false);
                         });
                     }
                 }

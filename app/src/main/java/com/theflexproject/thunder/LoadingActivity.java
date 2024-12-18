@@ -213,20 +213,32 @@ public class LoadingActivity extends AppCompatActivity {
             dbFile.getParentFile().mkdirs();
             dbFile.createNewFile();
         }
+        File dbDir = getDatabasePath("MyToDos").getParentFile();
+        long freeSpace = dbDir.getFreeSpace();
+        Log.d("Storage", "Available space: " + freeSpace + " bytes");
 
-        try (InputStream is = new FileInputStream(file);
-             OutputStream os = new FileOutputStream(dbFile)) {
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                os.write(buffer, 0, length);
-
+        new Thread(() -> {
+            try (InputStream is = new FileInputStream(file);
+                 OutputStream os = new FileOutputStream(dbFile)) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) > 0) {
+                    os.write(buffer, 0, length);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }finally {
-            file.delete();
-            Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
-            launchMainActivity(deepLinkData);
-        }
+            finally {
+                long inputFileSize = file.length();
+                long outputFileSize = dbFile.length();
+
+                Log.d("FileSize", "Input size: " + inputFileSize + ", Output size: " + outputFileSize);
+
+                file.delete();
+                Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
+                launchMainActivity(deepLinkData);
+            }
+        }).start();
 
 
 

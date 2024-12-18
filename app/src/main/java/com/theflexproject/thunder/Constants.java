@@ -1,8 +1,14 @@
 package com.theflexproject.thunder;
 
+import android.annotation.SuppressLint;
+
+import java.util.Locale;
 import java.util.Random;
 
 public class Constants {
+    @SuppressLint("ConstantLocale")
+    public static final String language = Locale.getDefault().getLanguage();
+    public static final String LIBRE_TRANSLATE_URL = "https://libretranslate.com/translate"; // URL API LibreTranslate
     public static final String TMDB_GET_REQUEST_BASE_URL ="https://api.themoviedb.org/3/search/movie?api_key=";
     public static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/";
     public static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";

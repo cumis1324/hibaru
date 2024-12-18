@@ -1,0 +1,116 @@
+<!-- res/layout/bottom_sheet_layout.xml -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:cardCornerRadius="12dp"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <TextView
+            android:id="@+id/bottom_sheet_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Person"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:paddingBottom="8dp"/>
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/nested_scroll_view">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/posterInMediaItem"
+                    android:layout_width="100dp"
+                    android:layout_height="150dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_gravity="center_horizontal"
+                    android:scaleType="centerCrop"
+                    app:srcCompat="@color/transparent" />
+                <TextView
+                    android:id="@+id/originalTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Judul Video"
+                    android:focusable="true"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:paddingBottom="8dp"/>
+                <TextView
+                    android:id="@+id/genreSheet"
+                    style="@style/sizelabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toEndOf="@id/dot2"
+                    android:fontFamily="@font/jost_regular"
+                    android:text="1h 30m"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp"
+                    android:visibility="visible" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Bottom sheet description text -->
+                    <TextView
+                        android:id="@+id/bottom_sheet_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:text="Deskripsi video yang sangat panjang secara lengkap akan muncul di sini..."
+                        android:textSize="16sp"
+                        />
+
+                    <!-- Expand description button aligned to the right -->
+                    <TextView
+                        android:id="@+id/expand_description"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Expand"
+                        android:textColor="@color/blue"
+                        android:textSize="16sp"
+                        android:layout_gravity="end"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/castTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Playing in"
+                    android:focusable="true"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:paddingVertical="8dp"/>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/castRecycler"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:scrollbars="horizontal"
+                    android:background="@drawable/button_selector"
+                    />
+
+
+            </LinearLayout></androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

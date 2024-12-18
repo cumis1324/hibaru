@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,17 +44,25 @@ import com.theflexproject.thunder.player.PlayerUtils;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarAdapterHolder> {
 
     Context context;
     List<MyMedia> mediaList;
+    TVShow seasonDetails;
 
     private SimilarAdapter.OnItemClickListener listener;
 
     public SimilarAdapter(Context context, List<MyMedia> mediaList, SimilarAdapter.OnItemClickListener listener) {
         this.context = context;
         this.mediaList = mediaList;
+        this.listener= listener;
+    }
+    public SimilarAdapter(Context context, List<MyMedia> mediaList, TVShow seasonDetails, SimilarAdapter.OnItemClickListener listener) {
+        this.context = context;
+        this.mediaList = mediaList;
+        this.seasonDetails = seasonDetails;
         this.listener= listener;
     }
 
@@ -114,22 +123,41 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
                         .into(holder.backdrop);
             }
         }
-
-
-        if(mediaList.get(position) instanceof Episode){
-            Episode episode = ((Episode)mediaList.get(position));
-            if(episode.getName()!=null){
-                holder.name.setText( "Episode " + episode.getEpisode_number() + ": "+episode.getName());
+        if (mediaList.get(position) instanceof Episode) {
+            Episode episode = ((Episode) mediaList.get(position));
+            if (episode.getName() != null) {
+                holder.name.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
                 holder.desc.setText(episode.getOverview());
                 holder.poster.setVisibility(View.GONE);
-                Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+episode.getStill_path())
-                        .placeholder(new ColorDrawable(Color.BLACK))
-                        .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
-                        .into(holder.backdrop);
-            }
 
+                String stillPath = episode.getStill_path();  // Menyimpan nilai di variabel sementara
+                if (Objects.equals(stillPath, "null") || stillPath.isEmpty()) {  // Cek jika null atau kosong
+                    String backdropUrl = Constants.TMDB_BACKDROP_IMAGE_BASE_URL + seasonDetails.getBackdrop_path();
+                    Log.d("Glide", "Backdrop URL: " + backdropUrl);  // Log URL untuk debugging
+                    if (seasonDetails.getBackdrop_path() != null && !seasonDetails.getBackdrop_path().isEmpty()) {
+                        Glide.with(context)
+                                .load(backdropUrl)
+                                .placeholder(new ColorDrawable(Color.BLACK))
+                                .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
+                                .into(holder.backdrop);
+                    } else {
+                        Log.d("Glide", "Backdrop path is null or empty");
+                    }
+                } else {
+                    String imageUrl = Constants.TMDB_IMAGE_BASE_URL + stillPath;
+                    Log.d("Glide", "Image URL: " + imageUrl);  // Log URL untuk debugging
+
+                    Glide.with(context)
+                            .load(imageUrl)
+                            .placeholder(new ColorDrawable(Color.BLACK))
+                            .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
+                            .into(holder.backdrop);
+
+
+                }
+            }
         }
+
 
         setAnimation(holder.itemView,position);
 

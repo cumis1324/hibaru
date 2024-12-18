@@ -1,7 +1,9 @@
 package com.theflexproject.thunder.fragments;
 
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
+import static com.theflexproject.thunder.Constants.language;
 import static com.theflexproject.thunder.fragments.EpisodeDetailsFragment.REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION;
+import static com.theflexproject.thunder.player.PlayerUtils.isTVDevice;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -26,6 +28,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
@@ -55,6 +58,7 @@ import com.google.android.material.textview.MaterialTextView;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.MoreMoviesAdapterr;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
+import com.theflexproject.thunder.adapter.SimilarAdapter;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
@@ -64,12 +68,14 @@ import com.theflexproject.thunder.player.PlayerUtils;
 import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
+import com.theflexproject.thunder.utils.Translate;
 import com.theflexproject.thunder.utils.pembayaran.BillingManager;
 import com.theflexproject.thunder.utils.tmdbTrending;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -84,8 +90,9 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
     private TemplateView template, templateBesar;
-    private List<Movie> similarMovie;
-    MoreMoviesAdapterr.OnItemClickListener moreMoviesListener;
+    private RecyclerView similarView;
+    private SimilarAdapter.OnItemClickListener similarListener;
+    private List<MyMedia> similarOrEpisode;
     private BillingManager billingManager;
     private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
     private List<SkuDetails> skuDetailsList = new ArrayList<>();
@@ -192,7 +199,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             sources = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
             mediaList = new ArrayList<>();
             mediaList.add(episode);
-
+            loadEpisodes(season.getId());
         }
     }
 
@@ -208,7 +215,8 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             String result = StringUtils.runtimeIntegerToString(movieDetails.getVote_count());
             rating.setText(ratings + " from " + result + " Votes");
             judul.setText(titleText + " ("+yearCrop+")" +"\n" + movieDetails.getOriginal_title());
-            deskripsi.setText(movieDetails.getOverview());
+            String description = movieDetails.getOverview();
+            deskripsi.setText(description);
             Glide.with(mActivity)
                     .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
                     .apply(new RequestOptions()
@@ -220,6 +228,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             sources = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, id);
             mediaList = new ArrayList<>();
             mediaList.add(movieDetails);
+            loadSimilar(id);
 
         }
 
@@ -262,6 +271,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             AdHelper.loadNative(mActivity, adRequest, template);
             AdHelper.loadNative(mActivity, adRequest, templateBesar);
         }
+        similarView = view.findViewById(R.id.similarAndEpisode);
 
 
     }
@@ -400,5 +410,103 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     public void onDestroy() {
         super.onDestroy();
         billingManager.endConnection();
+    }
+    private void loadSimilar(int id) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<Movie> similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
+                List<Movie> recommendationMovie = DetailsUtils.getRecommendationMovies(mActivity, id);
+                if (similarMovie!=null){
+                    movieListener();
+                    similarOrEpisode = new ArrayList<>();
+                    similarOrEpisode.addAll(similarMovie);
+                    similarOrEpisode.addAll(recommendationMovie);
+                    mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void run() {
+                            similarView.setVisibility(View.VISIBLE);
+                            ScaleCenterItemLayoutManager linearLayoutManager;
+                            if (isTVDevice(mActivity)){
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+                            }
+                            else {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            }
+                            similarView.setLayoutManager(linearLayoutManager);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
+                            similarView.setAdapter(moreMovieRecycler);
+                            moreMovieRecycler.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }});
+        thread.start();
+    }
+    private void loadEpisodes(int seasonId) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<Episode> listEpisode = DetailsUtils.getListEpisode(mActivity, tvShowDetails.getId(), seasonId);
+                if (listEpisode!=null){
+                    movieListener();
+                    similarOrEpisode = new ArrayList<>();
+                    similarOrEpisode.addAll(listEpisode);
+                    mActivity.runOnUiThread(new Runnable() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void run() {
+                            similarView.setVisibility(View.VISIBLE);
+                            ScaleCenterItemLayoutManager linearLayoutManager;
+                            if (isTVDevice(mActivity)){
+
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+                            }
+                            else {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            }
+                            similarView.setLayoutManager(linearLayoutManager);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, tvShowDetails, similarListener);
+                            similarView.setAdapter(moreMovieRecycler);
+                            moreMovieRecycler.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }});
+        thread.start();
+    }
+    private void movieListener() {
+        similarListener = new SimilarAdapter.OnItemClickListener() {
+            @OptIn(markerClass = UnstableApi.class)
+            @Override
+            public void onClick(View view, int position) {
+                if (similarOrEpisode.get(position) instanceof Movie){
+                    Movie movie = (Movie) similarOrEpisode.get(position);
+                    String url = movie.getUrlString();
+                    int movieId = movie.getId();
+                    Fragment currentFragment = mActivity.getSupportFragmentManager().findFragmentById(R.id.container);
+                    if (currentFragment instanceof PlayerFragment) {
+                        ((PlayerFragment) currentFragment).updateMovie(movieId, true);
+                    } else {
+                        Log.e("Error", "Current fragment is not PlayerFragment");
+                    }
+                }
+                if (similarOrEpisode.get(position) instanceof Episode){
+                    Episode episodeSelected = (Episode) similarOrEpisode.get(position);
+                    String url = episodeSelected.getUrlString();
+
+                    episode = episodeSelected;
+                    Fragment currentFragment = mActivity.getSupportFragmentManager().findFragmentById(R.id.container);
+                    if (currentFragment instanceof PlayerFragment) {
+                        ((PlayerFragment) currentFragment).updateEpisode(tvShowDetails, season, episodeSelected.getId());
+                    } else {
+                        Log.e("Error", "Current fragment is not PlayerFragment");
+                    }
+
+                }
+
+            }
+        };
     }
 }

@@ -91,10 +91,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         />
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/similarAndEpisode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:listitem="@layout/item_similar_episode"/>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

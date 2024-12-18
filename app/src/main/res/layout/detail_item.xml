@@ -180,6 +180,11 @@
                 app:gnt_template_type="@layout/iklan_besar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/similarAndEpisode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@layout/item_similar_episode"/>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.cardview.widget.CardView>
