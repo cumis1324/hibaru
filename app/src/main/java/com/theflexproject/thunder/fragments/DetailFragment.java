@@ -222,7 +222,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             String ratings = (decimalFormat.format(movieDetails.getVote_average()));
             String result = StringUtils.runtimeIntegerToString(movieDetails.getVote_count());
             rating.setText(ratings + " from " + result + " Votes");
-            judul.setText(titleText + " ("+yearCrop+")" +"\n" + movieDetails.getOriginal_title());
+            judul.setText(titleText +"\n" + movieDetails.getOriginal_title() + " ("+yearCrop+")");
             String description = movieDetails.getOverview();
             deskripsi.setText(description);
             Glide.with(mActivity)
@@ -330,7 +330,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     public void onPurchaseCompleted(Purchase purchase) {
         Log.d("DetailFragment", "Purchase completed: " + purchase.getSkus());
         Toast.makeText(mActivity, "Pembayaran berhasil", Toast.LENGTH_SHORT).show();
-        billingManager.startChecking();
+        billingManager.startChecking(mActivity);
     }
 
     @Override
@@ -366,6 +366,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         bottomSheetDialog.show();
     }
 
+    @SuppressLint("SetTextI18n")
     @OptIn(markerClass = UnstableApi.class)
     private void showSubscriptionOptions() {
         if (skuSubList == null || skuSubList.isEmpty()) {
@@ -379,12 +380,12 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         LinearLayout container = bottomSheetView.findViewById(R.id.skuContainer);
 
         // Set title
-        title.setText("Langganan 15ribu perbulan \n untuk menikmati nfgplus tanpa iklan");
+
 
         // Gunakan for loop dengan index untuk menghindari ConcurrentModificationException
         for (int i = 0; i < skuSubList.size(); i++) {
             SkuDetails skuDetails = skuSubList.get(i);
-
+            title.setText("Langganan "+ skuDetails.getPrice() +" perbulan \n untuk menikmati nfgplus tanpa iklan");
             // Create ImageView for displaying the image
             ImageView imageView = new ImageView(getContext());
             LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(
@@ -418,6 +419,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             subscribeButton.setBackgroundColor(getResources().getColor(R.color.blue)); // Button color
             subscribeButton.setTextColor(getResources().getColor(R.color.white)); // Button text color
             subscribeButton.setOnClickListener(v -> billingManager.startSubscription(getActivity(), skuDetails));
+
 
             // Add margins and layout params to button
             LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(

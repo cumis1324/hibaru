@@ -39,6 +39,7 @@ import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 
 import java.util.List;
+import java.util.Objects;
 
 public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAdapter.MovieViewHolder> {
 
@@ -76,7 +77,12 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
     public void onBindViewHolder(@NonNull MovieViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Movie movie = mediaList.get(position);
         String year = movie.getRelease_date().substring(0, 4);
-        holder.name.setText(movie.getTitle()+ " (" + year + ")");
+        if (Objects.equals(movie.getOriginal_language(), "id")){
+            holder.name.setText(movie.getOriginal_title()+ " (" + year + ")");
+        }
+        else {
+            holder.name.setText(movie.getTitle() + " (" + year + ")");
+        }
 
         if (movie.getBackdrop_path() != null) {
             Glide.with(context)

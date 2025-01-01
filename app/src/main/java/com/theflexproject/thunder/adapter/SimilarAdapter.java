@@ -104,8 +104,13 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
             if(movie.getTitle()==null){
                 holder.name.setText(movie.getFileName());
             } else {
-                String year = movie.getRelease_date().substring(0,4);
-                holder.name.setText(movie.getTitle() + " (" + year + ")");
+                String year = movie.getRelease_date().substring(0, 4);
+                if (Objects.equals(movie.getOriginal_language(), "id")){
+                    holder.name.setText(movie.getOriginal_title()+ " (" + year + ")");
+                }
+                else {
+                    holder.name.setText(movie.getTitle() + " (" + year + ")");
+                }
                 holder.desc.setText(movie.getOverview());
             }
 

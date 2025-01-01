@@ -210,9 +210,12 @@ public class LoadingActivity extends AppCompatActivity {
         }
 
         if (!dbFile.exists()) {
+            File cacheDir = getCacheDir();
+            deleteDir(cacheDir);
             dbFile.getParentFile().mkdirs();
             dbFile.createNewFile();
         }
+
         File dbDir = getDatabasePath("MyToDos").getParentFile();
         long freeSpace = dbDir.getFreeSpace();
         Log.d("Storage", "Available space: " + freeSpace + " bytes");
@@ -239,11 +242,21 @@ public class LoadingActivity extends AppCompatActivity {
                 launchMainActivity(deepLinkData);
             }
         }).start();
-
-
-
     }
-
+    private boolean deleteDir(File dir) {
+        if (dir != null && dir.isDirectory()) {
+            String[] children = dir.list();
+            if (children != null) {
+                for (String child : children) {
+                    boolean success = deleteDir(new File(dir, child));
+                    if (!success) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return dir.delete(); // Hapus file atau direktori kosong
+    }
     private void launchMainActivity(Uri deepLinkData) {
         HandlerCompat.createAsync(Looper.getMainLooper()).post(() -> {
             ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -275,13 +288,24 @@ public class LoadingActivity extends AppCompatActivity {
     private boolean isDatabaseCorrupt(String backupFileUrl, Uri deepLinkData) {
         AppDatabase db = null;
         File dbFile = getDatabasePath("MyToDos");
+
+        // Periksa jika file tidak ada
         if (!dbFile.exists()) {
+            Log.e(TAG, "Database does not exist.");
             return true;
-        }else {
+        } else {
+            // Periksa jika ukuran database adalah 0MB (0 bytes)
+            if (dbFile.length() == 0) {
+                Log.e(TAG, "Database is empty (0MB).");
+                return true;
+            }
+
             try {
                 db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos")
                         .allowMainThreadQueries()
                         .build();
+
+                // Cek apakah database dapat diakses
                 db.indexLinksDao().getAll();
                 Log.i(TAG, "DB Aman!");
                 return false;
@@ -296,12 +320,10 @@ public class LoadingActivity extends AppCompatActivity {
                 if (db != null) {
                     db.close();
                 }
-
             }
             return false;
         }
     }
-
     @NonNull
     private String getLastModifiedFromUrl() throws IOException {
         TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();

@@ -13,6 +13,7 @@ import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
+import com.android.billingclient.api.SkuDetailsResponseListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,12 +68,12 @@ public class BillingManager {
             }
         });
     }
-    public void startChecking(){
+    public void startChecking(Activity activity){
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    checkSubscriptionStatus();
+                    checkSubscriptionStatus(activity);
                     checkItemStatus();
 
                 } else {
@@ -192,41 +193,73 @@ public class BillingManager {
 
         billingClient.launchBillingFlow(activity, billingFlowParams);
     }
-
-
-
-    public void checkSubscriptionStatus() {
-        Log.d("BillingManager", "Starting to query purchases...");
+    public void checkSubscriptionStatus(Activity activity) {
         billingClient.queryPurchasesAsync(BillingClient.SkuType.SUBS, (billingResult, purchasesList) -> {
-            Log.d("BillingManager", "Query Purchases Result: " + billingResult.getResponseCode());
-            Log.d("BillingManager", "Query Purchases Debug Message: " + billingResult.getDebugMessage());
-
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchasesList != null) {
-                Log.d("BillingManager", "Number of purchases found: " + purchasesList.size());
                 boolean isSubscribed = false;
-
                 for (Purchase purchase : purchasesList) {
-                    Log.d("BillingManager", "Purchase found: " + purchase.getSkus());
-                    Log.d("BillingManager", "Purchase State: " + purchase.getPurchaseState());
-                    Log.d("BillingManager", "Purchase Token: " + purchase.getPurchaseToken());
-
                     if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-                        Log.d("BillingManager", "Valid subscription found for SKU: " + purchase.getSkus());
-                        isSubscribed = true;
+                        // Menghitung waktu kadaluwarsa langganan (30 hari setelah pembelian)
+                        long subscriptionDuration = 30L * 24L * 60L * 60L * 1000L; // 30 hari dalam milidetik
+                        long expirationTime = purchase.getPurchaseTime() + subscriptionDuration;
+                        Log.d("Subscription", "Expiration Time: " + expirationTime);
 
+                        long currentTime = System.currentTimeMillis();
+
+                        if (expirationTime > currentTime) {
+                            Log.d("Subscription", "Current Time: " + currentTime);
+                            // Langganan masih aktif
+                            isSubscribed = true;
+                        } else {
+                            // Langganan sudah kadaluarsa
+                            Log.d("Subscription", "Langganan sudah kadaluarsa.");
+                            isSubscribed = false;
+                            renewSubscription(activity); // Memperbarui langganan
+                        }
+
+                        // Akui pembelian jika belum diakui
                         if (!purchase.isAcknowledged()) {
                             acknowledgePurchase(purchase); // Hanya akui jika belum diakui
                         }
-
                         break; // Hentikan iterasi setelah langganan ditemukan
                     }
                 }
-
-                Log.d("BillingManager", "Subscription status: " + isSubscribed);
                 billingCallback.onSubscriptionStatus(isSubscribed);
             } else {
                 Log.e("BillingManager", "Failed to query purchases: " + billingResult.getDebugMessage());
                 billingCallback.onSubscriptionStatus(false);
+            }
+        });
+    }
+
+    private void renewSubscription(Activity activity) {
+        // Proses untuk memperbarui langganan
+        List<String> skuList = new ArrayList<>();
+        skuList.add("langganan_1_bulan"); // Ganti dengan SKU langganan Anda
+
+        // Menyiapkan untuk membeli langganan baru
+        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+        params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS);
+
+        billingClient.querySkuDetailsAsync(params.build(), new SkuDetailsResponseListener() {
+            @Override
+            public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> skuDetailsList) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && !skuDetailsList.isEmpty()) {
+                    SkuDetails skuDetails = skuDetailsList.get(0);
+
+                    BillingFlowParams flowParams = BillingFlowParams.newBuilder()
+                            .setSkuDetails(skuDetails)
+                            .build();
+
+                    BillingResult result = billingClient.launchBillingFlow(activity, flowParams);
+
+                    if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                        Log.d("Subscription", "Langganan berhasil diperbarui.");
+
+                    }
+                } else {
+                    Log.e("Subscription", "Gagal mendapatkan SKU atau SKU tidak ditemukan.");
+                }
             }
         });
     }

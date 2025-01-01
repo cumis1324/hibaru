@@ -52,6 +52,7 @@ import com.theflexproject.thunder.utils.DetailsUtils;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapterHolder> {
 
@@ -77,11 +78,16 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
     public void onBindViewHolder(@NonNull MediaAdapterHolder holder, int position) {
         if(mediaList.get(position) instanceof Movie) {
             Movie movie = ((Movie)mediaList.get(position));
-           if(movie.getTitle()==null){
+           if(movie.getTitle()==null || movie.getTitle().isEmpty()){
             holder.name.setText(movie.getFileName());
-            } else {
-               String year = movie.getRelease_date().substring(0,4);
-               holder.name.setText(movie.getTitle() + " (" + year + ")");
+            }else {
+               String year = movie.getRelease_date().substring(0, 4);
+               if (Objects.equals(movie.getOriginal_language(), "id")){
+                   holder.name.setText(movie.getOriginal_title()+ " (" + year + ")");
+               }
+               else {
+                   holder.name.setText(movie.getTitle() + " (" + year + ")");
+               }
            }
 
             if(movie.getVote_average()!=0){
@@ -106,8 +112,13 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
         if(mediaList.get(position) instanceof TVShow){
             TVShow tvShow = ((TVShow)mediaList.get(position));
             if(tvShow.getName()!=null){
-                String year = tvShow.getFirst_air_date().substring(0,4);
-              holder.name.setText(tvShow.getName() + " (" + year + ")");
+                if(Objects.equals(tvShow.getOriginal_name(), "id")){
+                    String year = tvShow.getFirst_air_date().substring(0,4);
+                    holder.name.setText(tvShow.getOriginal_name() + " (" + year + ")");
+                }else {
+                    String year = tvShow.getFirst_air_date().substring(0, 4);
+                    holder.name.setText(tvShow.getName() + " (" + year + ")");
+                }
                 Glide.with(context)
                         .load(Constants.TMDB_IMAGE_BASE_URL+tvShow.getPoster_path())
                         .placeholder(new ColorDrawable(Color.BLACK))

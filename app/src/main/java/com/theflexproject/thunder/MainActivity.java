@@ -143,13 +143,7 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
             Toast.makeText(this, "Notifikasi diizinkan!", Toast.LENGTH_SHORT).show();
         }
         billingManager = new BillingManager(this, this);
-        billingManager.startChecking();
-
-
-
-        // Daftarkan receiver untuk menerima pembaruan dari ModifiedCheckWorker
-
-
+        billingManager.startChecking(this);
     }
     private boolean isTVDevice() {
         UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);

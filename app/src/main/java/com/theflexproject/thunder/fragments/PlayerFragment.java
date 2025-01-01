@@ -531,6 +531,11 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         public void onIsPlayingChanged(boolean isPlaying) {
             playPauseButton.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
             playPauseButton.requestFocus();
+            if (isPlaying) {
+                startSeekBarUpdate(); // Memulai update seekbar
+            } else {
+                stopSeekBarUpdate(); // Menghentikan update seekbar
+            }
         }
 
 

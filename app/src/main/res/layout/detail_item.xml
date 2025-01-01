@@ -101,8 +101,6 @@
                         android:paddingHorizontal="8dp"
                         android:text="Nama Movie"
                         android:visibility="visible"
-                        android:maxLines="2"
-                        android:ellipsize="end"
                         />
                 </LinearLayout>
                 <com.google.android.material.button.MaterialButton

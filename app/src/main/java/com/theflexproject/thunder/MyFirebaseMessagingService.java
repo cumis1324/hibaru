@@ -25,7 +25,8 @@ import java.net.URL;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
-    private static final String CHANNEL_ID = "latest_update";
+    private static final String CHANNEL_ID = "upload_today";
+    private static int Notif_Id;
 
 
     @Override
@@ -39,6 +40,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Unduh gambar poster untuk ditampilkan dalam notifikasi
         Bitmap posterBitmap = getBitmapFromURL(posterPath);
+        Uri data = Uri.parse(deepLink);
+        String itemId = data.getQueryParameter("id");
+        Notif_Id = Integer.parseInt(itemId);
 
         // Membuat intent untuk membuka deep link ketika notifikasi diklik
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -73,7 +77,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        notificationManager.notify(1, builder.build());
+        notificationManager.notify(Notif_Id, builder.build());
     }
 
     // Membuat channel untuk notifikasi (diperlukan pada Android O ke atas)
