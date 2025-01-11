@@ -426,6 +426,7 @@ public class HomeFragment extends BaseFragment {
             public void run() {
                 lastPlayedList = FetchMovie.getRecommendation(mActivity);
                 List<String> his = MainActivity.historyList;
+                
                 if (his!=null) {played = FetchMovie.getMore(mActivity, his);}
                 List<String> favorit = MainActivity.favoritList;
                 if (favorit!=null) {fav = FetchMovie.getRecombyFav(mActivity, favorit);}

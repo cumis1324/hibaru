@@ -47,12 +47,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Membuat intent untuk membuka deep link ketika notifikasi diklik
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(deepLink));
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                getApplicationContext(),
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
 
         // Membuat dan menampilkan notifikasi

@@ -139,8 +139,6 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         handleSignIn();
         if (!isNotificationEnabled()) {
             showNotificationPermissionDialog();
-        } else {
-            Toast.makeText(this, "Notifikasi diizinkan!", Toast.LENGTH_SHORT).show();
         }
         billingManager = new BillingManager(this, this);
         billingManager.startChecking(this);

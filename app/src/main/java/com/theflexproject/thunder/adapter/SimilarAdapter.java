@@ -100,68 +100,82 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
             holder.backdrop.setLayoutParams(params);
         });
         if(mediaList.get(position) instanceof Movie) {
-            Movie movie = ((Movie)mediaList.get(position));
-            if(movie.getTitle()==null){
+            Movie movie = ((Movie) mediaList.get(position));
+
+            // Ensure movie title is not null before using it
+            if (movie.getTitle() != null) {
+                holder.name.setText(movie.getTitle());
+            } else if (movie.getFileName() != null) {
                 holder.name.setText(movie.getFileName());
             } else {
-                String year = movie.getRelease_date().substring(0, 4);
-                if (Objects.equals(movie.getOriginal_language(), "id")){
-                    holder.name.setText(movie.getOriginal_title()+ " (" + year + ")");
-                }
-                else {
-                    holder.name.setText(movie.getTitle() + " (" + year + ")");
-                }
-                holder.desc.setText(movie.getOverview());
+                holder.name.setText("Unknown Title");
             }
 
+            // Ensure other fields are also checked for null
+            if (movie.getRelease_date() != null && movie.getRelease_date().length() >= 4) {
+                String year = movie.getRelease_date().substring(0, 4);
+                holder.name.append(" (" + year + ")");
+            }
+            if (movie.getOverview() != null) {
+                holder.desc.setText(movie.getOverview());
+            } else {
+                holder.desc.setText("No description available");
+            }
 
-            if(movie.getPoster_path()!=null){
+            if (movie.getPoster_path() != null) {
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+movie.getPoster_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + movie.getPoster_path())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+movie.getBackdrop_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + movie.getBackdrop_path())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.backdrop);
             }
         }
+
         if (mediaList.get(position) instanceof Episode) {
             Episode episode = ((Episode) mediaList.get(position));
+
+            // Check if episode name is null before using it
             if (episode.getName() != null) {
                 holder.name.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
+            } else {
+                holder.name.setText("Episode " + episode.getEpisode_number() + ": Unknown");
+            }
+
+            // Handle description in a similar way
+            if (episode.getOverview() != null) {
                 holder.desc.setText(episode.getOverview());
-                holder.poster.setVisibility(View.GONE);
+            } else {
+                holder.desc.setText("No description available");
+            }
 
-                String stillPath = episode.getStill_path();  // Menyimpan nilai di variabel sementara
-                if (Objects.equals(stillPath, "null") || stillPath.isEmpty()) {  // Cek jika null atau kosong
-                    String backdropUrl = Constants.TMDB_BACKDROP_IMAGE_BASE_URL + seasonDetails.getBackdrop_path();
-                    Log.d("Glide", "Backdrop URL: " + backdropUrl);  // Log URL untuk debugging
-                    if (seasonDetails.getBackdrop_path() != null && !seasonDetails.getBackdrop_path().isEmpty()) {
-                        Glide.with(context)
-                                .load(backdropUrl)
-                                .placeholder(new ColorDrawable(Color.BLACK))
-                                .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
-                                .into(holder.backdrop);
-                    } else {
-                        Log.d("Glide", "Backdrop path is null or empty");
-                    }
-                } else {
-                    String imageUrl = Constants.TMDB_IMAGE_BASE_URL + stillPath;
-                    Log.d("Glide", "Image URL: " + imageUrl);  // Log URL untuk debugging
-
+            // Handle still image path
+            String stillPath = episode.getStill_path();
+            if (stillPath == null || stillPath.isEmpty()) {
+                String backdropUrl = Constants.TMDB_BACKDROP_IMAGE_BASE_URL + seasonDetails.getBackdrop_path();
+                if (seasonDetails.getBackdrop_path() != null && !seasonDetails.getBackdrop_path().isEmpty()) {
                     Glide.with(context)
-                            .load(imageUrl)
+                            .load(backdropUrl)
                             .placeholder(new ColorDrawable(Color.BLACK))
                             .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                             .into(holder.backdrop);
-
-
+                } else {
+                    holder.backdrop.setVisibility(View.GONE);  // Hide if no backdrop available
                 }
+            } else {
+                String imageUrl = Constants.TMDB_IMAGE_BASE_URL + stillPath;
+                Glide.with(context)
+                        .load(imageUrl)
+                        .placeholder(new ColorDrawable(Color.BLACK))
+                        .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
+                        .into(holder.backdrop);
             }
         }
+
 
 
         setAnimation(holder.itemView,position);

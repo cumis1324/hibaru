@@ -1,26 +1,36 @@
 package com.theflexproject.thunder;
 
-import android.app.ActivityManager;
+import android.app.ActivityManager;import android.Manifest;
+import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.HandlerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.room.Room;
@@ -61,6 +71,7 @@ public class LoadingActivity extends AppCompatActivity {
     private static final String LAST_MODIFIED_KEY = "last_modified_key";
     private static final String TAG = "huntu";
     private TextView pesan;
+    private static final int REQUEST_MEDIA_PERMISSION = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +79,12 @@ public class LoadingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_loading);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
+        if (!isNotificationEnabled()) {
+            showNotificationPermissionDialog();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkAndRequestMediaPermissions();
+        }
 
         FirebaseMessaging.getInstance().subscribeToTopic("latest_update")
                 .addOnCompleteListener(task -> {
@@ -90,6 +107,7 @@ public class LoadingActivity extends AppCompatActivity {
         Uri deepLinkData = getIntent().getData();
 
         checkForModifiedData(backupFileUrl, deepLinkData);
+
 
 
     }
@@ -201,9 +219,8 @@ public class LoadingActivity extends AppCompatActivity {
     }
 
     private void restoreDatabase(File file, Uri deepLinkData) throws IOException {
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
-        db.close();
         File dbFile = getDatabasePath("MyToDos");
+        Log.i("dbfile", String.valueOf(dbFile));
 
         if (dbFile.exists()) {
             dbFile.delete();
@@ -238,7 +255,6 @@ public class LoadingActivity extends AppCompatActivity {
                 Log.d("FileSize", "Input size: " + inputFileSize + ", Output size: " + outputFileSize);
 
                 file.delete();
-                Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos").build();
                 launchMainActivity(deepLinkData);
             }
         }).start();
@@ -351,6 +367,72 @@ public class LoadingActivity extends AppCompatActivity {
             return Tasks.await(taskCompletionSource.getTask(), 10, TimeUnit.SECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             throw new IOException("Failed to get last modified value from Firebase", e);
+        }
+    }
+    private boolean isNotificationEnabled() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            return notificationManager != null && notificationManager.getImportance() != NotificationManager.IMPORTANCE_NONE;
+        }
+        return true; // Di bawah Android O, dianggap sudah diizinkan
+    }
+
+    private void showNotificationPermissionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Izinkan Notifikasi")
+                .setMessage("Kami membutuhkan izin Anda untuk mengirim notifikasi.")
+                .setPositiveButton("Izinkan", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Arahkan pengguna ke pengaturan aplikasi untuk mengizinkan notifikasi
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                        intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton("Tolak", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss(); // Menutup dialog
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void checkAndRequestMediaPermissions() {
+        // List of permissions to request
+        String[] permissions = {
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_AUDIO
+        };
+
+        // Check if permissions are already granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Request permissions
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_MEDIA_PERMISSION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_MEDIA_PERMISSION) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+
+            if (allGranted) {
+                Toast.makeText(this, "Media permissions granted", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

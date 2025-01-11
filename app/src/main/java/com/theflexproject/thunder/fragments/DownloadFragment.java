@@ -47,6 +47,7 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
     private static final int STORAGE_PERMISSION_CODE = 1;
     private static final String TAG = "DownloadFragment";
     private static final int FILE_SELECT_CODE = 0;
+    private static final int REQUEST_MEDIA_PERMISSION = 100;
     private RecyclerView recyclerView, downloadingRecy;
     private DownloadRecyAdapter mediaAdapter;
     private List<MediaItem> mediaList = new ArrayList<>();
@@ -76,8 +77,9 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
         downloadAdapter = new DownloadAdapter(downloadItems, getContext());
         downloadingRecy.setAdapter(downloadAdapter);
         checkDownloadProgress();
-
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkAndRequestMediaPermissions();
+        }
         recyclerView = view.findViewById(R.id.recyclerDownload);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         teksDownload = view.findViewById(R.id.teksDownload);
@@ -308,6 +310,20 @@ public class DownloadFragment extends BaseFragment implements DownloadRecyAdapte
         mediaList.clear();
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
+        }
+    }
+    private void checkAndRequestMediaPermissions() {
+        // List of permissions to request
+        String[] permissions = {
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_AUDIO
+        };
+
+        // Check if permissions are already granted
+        if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(mActivity, Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // Request permissions
+            ActivityCompat.requestPermissions(mActivity, permissions, REQUEST_MEDIA_PERMISSION);
         }
     }
 }
