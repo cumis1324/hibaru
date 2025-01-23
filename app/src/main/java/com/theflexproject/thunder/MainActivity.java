@@ -142,7 +142,19 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         }
         billingManager = new BillingManager(this, this);
         billingManager.startChecking(this);
+        setAdsState();
     }
+
+    private void setAdsState() {
+        SharedPreferences prefs = getSharedPreferences("load4Ads", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("adStart", false);
+        editor.putBoolean("ad25", false);
+        editor.putBoolean("ad50", false);
+        editor.putBoolean("ad75", false);
+        editor.apply();
+    }
+
     private boolean isTVDevice() {
         UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;

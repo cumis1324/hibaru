@@ -12,6 +12,7 @@ import android.app.PictureInPictureParams;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -92,10 +93,10 @@ public class PlayerUtils {
     static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(HISTORY_PATH);
     static String userId = manager.getCurrentUser().getUid();
     public static ValueEventListener lastPositionListener;
-    private static boolean adStart = false;
-    private static boolean ad25 = false;
-    private static boolean ad50 = false;
-    private static boolean ad75 = false;
+    private static boolean adStart;
+    private static boolean ad25;
+    private static boolean ad50;
+    private static boolean ad75;
     private static List<DownloadItem> downloadItems = new ArrayList<>();
     private static View decorView;
     private static ViewGroup rootView;
@@ -236,25 +237,35 @@ public class PlayerUtils {
                 .setDrmSessionManagerProvider(drmProvider);
     }
     public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView, AdRequest adRequest) {
+        SharedPreferences prefs = mCtx.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        adStart = prefs.getBoolean("adStart", false);
+        ad25 = prefs.getBoolean("ad25", false);
+        ad50 = prefs.getBoolean("ad50", false);
+        ad75 = prefs.getBoolean("ad75", false);
         if (player != null){
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
             if (!adStart && cp <= 5000) {
                 AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
-                adStart = true; // Flag untuk mencegah pemanggilan ulang
+                editor.putBoolean("adStart", true); // Flag untuk mencegah pemanggilan ulang
+                editor.apply();
             }
             if (tp > 0){
-                if (!ad25 && cp >= tp * 0.25){
+                if (!ad25 && cp >= tp * 0.25 && adStart){
                     AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
-                    ad25 = true;
+                    editor.putBoolean("ad25", true);
+                    editor.apply();
                 }
-                if (!ad50 && cp >= tp * 0.50){
+                if (!ad50 && cp >= tp * 0.50 && ad25){
                     AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
-                    ad50 = true;
+                    editor.putBoolean("ad50", true);
+                    editor.apply();
                 }
-                if (!ad75 && cp >= tp * 0.75){
+                if (!ad75 && cp >= tp * 0.75 && ad50){
                     AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
-                    ad75 = true;
+                    editor.putBoolean("ad75", true);
+                    editor.apply();
                 }
             }
         }

@@ -476,6 +476,12 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 seekBar.setMax((int) player.getDuration());
                 updateTimer(timer, player.getCurrentPosition(), player.getDuration());
                 handler.postDelayed(this, 1000); // Update setiap detik
+                if (!isSubscribed){
+                    //requestAds();
+                    //AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
+                    adRequest = AdHelper.getAdRequest(mActivity);
+                    PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
+                }
             }
         }
     };
@@ -490,7 +496,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     @Override
     public void onUserLeaveHint() {
-            handleUserLeaveHint();
+           // handleUserLeaveHint();
 
     }
     private void handleUserLeaveHint() {
@@ -516,6 +522,15 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             destroyAll();
         }
 
+    }
+    private void setAdsState() {
+        SharedPreferences prefs = mActivity.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("adStart", false);
+        editor.putBoolean("ad25", false);
+        editor.putBoolean("ad50", false);
+        editor.putBoolean("ad75", false);
+        editor.apply();
     }
 
     private class PlayerEventListener implements Player.Listener {
@@ -552,12 +567,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 if (isTVDevice(mActivity)){
                     movietitle.setVisibility(View.VISIBLE);
                 }
-                if (!isSubscribed){
-                    //requestAds();
-                    //AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
-                    adRequest = AdHelper.getAdRequest(mActivity);
-                    PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
-                }
+
                 playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
             }
             if (playbackState != Player.STATE_READY) {
@@ -645,6 +655,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     }
     protected void newSource() {
         if (player != null) {
+            setAdsState();
             saveResume(player, tmdbId);
             player.release();
             player = null;
@@ -665,6 +676,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
     }
     private void destroyAll() {
+        setAdsState();
         decorView = mActivity.getWindow().getDecorView();
         rootView = decorView.findViewById(android.R.id.content);
         rootView.setPadding(0, 0, 0, 0);
