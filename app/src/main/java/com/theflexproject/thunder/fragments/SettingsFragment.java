@@ -437,7 +437,7 @@ public class SettingsFragment extends BaseFragment {
 
     private void getHistoryFb() {
         // Cek apakah historyList sudah terisi dari MainActivity
-        List<String> his = MainActivity.historyList;
+        List<String> his = MainActivity.historyAll;
 
         if (his != null && !his.isEmpty()) {
             loadLastPlayedMovies(his);  // Panggil metode untuk menampilkan movie

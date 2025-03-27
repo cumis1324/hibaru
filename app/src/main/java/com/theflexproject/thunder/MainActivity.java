@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     NavigationRailView navigationRailView;
     private OnUserLeaveHintListener userLeaveHintListener;
     public static List<String> historyList = new ArrayList<>();  // Menyimpan data history
+    public static List<String> historyAll = new ArrayList<>();  // Menyimpan data history
     public static List<String> favoritList = new ArrayList<>();
     private BillingManager billingManager;
 
@@ -268,11 +269,14 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         }
         else {
             bukaIntent();
+            //IklanPremium.konvertWaktu();
             IklanPremium.checkHistory(this, new IklanPremium.HistoryCallback() {
                 @Override
                 public void onHistoryLoaded(List<String> history) {
                     // Simpan data history ke dalam variabel statis atau global
-                    historyList = history;
+                    historyList = history.size() > 10 ? history.subList(0, 10) : history;
+                    historyAll = history;
+
                     Log.d("MainActivity", "History data loaded: " + history);
                 }
             });

@@ -2,6 +2,7 @@ package com.theflexproject.thunder.utils.pembayaran;
 
 import android.content.Context;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -16,9 +17,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.theflexproject.thunder.model.FavHis;
 
 import java.text.ParseException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class IklanPremium {
@@ -73,27 +77,54 @@ public class IklanPremium {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    List<String> itemIds = new ArrayList<>();
+                    List<Pair<String, ZonedDateTime>> itemList = new ArrayList<>();
+
+                    // Sesuaikan format dengan format penyimpanan di Firebase
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+
                     for (DataSnapshot item : dataSnapshot.getChildren()) {
                         String itemId = item.getKey();
-                        if (itemId != null) {
-                            itemIds.add(itemId);
+                        String lastPlayedStr = item.child("lastPlayed").getValue(String.class);
+
+                        Log.d("FirebaseData", "Item ID: " + itemId + ", lastPlayed: " + lastPlayedStr);
+
+                        if (itemId != null && lastPlayedStr != null) {
+                            try {
+                                ZonedDateTime lastPlayed = ZonedDateTime.parse(lastPlayedStr, formatter);
+                                itemList.add(new Pair<>(itemId, lastPlayed));
+                            } catch (Exception e) {
+                                Log.e("DateParseError", "Error parsing date: " + lastPlayedStr, e);
+                            }
                         }
                     }
-                    callback.onHistoryLoaded(itemIds);  // Panggil callback dengan data history
+
+                    Log.d("BeforeSort", "Before sorting: " + itemList.toString());
+
+                    itemList.sort((a, b) -> b.second.compareTo(a.second));
+
+                    Log.d("AfterSort", "After sorting: " + itemList.toString());
+
+
+                    // Ambil hanya itemIds dalam urutan yang telah diurutkan
+                    List<String> sortedItemIds = new ArrayList<>();
+                    for (Pair<String, ZonedDateTime> pair : itemList) {
+                        sortedItemIds.add(pair.first);
+                    }
+
+                    callback.onHistoryLoaded(sortedItemIds); // Panggil callback dengan daftar yang sudah diurutkan
                 } else {
-                    callback.onHistoryLoaded(new ArrayList<>());  // Data kosong jika tidak ada history
+                    callback.onHistoryLoaded(new ArrayList<>()); // Data kosong jika tidak ada history
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Handle error
                 Log.e("FirebaseError", "Error fetching history: " + error.getMessage());
-                callback.onHistoryLoaded(new ArrayList<>());  // Data kosong jika gagal
+                callback.onHistoryLoaded(new ArrayList<>()); // Data kosong jika gagal
             }
         });
     }
+
 
     // Memeriksa data favorit dari Firebase
     public static void checkFavorit(Context context, FavoritCallback callback) {
