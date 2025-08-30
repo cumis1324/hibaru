@@ -18,3 +18,4 @@ local.properties
 /nativetemplates/build
 /.github
 /app/release
+/app/build
