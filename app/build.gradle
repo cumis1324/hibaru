@@ -6,12 +6,12 @@ plugins {
 
 
 android {
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
-        targetSdk 34
+        targetSdk 36
         versionCode 74
         versionName "Catur Saptadasa"
 
@@ -26,7 +26,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -36,11 +36,6 @@ android {
 
 
         coreLibraryDesugaringEnabled true
-
-
-
-
-
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
