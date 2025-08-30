@@ -176,6 +176,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private Intent intent;
     private RandomIndex loadBalancer = new RandomIndex();
     private String randomUrl;
+    private static final String ADMIN_USER_UID = "M20Oxpp64gZ480Lqus4afv6x2n63";
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
 
@@ -750,7 +751,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                             .into(imageView);
                 }
             }
-            initializePlayer(newUrl);
+            if (ADMIN_USER_UID.equals(userId)){
+            initializePlayer(urlString);
+            }else {initializePlayer(newUrl);}
         }
         sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
     }
@@ -777,7 +780,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
                         randomUrl
                 );
-                initializePlayer(newUrl);
+                if (ADMIN_USER_UID.equals(userId)){
+                    initializePlayer(urlString);
+                }else {initializePlayer(newUrl);}
                 sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
             }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
             if(tvShowDetails.getBackdrop_path()!=null) {
