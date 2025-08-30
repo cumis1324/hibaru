@@ -73,8 +73,8 @@ public class LoadingActivity extends AppCompatActivity {
     private static final String LAST_MODIFIED_KEY = "last_modified_key";
     private static final String DB_NAME = "MyToDos";
     private static final String ADMIN_USER_UID = "M20Oxpp64gZ480Lqus4afv6x2n63"; // UID admin
-    private static final String DEMO_DB_URL = "https://drive4.nfgplusmirror.workers.dev/0:/database/demo.db";
-    private static final String MAIN_DB_URL = "https://drive4.nfgplusmirror.workers.dev/0:/database/nfg.db";
+    private static final String DEMO_DB_URL = "https://drive4.nfgplusmirror.workers.dev/1:/database/demo.db";
+    private static final String MAIN_DB_URL = "https://drive4.nfgplusmirror.workers.dev/1:/database/nfg2.db";
     private static final int REQUEST_MEDIA_PERMISSION = 100;
     private TextView appVersion;
 

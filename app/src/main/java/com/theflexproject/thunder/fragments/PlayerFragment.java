@@ -175,7 +175,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private View decorView;
     private Intent intent;
     private RandomIndex loadBalancer = new RandomIndex();
-    private String selectedUrl;
+    private String randomUrl;
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
 
@@ -228,6 +228,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         } else {
             view = inflater.inflate(R.layout.video_player, container, false);
         }
+        loadBalancer = new RandomIndex();
+        randomUrl = loadBalancer.getSelectedDomain();
         initFirebase();
         initViews(view);
         initPlayerState(savedInstanceState);
@@ -316,8 +318,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             fullscreen.setVisibility(View.GONE);
         }
         exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
-        loadBalancer = new RandomIndex();
-        selectedUrl = loadBalancer.getSelectedDomain();
+
     }
 
     private void setControlListeners() {
@@ -401,9 +402,11 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private void initializePlayer(String urlString) {
         if (player == null) {
             if (urlString == null || urlString.isEmpty()) {
+
                 Log.e(TAG, "Invalid URL string");
                 return;
             }
+            Log.d("Link", urlString);
             Uri uri = Uri.parse(urlString);
             MediaItem mediaItem = MediaItem.fromUri(uri);
             trackSelector = new DefaultTrackSelector(mActivity);
@@ -645,7 +648,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 String selectedUrl2 = ((Movie) selectedSource).getUrlString();
                 String newUrl = selectedUrl2.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        selectedUrl
+                        randomUrl
                 );
                 if (!Objects.equals(selectedUrl2, urlString)) {
                     newSource();
@@ -655,7 +658,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 String selectedUrl2 = ((Episode) selectedSource).getUrlString();
                 String newUrl = selectedUrl2.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        selectedUrl
+                        randomUrl
                 );
                 if (!Objects.equals(selectedUrl2, urlString)) {
                     newSource();
@@ -681,6 +684,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private void releasePlayer() {
         if (player != null) {
             saveResume(player, tmdbId);
+            setAdsState();
             player.release();
             player = null;
             playerView.setPlayer(null);
@@ -717,7 +721,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             urlString = movieDetails.getUrlString();
             String newUrl = urlString.replaceAll(
                     "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                    selectedUrl
+                    randomUrl
             );
             String yearCrop = year.substring(0,year.indexOf('-'));
             tmdbId = String.valueOf(movieDetails.getId());
@@ -771,7 +775,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 urlString = episode.getUrlString();
                 String newUrl = urlString.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        selectedUrl
+                        randomUrl
                 );
                 initializePlayer(newUrl);
                 sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
