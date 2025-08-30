@@ -17,6 +17,7 @@ public class Constants {
     public static final String TMDB_API_KEY = "75399494372c92bd800f70079dff476b";
     public static final String SIMPLE_PROGRAM_DOWNLOAD_API = "https://geolocation.zindex.eu.org/generate.json?id=";
     public static final String CF_CACHE_TOKEN = "";
+    public static final String background = "https://assets.nflxext.com/ffe/siteui/vlv3/03fdc4bf-72f6-4926-83a7-a76e6a1a5591/9f09b85f-530e-4090-82c3-a60ea2b3177f/US-en-20211115-popsignuptwoweeks-perspective_alpha_website_large.jpg";
 
     public static String getFanartApiKey(){
         final String[] KEYS = {

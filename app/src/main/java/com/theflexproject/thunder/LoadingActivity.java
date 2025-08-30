@@ -1,17 +1,18 @@
 package com.theflexproject.thunder;
 
-import android.app.ActivityManager;import android.Manifest;
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,24 +21,26 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.os.HandlerCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.room.Room;
 
-import com.google.android.gms.tasks.TaskCompletionSource;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -57,362 +60,388 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class LoadingActivity extends AppCompatActivity {
 
-    private FirebaseManager firebaseManager;
-    private static FirebaseUser currentUser;
-    private ViewGroup rootView;
-    private ProgressBar progressBar;
+    // PERBAIKAN: Pindahkan semua string hardcoded ke konstanta.
+    // Ini membuat kode lebih mudah dibaca, diubah, dan dikelola.
+    private static final String TAG = LoadingActivity.class.getSimpleName(); // Gunakan nama kelas untuk TAG log
     private static final String LAST_MODIFIED_PREF = "last_modified_pref";
     private static final String LAST_MODIFIED_KEY = "last_modified_key";
-    private static final String TAG = "huntu";
-    private TextView pesan;
+    private static final String DB_NAME = "MyToDos";
+    private static final String ADMIN_USER_UID = "M20Oxpp64gZ480Lqus4afv6x2n63"; // UID admin
+    private static final String DEMO_DB_URL = "https://drive4.nfgplusmirror.workers.dev/0:/database/demo.db";
+    private static final String MAIN_DB_URL = "https://drive4.nfgplusmirror.workers.dev/0:/database/nfg.db";
     private static final int REQUEST_MEDIA_PERMISSION = 100;
+    private TextView appVersion;
 
+    // PERBAIKAN: Gunakan ExecutorService untuk mengelola background thread.
+    // Ini jauh lebih baik daripada `new Thread()` karena memberikan kontrol lebih,
+    // dapat dihentikan (shutdown), dan lebih efisien.
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+
+    // PERBAIKAN: Hilangkan `static` dari `currentUser` untuk menghindari memory leak.
+    private FirebaseUser currentUser;
+
+    private ProgressBar progressBar;
+    private TextView loadingMessageTextView;
+    private LinearLayout loadingLayout;
+
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
+
+        setupWindow();
+
+        // Inisialisasi UI
+        progressBar = findViewById(R.id.progress_datar);
+        loadingMessageTextView = findViewById(R.id.loading_message);
+        loadingLayout = findViewById(R.id.loadingLayout);
+        Glide.with(this)
+                .load(Constants.background)
+                .error(R.drawable.bd)
+                .into(new CustomTarget<Drawable>() {
+                    @Override
+                    public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                        loadingLayout.setBackground(resource);
+                    }
+                    @Override
+                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                        // Ini akan dipanggil jika `.load()` gagal dan `.error()` telah diatur.
+                        // errorDrawable akan menjadi drawable yang Anda berikan di `.error()`.
+                        // Di sini kita sudah mengaturnya melalui .error(), jadi cukup set background.
+                        loadingLayout.setBackground(errorDrawable);
+                        Log.e(TAG, "Failed to load background image from URL, using fallback.");
+                    }
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {
+                        // Kosongkan jika tidak perlu
+                    }
+                });
+
+        // PERBAIKAN: Dapatkan currentUser dari instance FirebaseAuth.
+        // Hindari penggunaan kelas manager custom jika tidak benar-benar kompleks.
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        appVersion = findViewById(R.id.app_version);
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String version = pInfo.versionName;
+            appVersion.setText("Version " + version);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            // Tampilkan teks fallback jika terjadi error
+            appVersion.setText("");
+        }
+        // CATATAN: Jika currentUser bisa null, harus ada penanganan di sini.
+        // Misalnya, kembali ke layar login.
+        if (currentUser == null) {
+            // TODO: Arahkan ke LoginActivity atau tampilkan error
+            Toast.makeText(this, "User not logged in!", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        checkPermissions();
+        subscribeToFcmTopic();
+
+        // Ambil URL backup dan mulai proses pengecekan modifikasi
+        String backupFileUrl = getBackupFileUrlForCurrentUser();
+        Uri deepLinkData = getIntent().getData();
+
+        checkForDatabaseUpdate(backupFileUrl, deepLinkData);
+    }
+
+    private void setupWindow() {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
-        if (!isNotificationEnabled()) {
+    }
+
+    private void checkPermissions() {
+        if (!isNotificationPermissionGranted()) {
             showNotificationPermissionDialog();
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             checkAndRequestMediaPermissions();
         }
+    }
 
+    private void subscribeToFcmTopic() {
         FirebaseMessaging.getInstance().subscribeToTopic("latest_update")
                 .addOnCompleteListener(task -> {
-                    String msg = "Berhasil berlangganan topik";
-                    if (!task.isSuccessful()) {
-                        msg = "Gagal berlangganan topik";
-                    }
+                    String msg = task.isSuccessful() ? "Successfully subscribed to topic" : "Failed to subscribe to topic";
                     Log.d(TAG, msg);
                 });
-        firebaseManager = new FirebaseManager();
-        currentUser = firebaseManager.getCurrentUser();
-        progressBar = findViewById(R.id.progress_datar);
-        pesan = findViewById(R.id.loading_message);
-        // Pastikan ada ProgressBar di layout Anda
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(progressReceiver, new IntentFilter("PROGRESS_UPDATE"));
-
-        // Ambil URL backup dan mulai proses pengecekan modifikasi
-        String backupFileUrl = getBackupFileUrl();
-        Uri deepLinkData = getIntent().getData();
-
-        checkForModifiedData(backupFileUrl, deepLinkData);
-
-
-
     }
 
-    private final BroadcastReceiver progressReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int progress = intent.getIntExtra("progress", 0);
-            String pesanIntent = intent.getStringExtra("pesan");
-            progressBar.setProgress(progress);
-            pesan.setText(pesanIntent);
+    private String getBackupFileUrlForCurrentUser() {
+        // PERBAIKAN: Gunakan konstanta untuk perbandingan UID.
+        if (ADMIN_USER_UID.equals(currentUser.getUid())) {
+            return DEMO_DB_URL;
         }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(progressReceiver);
+        return MAIN_DB_URL;
     }
 
-    private static String getBackupFileUrl() {
-        if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
-            return "https://drive3.nfgplusmirror.workers.dev/0:/database/demo.db";
-        }
-        return "https://drive3.nfgplusmirror.workers.dev/0:/database/nfg.db";
-    }
-
-    private void checkForModifiedData(String backupFileUrl, Uri deepLinkData) {
-        new Thread(() -> {
+    /**
+     * Memulai alur utama untuk memeriksa pembaruan database di background thread.
+     */
+    private void checkForDatabaseUpdate(String backupFileUrl, Uri deepLinkData) {
+        executorService.execute(() -> {
             try {
-                String lastModified = getLastModifiedFromUrl();
-                if (lastModified == null) {
-                    Log.e(TAG, "Failed to get last modified from Firebase.");
-                    return;
-                }
-                SharedPreferences prefs = getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
-                String lastModifiedSaved = prefs.getString(LAST_MODIFIED_KEY, "");
+                // 1. Dapatkan timestamp 'last modified' dari Firebase
+                String remoteLastModified = fetchLastModifiedFromFirebase();
 
-                if (lastModifiedSaved.isEmpty() || !lastModified.equals(lastModifiedSaved)) {
-                    runOnUiThread(() -> updateProgressBar(100, "Updated database found"));
-                    prefs.edit().putString(LAST_MODIFIED_KEY, lastModified).apply();
-                    restoreDatabaseFromUrl(backupFileUrl, deepLinkData);
+                // 2. Dapatkan timestamp yang tersimpan secara lokal
+                SharedPreferences prefs = getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+                String localLastModified = prefs.getString(LAST_MODIFIED_KEY, "");
+
+                // 3. Bandingkan timestamp
+                if (localLastModified.isEmpty() || !remoteLastModified.equals(localLastModified)) {
+                    // Jika berbeda atau baru pertama kali, unduh database baru
+                    updateProgressOnMainThread(10, "New database version found. Updating...");
+                    downloadAndRestoreDatabase(backupFileUrl, remoteLastModified, deepLinkData);
                 } else {
-                    runOnUiThread(() -> updateProgressBar(50, "Loading database, please wait ...."));
-                    if (!isDatabaseCorrupt(backupFileUrl, deepLinkData)) {
-                        runOnUiThread(() -> updateProgressBar(100, "Enjoy"));
+                    // Jika sama, periksa apakah database lokal korup
+                    updateProgressOnMainThread(50, "Loading database, please wait...");
+                    if (!isDatabaseCorrupt()) {
+                        // Jika aman, langsung ke MainActivity
+                        updateProgressOnMainThread(100, "Enjoy!");
                         launchMainActivity(deepLinkData);
-                    }else {
-                        runOnUiThread(() -> updateProgressBar(100, "Database corrupted, Recovering database...."));
-                        prefs.edit().putString(LAST_MODIFIED_KEY, lastModified).apply();
-                        restoreDatabaseFromUrl(backupFileUrl, deepLinkData);
+                    } else {
+                        // Jika korup, paksa unduh ulang
+                        updateProgressOnMainThread(75, "Database corrupted. Recovering...");
+                        downloadAndRestoreDatabase(backupFileUrl, remoteLastModified, deepLinkData);
                     }
                 }
             } catch (IOException e) {
-                Log.e(TAG, "Error in checkForModifiedData", e);
+                Log.e(TAG, "Failed to check for database update.", e);
+                updateProgressOnMainThread(100, "Error: Could not connect to update server.");
+                // CATATAN: Di sini bisa ditambahkan logika retry atau menampilkan dialog error.
             }
-        }).start();
+        });
     }
 
-    private void restoreDatabaseFromUrl(String fileUrl, Uri deepLinkData) {
-        new Thread(() -> {
-            try {
-                File downloadedFile = downloadFileFromUrl(fileUrl);
-                if (downloadedFile != null) {
-                    restoreDatabase(downloadedFile, deepLinkData);
-                }else {
-                    SharedPreferences prefs = getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+    /**
+     * Mengunduh dan merestore database.
+     */
+    private void downloadAndRestoreDatabase(String fileUrl, String newLastModified, Uri deepLinkData) {
+        try {
+            File downloadedFile = downloadFile(fileUrl);
+            restoreDatabase(downloadedFile);
 
-                    prefs.edit().putString(LAST_MODIFIED_KEY, "").apply();
-                    checkForModifiedData(fileUrl, deepLinkData);
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Error in restoreDatabaseFromUrl", e);
-            }
-        }).start();
-    }
+            // Simpan timestamp baru setelah berhasil restore
+            SharedPreferences prefs = getSharedPreferences(LAST_MODIFIED_PREF, Context.MODE_PRIVATE);
+            prefs.edit().putString(LAST_MODIFIED_KEY, newLastModified).apply();
 
-    private File downloadFileFromUrl(String fileUrl) throws IOException {
-        URL url = new URL(fileUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        connection.connect();
-
-        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-            throw new IOException("Failed to download file: " + connection.getResponseMessage());
+            updateProgressOnMainThread(100, "Database updated successfully!");
+            launchMainActivity(deepLinkData);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to download or restore database.", e);
+            updateProgressOnMainThread(100, "Error: Update failed. Check Your Connection.");
+            // PERBAIKAN: Hindari infinite loop. Tampilkan pesan error dan berhenti.
+            // Jika ingin retry, gunakan mekanisme yang lebih terkontrol (misal, dengan delay).
         }
+    }
 
-        File localFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "demo.db");
-        try (InputStream inputStream = connection.getInputStream();
-             OutputStream outputStream = new FileOutputStream(localFile)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            int totalBytesRead = 0;
+    private File downloadFile(String fileUrl) throws IOException {
+        HttpURLConnection connection = null;
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+        File localFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "temp_db.db");
+
+        try {
+            URL url = new URL(fileUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.connect();
+
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Server returned HTTP " + connection.getResponseCode() + " " + connection.getResponseMessage());
+            }
+
             int fileLength = connection.getContentLength();
+            inputStream = connection.getInputStream();
+            outputStream = new FileOutputStream(localFile);
+
+            byte[] buffer = new byte[4096]; // PERBAIKAN: Buffer lebih besar untuk performa I/O
+            int bytesRead;
+            long totalBytesRead = 0;
 
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
                 totalBytesRead += bytesRead;
-                int progress = (int) ((totalBytesRead / (float) fileLength) * 100);
-                updateProgressBar(progress, "Updating database, do not close the app .... " + progress + "%");
+                if (fileLength > 0) {
+                    int progress = (int) ((totalBytesRead * 100) / fileLength);
+                    updateProgressOnMainThread(progress, "Downloading update... " + progress + "%");
+                }
             }
-        } catch (IOException e) {
-            localFile.delete();
-            throw e;
+            return localFile;
         } finally {
-            connection.disconnect();
+            // PERBAIKAN: Pastikan semua stream ditutup dengan benar
+            if (outputStream != null) outputStream.close();
+            if (inputStream != null) inputStream.close();
+            if (connection != null) connection.disconnect();
         }
-        return localFile;
     }
 
-    private void restoreDatabase(File file, Uri deepLinkData) throws IOException {
-        File dbFile = getDatabasePath("MyToDos");
-        Log.i("dbfile", String.valueOf(dbFile));
+    private void restoreDatabase(File downloadedFile) throws IOException {
+        File dbFile = getDatabasePath(DB_NAME);
+        Log.i(TAG, "Restoring database to: " + dbFile.getAbsolutePath());
 
+        // Hapus cache dan file database lama
+        deleteDir(getCacheDir());
         if (dbFile.exists()) {
             dbFile.delete();
         }
+        dbFile.getParentFile().mkdirs();
 
-        if (!dbFile.exists()) {
-            File cacheDir = getCacheDir();
-            deleteDir(cacheDir);
-            dbFile.getParentFile().mkdirs();
-            dbFile.createNewFile();
+        // PERBAIKAN: Gunakan try-with-resources untuk menyalin file, lebih aman dan bersih.
+        try (InputStream is = new FileInputStream(downloadedFile);
+             OutputStream os = new FileOutputStream(dbFile)) {
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
+            }
+        } finally {
+            // Hapus file sementara setelah selesai
+            downloadedFile.delete();
+        }
+        Log.d(TAG, "Input size: " + downloadedFile.length() + ", Output size: " + dbFile.length());
+    }
+
+    private String fetchLastModifiedFromFirebase() throws IOException {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Data").child("nfgdb").child("lastModified");
+        try {
+            // PERBAIKAN: Menggunakan GMS Tasks API secara langsung untuk kode yang lebih sinkron dan bersih.
+            Task<DataSnapshot> task = ref.get();
+            DataSnapshot dataSnapshot = Tasks.await(task, 15, TimeUnit.SECONDS); // Timeout 15 detik
+            if (dataSnapshot.exists()) {
+                String lastModified = dataSnapshot.getValue(String.class);
+                if (lastModified != null) {
+                    return lastModified;
+                }
+            }
+            throw new IOException("Last modified value is null or does not exist in Firebase.");
+        } catch (Exception e) {
+            throw new IOException("Failed to fetch last modified value from Firebase.", e);
+        }
+    }
+
+    private boolean isDatabaseCorrupt() {
+        File dbFile = getDatabasePath(DB_NAME);
+
+        // Jika file tidak ada atau ukurannya 0, anggap korup/perlu diunduh.
+        if (!dbFile.exists() || dbFile.length() == 0) {
+            Log.w(TAG, "Database file does not exist or is empty.");
+            return true;
         }
 
-        File dbDir = getDatabasePath("MyToDos").getParentFile();
-        long freeSpace = dbDir.getFreeSpace();
-        Log.d("Storage", "Available space: " + freeSpace + " bytes");
-
-        new Thread(() -> {
-            try (InputStream is = new FileInputStream(file);
-                 OutputStream os = new FileOutputStream(dbFile)) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, length);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        AppDatabase db = null;
+        try {
+            // PERBAIKAN: Jangan gunakan allowMainThreadQueries().
+            // Karena ini sudah di dalam ExecutorService, kita aman.
+            db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, DB_NAME).build();
+            // Coba lakukan operasi baca sederhana untuk memvalidasi database.
+            db.indexLinksDao().getAll(); // Asumsi ada DAO bernama indexLinksDao
+            Log.i(TAG, "Database integrity check passed.");
+            return false;
+        } catch (SQLiteException e) {
+            // PERBAIKAN: Tangkap semua SQLiteException sebagai indikasi korupsi/masalah.
+            Log.e(TAG, "Database is considered corrupt!", e);
+            return true;
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
             }
-            finally {
-                long inputFileSize = file.length();
-                long outputFileSize = dbFile.length();
-
-                Log.d("FileSize", "Input size: " + inputFileSize + ", Output size: " + outputFileSize);
-
-                file.delete();
-                launchMainActivity(deepLinkData);
-            }
-        }).start();
+        }
     }
+
+    private void launchMainActivity(Uri deepLinkData) {
+        mainThreadHandler.post(() -> {
+            // Cek jika activity masih berjalan untuk menghindari crash
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            Intent intent = new Intent(this, MainActivity.class);
+            if (deepLinkData != null) {
+                intent.setData(deepLinkData);
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish(); // Tutup LoadingActivity
+        });
+    }
+
+    private void updateProgressOnMainThread(int progress, String message) {
+        mainThreadHandler.post(() -> {
+            if (progressBar != null) {
+                progressBar.setProgress(progress);
+            }
+            if (loadingMessageTextView != null) {
+                loadingMessageTextView.setText(message);
+            }
+        });
+    }
+
+    // --- Metode utilitas dan izin (sebagian besar tidak berubah, hanya dirapikan) ---
+
     private boolean deleteDir(File dir) {
         if (dir != null && dir.isDirectory()) {
             String[] children = dir.list();
             if (children != null) {
                 for (String child : children) {
-                    boolean success = deleteDir(new File(dir, child));
-                    if (!success) {
+                    if (!deleteDir(new File(dir, child))) {
                         return false;
                     }
                 }
             }
         }
-        return dir.delete(); // Hapus file atau direktori kosong
-    }
-    private void launchMainActivity(Uri deepLinkData) {
-        HandlerCompat.createAsync(Looper.getMainLooper()).post(() -> {
-            ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
-            if (appProcesses != null) {
-                for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
-                    if (appProcess.processName.equals(getPackageName()) &&
-                            appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                        Intent intent = new Intent(this, MainActivity.class);
-                        if (deepLinkData != null) {
-                            intent.setData(deepLinkData);
-                        }
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        break;
-                    }
-                }
-            }
-        });
+        return dir != null && dir.delete();
     }
 
-    private void updateProgressBar(int progress, String message) {
-        runOnUiThread(() -> {
-            progressBar.setProgress(progress);
-            pesan.setText(message);
-        });
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // PERBAIKAN: Matikan ExecutorService saat Activity dihancurkan.
+        // Ini penting untuk menghentikan thread dan mencegah memory leak.
+        executorService.shutdownNow();
     }
 
-    private boolean isDatabaseCorrupt(String backupFileUrl, Uri deepLinkData) {
-        AppDatabase db = null;
-        File dbFile = getDatabasePath("MyToDos");
-
-        // Periksa jika file tidak ada
-        if (!dbFile.exists()) {
-            Log.e(TAG, "Database does not exist.");
-            return true;
-        } else {
-            // Periksa jika ukuran database adalah 0MB (0 bytes)
-            if (dbFile.length() == 0) {
-                Log.e(TAG, "Database is empty (0MB).");
-                return true;
-            }
-
-            try {
-                db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "MyToDos")
-                        .allowMainThreadQueries()
-                        .build();
-
-                // Cek apakah database dapat diakses
-                db.indexLinksDao().getAll();
-                Log.i(TAG, "DB Aman!");
-                return false;
-            } catch (SQLiteException e) {
-                if (e instanceof android.database.sqlite.SQLiteDatabaseCorruptException) {
-                    Log.e(TAG, "Database is corrupt!", e);
-                    return true;
-                } else {
-                    Log.e(TAG, "Database is corrupt!", e);
-                }
-            } finally {
-                if (db != null) {
-                    db.close();
-                }
-            }
-            return false;
+    private boolean isNotificationPermissionGranted() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
         }
-    }
-    @NonNull
-    private String getLastModifiedFromUrl() throws IOException {
-        TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Data").child("nfgdb").child("lastModified");
-
-        ValueEventListener valueEventListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String lastModified = snapshot.getValue(String.class);
-                if (lastModified != null) {
-                    taskCompletionSource.setResult(lastModified);
-                } else {
-                    taskCompletionSource.setException(new IOException("Last modified value is null"));
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                taskCompletionSource.setException(error.toException());
-            }
-        };
-        ref.addListenerForSingleValueEvent(valueEventListener);
-
-        try {
-            return Tasks.await(taskCompletionSource.getTask(), 10, TimeUnit.SECONDS);
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            throw new IOException("Failed to get last modified value from Firebase", e);
-        }
-    }
-    private boolean isNotificationEnabled() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            return notificationManager != null && notificationManager.getImportance() != NotificationManager.IMPORTANCE_NONE;
-        }
-        return true; // Di bawah Android O, dianggap sudah diizinkan
+        // Untuk versi di bawah Tiramisu, izin notifikasi diberikan secara default.
+        return true;
     }
 
     private void showNotificationPermissionDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Izinkan Notifikasi")
-                .setMessage("Kami membutuhkan izin Anda untuk mengirim notifikasi.")
-                .setPositiveButton("Izinkan", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // Arahkan pengguna ke pengaturan aplikasi untuk mengizinkan notifikasi
-                        Intent intent = new Intent();
-                        intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-                        intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
-                        startActivity(intent);
-                    }
+        new AlertDialog.Builder(this)
+                .setTitle("Notification Permission")
+                .setMessage("To receive updates and alerts, please allow notification access in the settings.")
+                .setPositiveButton("Go to Settings", (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                    startActivity(intent);
                 })
-                .setNegativeButton("Tolak", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss(); // Menutup dialog
-                    }
-                });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .create()
+                .show();
     }
+
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void checkAndRequestMediaPermissions() {
-        // List of permissions to request
         String[] permissions = {
                 Manifest.permission.READ_MEDIA_VIDEO,
                 Manifest.permission.READ_MEDIA_AUDIO
         };
-
-        // Check if permissions are already granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            // Request permissions
             ActivityCompat.requestPermissions(this, permissions, REQUEST_MEDIA_PERMISSION);
         }
     }
@@ -420,18 +449,11 @@ public class LoadingActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == REQUEST_MEDIA_PERMISSION) {
-            boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
-                }
-            }
-
-            if (allGranted) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Media permissions granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Media permissions are required for some features.", Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -98,6 +98,7 @@ import com.theflexproject.thunder.adapter.SimilarAdapter;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
+import com.theflexproject.thunder.model.RandomIndex;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
@@ -173,6 +174,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private ViewGroup rootView;
     private View decorView;
     private Intent intent;
+    private RandomIndex loadBalancer = new RandomIndex();
+    private String selectedUrl;
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
 
@@ -313,6 +316,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             fullscreen.setVisibility(View.GONE);
         }
         exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
+        loadBalancer = new RandomIndex();
+        selectedUrl = loadBalancer.getSelectedDomain();
     }
 
     private void setControlListeners() {
@@ -637,16 +642,24 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         builder.setPositiveButton("OK", (dialog, which) -> {
             MyMedia selectedSource = sourceList.get(selectedIndex[0]);
             if (selectedSource instanceof Movie) {
-                String selectedUrl = ((Movie) selectedSource).getUrlString();
-                if (!Objects.equals(selectedUrl, urlString)) {
+                String selectedUrl2 = ((Movie) selectedSource).getUrlString();
+                String newUrl = selectedUrl2.replaceAll(
+                        "drive\\d*\\.nfgplusmirror\\.workers.dev",
+                        selectedUrl
+                );
+                if (!Objects.equals(selectedUrl2, urlString)) {
                     newSource();
-                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(selectedUrl));
+                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(newUrl));
                 }
             } else if (selectedSource instanceof Episode) {
-                String selectedUrl = ((Episode) selectedSource).getUrlString();
-                if (!Objects.equals(selectedUrl, urlString)) {
+                String selectedUrl2 = ((Episode) selectedSource).getUrlString();
+                String newUrl = selectedUrl2.replaceAll(
+                        "drive\\d*\\.nfgplusmirror\\.workers.dev",
+                        selectedUrl
+                );
+                if (!Objects.equals(selectedUrl2, urlString)) {
                     newSource();
-                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(selectedUrl));
+                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(newUrl));
                 }
             }
         });
@@ -702,6 +715,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             String titleText = movieDetails.getTitle();
             String year = movieDetails.getRelease_date();
             urlString = movieDetails.getUrlString();
+            String newUrl = urlString.replaceAll(
+                    "drive\\d*\\.nfgplusmirror\\.workers.dev",
+                    selectedUrl
+            );
             String yearCrop = year.substring(0,year.indexOf('-'));
             tmdbId = String.valueOf(movieDetails.getId());
             movietitle.setText(titleText + " ("+yearCrop+")");
@@ -729,7 +746,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                             .into(imageView);
                 }
             }
-            initializePlayer(urlString);
+            initializePlayer(newUrl);
         }
         sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
     }
@@ -752,7 +769,11 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 epstitle.setVisibility(View.VISIBLE);
                 tmdbId = String.valueOf(episode.getId());
                 urlString = episode.getUrlString();
-                initializePlayer(urlString);
+                String newUrl = urlString.replaceAll(
+                        "drive\\d*\\.nfgplusmirror\\.workers.dev",
+                        selectedUrl
+                );
+                initializePlayer(newUrl);
                 sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
             }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
             if(tvShowDetails.getBackdrop_path()!=null) {
