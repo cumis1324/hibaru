@@ -14,7 +14,7 @@
 .cxx
 local.properties
 *.log
-*.mpdp
+*.mdmp
 /nativetemplates/build
 /.github
 /app/release
