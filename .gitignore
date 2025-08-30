@@ -19,3 +19,4 @@ local.properties
 /.github
 /app/release
 /app/build
+/.github/workflows
