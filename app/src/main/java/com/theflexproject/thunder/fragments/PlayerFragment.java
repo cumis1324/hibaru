@@ -685,7 +685,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private void releasePlayer() {
         if (player != null) {
             saveResume(player, tmdbId);
-            setAdsState();
             player.release();
             player = null;
             playerView.setPlayer(null);

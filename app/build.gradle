@@ -7,13 +7,14 @@ plugins {
 
 android {
     compileSdk 36
+    ndkVersion "26.1.10909125"
 
     defaultConfig {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 36
-        versionCode 78
-        versionName "Astha Saptadasa"
+        versionCode 80
+        versionName "Asthadasa"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
