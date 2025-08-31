@@ -5,6 +5,7 @@
     android:id="@+id/loadingLayout"
     xmlns:tools="http://schemas.android.com/tools"
     android:gravity="center"
+    android:background="@drawable/bd"
     tools:context=".LoadingActivity"
     android:orientation="vertical">
 

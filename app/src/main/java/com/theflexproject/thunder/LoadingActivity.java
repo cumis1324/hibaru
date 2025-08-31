@@ -315,7 +315,7 @@ public class LoadingActivity extends AppCompatActivity {
     }
 
     private String fetchLastModifiedFromFirebase() throws IOException {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Data").child("nfgdb").child("lastModified");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Data").child("nfgdb2").child("lastModified");
         try {
             // PERBAIKAN: Menggunakan GMS Tasks API secara langsung untuk kode yang lebih sinkron dan bersih.
             Task<DataSnapshot> task = ref.get();

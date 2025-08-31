@@ -8,8 +8,7 @@ public class RandomIndex {
     private final List<String> loadBalancerDomains = Arrays.asList(
             "lb1.nfgplusmirror.workers.dev",
             "lb2.nfgplusmirror.workers.dev",
-            "lb3.nfgplusmirror.workers.dev",
-            "drive4.nfgplusmirror.workers.dev"
+            "lb3.nfgplusmirror.workers.dev"
     );
     private final Random random = new Random();
 
