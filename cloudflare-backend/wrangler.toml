@@ -6,7 +6,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "nfgplus-db"
-database_id = "YOUR_DATABASE_ID_HERE"
+database_id = "0af98dee-4081-441f-8c92-8e5f39ad28e7"
 
 # CORS settings for Android app
 [vars]
