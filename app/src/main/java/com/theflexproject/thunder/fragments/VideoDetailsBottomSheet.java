@@ -103,15 +103,15 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                     crewList.addAll(crew);
                     if (movieDetails != null) {
                         getActivity().runOnUiThread(() -> {
-                            String year = movieDetails.getRelease_date();
+                            String year = movieDetails.getReleaseDate();
                             String yearCrop = year.substring(0, year.indexOf('-'));
                             titleView.setText(movieDetails.getTitle() + " (" + yearCrop + ") ");
                             String description = movieDetails.getOverview();
                             descriptionView.setText(description);
-                            String ratings = String.valueOf((int) (movieDetails.getVote_average() * 10));
-                            String result = StringUtils.runtimeIntegerToString(movieDetails.getVote_count());
+                            String ratings = String.valueOf((int) (movieDetails.getVoteAverage() * 10));
+                            String result = StringUtils.runtimeIntegerToString(movieDetails.getVoteCount());
                             rating.setText(ratings + " from " + result + " Votes");
-                            originalTitle.setText(movieDetails.getOriginal_title());
+                            originalTitle.setText(movieDetails.getOriginalTitle());
                             ArrayList<Genre> genres = movieDetails.getGenres();
                             StringBuilder sb = new StringBuilder();
                             for (int i = 0; i < genres.size(); i++) {
@@ -154,13 +154,13 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
 
                     if (tvShowDetails != null) {
                         getActivity().runOnUiThread(() -> {
-                            String year = tvShowDetails.getFirst_air_date();
+                            String year = tvShowDetails.getFirstAirDate();
                             String yearCrop = year.substring(0, year.indexOf('-'));
                             titleView.setText(tvShowDetails.getName() + " (" + yearCrop + ") ");
                             descriptionView.setText(tvShowDetails.getOverview());
-                            originalTitle.setText(tvShowDetails.getOriginal_name());
-                            String ratings = String.valueOf((int) (tvShowDetails.getVote_average() * 10));
-                            String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVote_count());
+                            originalTitle.setText(tvShowDetails.getOriginalName());
+                            String ratings = String.valueOf((int) (tvShowDetails.getVoteAverage() * 10));
+                            String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVoteCount());
                             rating.setText(ratings + " from " + result + " Votes");
                             ArrayList<Genre> genres = tvShowDetails.getGenres();
                             StringBuilder sb = new StringBuilder();
@@ -213,4 +213,5 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 }
+
 

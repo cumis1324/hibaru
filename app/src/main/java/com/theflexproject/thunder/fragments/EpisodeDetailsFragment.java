@@ -203,7 +203,7 @@ public class EpisodeDetailsFragment extends BaseFragment {
     private void loadDetails() {
 
 
-        String logoLink = tvShow.getLogo_path();
+        String logoLink = tvShow.getLogoPath();
         System.out.println("Logo Link"+logoLink);
 
         if(!logoLink.equals("")){
@@ -223,7 +223,7 @@ public class EpisodeDetailsFragment extends BaseFragment {
         }
 
 
-        String buttonText = "S" + episode.getSeason_number() + " E" + episode.getEpisode_number();
+        String buttonText = "S" + episode.getSeasonNumber() + " E" + episode.getEpisodeNumber();
         System.out.println(buttonText);
         continueWatching.setText(buttonText);
 //                            play.setText(buttonText);
@@ -237,39 +237,39 @@ public class EpisodeDetailsFragment extends BaseFragment {
 //            episodeName.setText(episode.getName());
 //        }
         else {
-            String name = "Episode" + episode.getEpisode_number();
+            String name = "Episode" + episode.getEpisodeNumber();
             episodeName.setText(name);
         }
-        if (episode.getVote_average() > 0) {
+        if (episode.getVoteAverage() > 0) {
 //            ratings.setVisibility(View.VISIBLE);
             dot1.setVisibility(View.VISIBLE);
             ratingsText.setVisibility(View.VISIBLE);
-            String rating =(int) (episode.getVote_average() * 10) + "%";
+            String rating =(int) (episode.getVoteAverage() * 10) + "%";
             ratingsText.setText(rating);
         }
-//        if (tvShowSeasonDetails.getPoster_path() != null) {
+//        if (tvShowSeasonDetails.getPosterPath() != null) {
 //            Glide.with(mActivity)
-//                    .load(TMDB_IMAGE_BASE_URL + tvShowSeasonDetails.getPoster_path())
+//                    .load(TMDB_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
 //                    .placeholder(new ColorDrawable(Color.BLACK))
 //                    .into(poster);
 //        } else {
-//            if (tvShow.getPoster_path() != null) {
+//            if (tvShow.getPosterPath() != null) {
 //                Glide.with(mActivity)
-//                        .load(TMDB_IMAGE_BASE_URL + tvShow.getPoster_path())
+//                        .load(TMDB_IMAGE_BASE_URL + tvShow.getPosterPath())
 //                        .placeholder(new ColorDrawable(Color.BLACK))
 //                        .into(poster);
 //            }
 //        }
-        if (episode.getStill_path() != null) {
+        if (episode.getStillPath() != null) {
             Glide.with(mActivity.getApplicationContext())
-                    .load(Constants.TMDB_BACKDROP_IMAGE_BASE_URL + episode.getStill_path())
+                    .load(Constants.TMDB_BACKDROP_IMAGE_BASE_URL + episode.getStillPath())
                     .placeholder(new ColorDrawable(Color.BLACK))
                     .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                     .into(episodeStill);
         } else {
-            if (tvShow.getPoster_path() != null) {
+            if (tvShow.getPosterPath() != null) {
                 Glide.with(mActivity)
-                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShow.getPoster_path())
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShow.getPosterPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .into(episodeStill);
             }
@@ -279,11 +279,11 @@ public class EpisodeDetailsFragment extends BaseFragment {
             overviewText.setVisibility(View.VISIBLE);
             overviewText.setText(episode.getOverview());
         }
-        if (episode.getAir_date() != null) {
+        if (episode.getAirDate() != null) {
             air_date.setVisibility(View.VISIBLE);
             try {
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd" , Locale.ENGLISH);
-                Date date = formatter.parse(episode.getAir_date());
+                Date date = formatter.parse(episode.getAirDate());
                 SimpleDateFormat formatter2 = new SimpleDateFormat("MMMM dd , yyyy", Locale.ENGLISH);
                 String strDate = formatter2.format(date);
                 air_date_text.setText(strDate);
@@ -296,8 +296,8 @@ public class EpisodeDetailsFragment extends BaseFragment {
             runtime.setVisibility(View.VISIBLE);
             runtime.setText(result);
         }
-        if (!(tvShowSeasonDetails.getSeason_number() < 0)) {
-            String season = "Season " + tvShowSeasonDetails.getSeason_number();
+        if (!(tvShowSeasonDetails.getSeasonNumber() < 0)) {
+            String season = "Season " + tvShowSeasonDetails.getSeasonNumber();
             seasonNumber.setText(season);
         }
         loadEpisodeFilesRecycler();
@@ -377,8 +377,8 @@ public class EpisodeDetailsFragment extends BaseFragment {
                     currentPosition = playerHelper.getCurrentPosition();
                     in.putExtra("position", currentPosition);
                     in.putExtra("url" , largestFile.getUrlString());
-                    String season = String.valueOf(episode.getSeason_number());
-                    String epsnum = String.valueOf(episode.getEpisode_number());
+                    String season = String.valueOf(episode.getSeasonNumber());
+                    String epsnum = String.valueOf(episode.getEpisodeNumber());
                     in.putExtra("season" , season);
                     in.putExtra("number" , epsnum);
                     in.putExtra("episode" , episode.getName());

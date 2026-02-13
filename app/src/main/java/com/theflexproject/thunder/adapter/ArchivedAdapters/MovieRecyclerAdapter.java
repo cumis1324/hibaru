@@ -46,7 +46,7 @@
 //        holder.name.setText(mediaList.get(position).getTitle());
 //
 //        Glide.with(context)
-//                .load(TMDB_IMAGE_BASE_URL+mediaList.get(position).getPoster_path())
+//                .load(TMDB_IMAGE_BASE_URL+mediaList.get(position).getPosterPath())
 //                .placeholder(new ColorDrawable(Color.BLACK))
 //                .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
 //                .into(holder.poster);
@@ -79,3 +79,4 @@
 //        public void onClick(View view, int position);
 //    }
 //}
+

@@ -7,6 +7,7 @@ import androidx.room.Query;
 import androidx.room.RawQuery;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
+import androidx.room.OnConflictStrategy;
 import com.theflexproject.thunder.model.Movie;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE genres LIKE '%' || :genreId || '%' and disabled=0 GROUP BY id")
     List<Movie> getMoviesByGenre(String genreId);
+
     @Query("SELECT * FROM Movie WHERE title is not null and disabled=0 GROUP BY id ")
     List<Movie> getAll();
 
@@ -23,56 +25,65 @@ public interface MovieDao {
 
     @Query("SELECT * FROM Movie WHERE id IN (:itemIds) GROUP BY id")
     List<Movie> loadAllByIds(List<String> itemIds);
+
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size ASC")
     List<Movie> getAllById(int id);
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE id=:id)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getmorebyid(int id);
 
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size DESC limit 1 ")
     Movie byIdLargest(int id);
+
     @Query("SELECT * FROM Movie WHERE id=:id and disabled=0 ORDER BY size ASC limit 1 ")
     Movie byIdSmallest(int id);
 
     @Query("SELECT * FROM Movie WHERE (title like '%' || :string || '%' or overview like '%' || :string || '%' or original_title like '%' || :string || '%') and disabled=0 GROUP BY id")
     List<Movie> getSearchQuery(String string);
 
-    @Query("SELECT * FROM Movie WHERE fileName LIKE :fileName and disabled=0")
+    @Query("SELECT * FROM Movie WHERE file_name LIKE :fileName and disabled=0")
     Movie getByFileName(String fileName);
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 GROUP BY id ORDER BY release_date")
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 GROUP BY id ORDER BY vote_average DESC LIMIT 10")
     List<Movie> getTopRated();
 
-    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC LIMIT :limit OFFSET :offset")
+    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modified_time DESC LIMIT :limit OFFSET :offset")
     List<Movie> getrecentlyadded(int limit, int offset);
-    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modifiedTime DESC")
+
+    @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modified_time DESC")
     List<Movie> getallrecentlyadded();
 
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC lIMIT 10")
     List<Movie> getrecentreleases();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC")
     List<Movie> getallrecentreleases();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND release_date >= '2023-01-01' GROUP BY id ORDER BY (popularity + release_date) DESC LIMIT 10")
     List<Movie> getTrending();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY  genres Limit 10")
     List<Movie> getgenres();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND genres IS NOT NULL GROUP BY id ORDER BY vote_count DESC")
     List<Movie> getrecomendation();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND release_date < '2011-01-01' AND release_date IS NOT NULL GROUP BY id ORDER BY release_date ASC")
     List<Movie> getOgMovies();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE played = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getMoreMovied();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 GROUP BY id ORDER BY release_date ASC LIMIT 10")
     List<Movie> getTopOld();
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE addToList = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
+
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE add_to_list = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getRecombyfav();
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND original_language = 'id' GROUP BY id ORDER BY release_date DESC")
     List<Movie> getFilmIndo();
 
-
-
-
-
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Movie... movies);
 
     @Delete
@@ -84,20 +95,17 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND played LIKE '% added' AND disabled = 0 GROUP BY id ORDER BY played DESC")
     List<Movie> getPlayed();
 
-
     @Query("Update Movie set played =:dateTime where id =:id and disabled=0")
     void updatePlayed(int id, String dateTime);
 
     @Query("SELECT * FROM Movie WHERE title is NULL and disabled=0")
     List<Movie> getFilesWithNoTitle();
 
-    @Query("SELECT * FROM Movie WHERE fileName LIKE :fileName and disabled=0")
+    @Query("SELECT * FROM Movie WHERE file_name LIKE :fileName and disabled=0")
     List<Movie> getAllByFileName(String fileName);
-
 
     @Query("SELECT COUNT (title) FROM Movie WHERE index_id =:index_id")
     int getNoOfMovies(int index_id);
-
 
     @Query("UPDATE Movie set disabled=1 WHERE index_id=:index_id ")
     void disableFromThisIndex(int index_id);
@@ -111,16 +119,22 @@ public interface MovieDao {
     @Query("DELETE FROM Movie WHERE gd_id =:id")
     void deleteByGdId(String id);
 
-    @Query("UPDATE Movie SET addToList=1 WHERE id=:movieId")
+    @Query("UPDATE Movie SET add_to_list=1 WHERE id=:movieId")
     void updateAddToList(int movieId);
 
-    @Query("SELECT * FROM Movie WHERE addToList=1 and disabled=0 GROUP BY id")
+    @Query("SELECT * FROM Movie WHERE add_to_list=1 and disabled=0 GROUP BY id")
     List<Movie> getWatchlisted();
 
-    @Query("UPDATE Movie SET addToList=0 WHERE id=:movieId")
+    @Query("UPDATE Movie SET add_to_list=0 WHERE id=:movieId")
     void updateRemoveFromList(int movieId);
 
     @RawQuery
     List<Movie> getMoviesByGenreAndSort(SupportSQLiteQuery query);
+
+    @Query("SELECT COUNT(*) FROM Movie")
+    int getMovieCount();
+
+    @Query("DELETE FROM Movie")
+    void deleteAll();
 
 }

@@ -9,10 +9,10 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class ResFormat(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    var id: Int = 0,
     
-    val data: Data? = null,
-    val nextPageToken: String? = null,
-    val curPageIndex: String? = null,
-    val code: Int = 0
+    var data: Data? = null,
+    var nextPageToken: String? = null,
+    var curPageIndex: String? = null,
+    var code: Int = 0
 ) : Parcelable

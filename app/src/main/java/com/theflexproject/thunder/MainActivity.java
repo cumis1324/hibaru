@@ -95,12 +95,11 @@ import java.util.concurrent.TimeUnit;
 import eightbitlab.com.blurview.BlurView;
 import eightbitlab.com.blurview.RenderScriptBlur;
 
-
 public class MainActivity extends AppCompatActivity implements BillingManager.BillingCallback {
 
     BottomNavigationView bottomNavigationView;
     HomeNewFragment homeFragment = new HomeNewFragment();
-    HomeFragment    homeVerif = new HomeFragment();
+    HomeFragment homeVerif = new HomeFragment();
     SearchFragment searchFragment = new SearchFragment();
     LibraryFragment libraryFragment = new LibraryFragment();
     SettingsFragment settingsFragment = new SettingsFragment();
@@ -123,8 +122,8 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     AppDatabase dbs;
     NavigationRailView navigationRailView;
     private OnUserLeaveHintListener userLeaveHintListener;
-    public static List<String> historyList = new ArrayList<>();  // Menyimpan data history
-    public static List<String> historyAll = new ArrayList<>();  // Menyimpan data history
+    public static List<String> historyList = new ArrayList<>(); // Menyimpan data history
+    public static List<String> historyAll = new ArrayList<>(); // Menyimpan data history
     public static List<String> favoritList = new ArrayList<>();
     private BillingManager billingManager;
 
@@ -160,10 +159,12 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         UiModeManager uiModeManager = (UiModeManager) this.getSystemService(Context.UI_MODE_SERVICE);
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
+
     private boolean isNotificationEnabled() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            return notificationManager != null && notificationManager.getImportance() != NotificationManager.IMPORTANCE_NONE;
+            return notificationManager != null
+                    && notificationManager.getImportance() != NotificationManager.IMPORTANCE_NONE;
         }
         return true; // Di bawah Android O, dianggap sudah diizinkan
     }
@@ -193,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         dialog.show();
     }
 
-    private void handleSignIn(){
+    private void handleSignIn() {
         if (currentUser != null) {
             dbs = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase();
             checkForAppUpdate();
@@ -202,16 +203,14 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
                 initWidgets();
                 setUpBottomNavigationView();
                 handleDemoUser();
-            }
-            else {
+            } else {
                 setContentView(R.layout.main_tv);
                 initWidgets();
                 setUpBottomNavigationView();
                 handleDemoUser();
                 bottomNavigationView.setVisibility(View.GONE);
             }
-        }
-        else {
+        } else {
             startActivity(new Intent(MainActivity.this, SignInActivity.class));
 
         }
@@ -225,10 +224,10 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
 
             if (itemId != null && itemType != null) {
                 openFragmentBasedOnType(itemId, itemType);
-            }else {
+            } else {
                 getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
             }
-        }else {
+        } else {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, homeFragment).commit();
         }
     }
@@ -236,26 +235,26 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     @OptIn(markerClass = UnstableApi.class)
     private void openFragmentBasedOnType(String itemId, String itemType) {
         int id = Integer.parseInt(itemId);
-        if (Objects.equals(itemType, "movie")){
+        if (Objects.equals(itemType, "movie")) {
             PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             Fragment oldFragment = getSupportFragmentManager().findFragmentById(R.id.container);
             if (oldFragment != null) {
                 transaction.hide(oldFragment);
             }
-            transaction.setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out);
-            transaction.add(R.id.container,movieDetailsFragment).addToBackStack(null);
+            transaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out);
+            transaction.add(R.id.container, movieDetailsFragment).addToBackStack(null);
             transaction.commit();
-        }else {
-                TvShowDetailsFragment tvDetailsFragment = new TvShowDetailsFragment(id);
+        } else {
+            TvShowDetailsFragment tvDetailsFragment = new TvShowDetailsFragment(id);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             Fragment oldFragment = getSupportFragmentManager().findFragmentById(R.id.container);
             if (oldFragment != null) {
                 transaction.hide(oldFragment);
             }
 
-            transaction.setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .add(R.id.container,tvDetailsFragment).addToBackStack(null).commit();
+            transaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                    .add(R.id.container, tvDetailsFragment).addToBackStack(null).commit();
         }
     }
 
@@ -266,10 +265,9 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         currentUser.getIdToken(true).toString();
         if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, homeVerif).commit();
-        }
-        else {
+        } else {
             bukaIntent();
-            //IklanPremium.konvertWaktu();
+            // IklanPremium.konvertWaktu();
             IklanPremium.checkHistory(this, new IklanPremium.HistoryCallback() {
                 @Override
                 public void onHistoryLoaded(List<String> history) {
@@ -293,16 +291,12 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         }
     }
 
-
-
-
-
-
     @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0)
             getSupportFragmentManager().popBackStackImmediate();
-        else super.onBackPressed();
+        else
+            super.onBackPressed();
     }
 
     private void initWidgets() {
@@ -322,15 +316,14 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
 
     private void setUpBottomNavigationView() {
         bottomNavigationView.setOnItemSelectedListener(item -> {
-            if(item.getItemId()==R.id.homeFragment){
+            if (item.getItemId() == R.id.homeFragment) {
                 if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
                     getSupportFragmentManager()
                             .beginTransaction()
                             .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
                             .replace(R.id.container, homeVerif)
                             .commit();
-                }
-                else{
+                } else {
                     getSupportFragmentManager()
                             .beginTransaction()
                             .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
@@ -338,35 +331,35 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
                             .commit();
                 }
                 return true;
-            }else if(item.getItemId()==R.id.searchFragment){
+            } else if (item.getItemId() == R.id.searchFragment) {
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
-                        .replace(R.id.container , searchFragment)
+                        .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                        .replace(R.id.container, searchFragment)
                         .addToBackStack(null)
                         .commit();
                 return true;
-            }else if(item.getItemId()==R.id.downloadFragment){
+            } else if (item.getItemId() == R.id.downloadFragment) {
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
-                        .replace(R.id.container , downloadFragment)
+                        .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                        .replace(R.id.container, downloadFragment)
                         .addToBackStack(null)
                         .commit();
                 return true;
-            }else if(item.getItemId()==R.id.libraryFragment){
+            } else if (item.getItemId() == R.id.libraryFragment) {
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
-                        .replace(R.id.container , libraryFragment)
+                        .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                        .replace(R.id.container, libraryFragment)
                         .addToBackStack(null)
                         .commit();
                 return true;
-            }else if(item.getItemId()==R.id.settingsFragment){
+            } else if (item.getItemId() == R.id.settingsFragment) {
                 getSupportFragmentManager()
                         .beginTransaction()
-                        .setCustomAnimations(R.anim.from_right,R.anim.to_left,R.anim.from_left,R.anim.to_right)
-                        .replace(R.id.container , settingsFragment)
+                        .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                        .replace(R.id.container, settingsFragment)
                         .addToBackStack(null)
                         .commit();
                 return true;
@@ -379,13 +372,15 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
                     if ("M20Oxpp64gZ480Lqus4afv6x2n63".equals(currentUser.getUid())) {
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                                .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left,
+                                        R.anim.to_right)
                                 .replace(R.id.container, homeVerif)
                                 .commit();
                     } else {
                         getSupportFragmentManager()
                                 .beginTransaction()
-                                .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
+                                .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left,
+                                        R.anim.to_right)
                                 .replace(R.id.container, homeFragment)
                                 .commit();
                     }
@@ -430,8 +425,10 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     }
 
     private void blurBottom() {
-        // Aktifkan FLAG_LAYOUT_NO_LIMITS untuk memungkinkan layout meluas di luar batas normal
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        // Aktifkan FLAG_LAYOUT_NO_LIMITS untuk memungkinkan layout meluas di luar batas
+        // normal
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
         getWindow().setStatusBarColor(Color.TRANSPARENT);
 
@@ -480,13 +477,12 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         DatabaseClient.getInstance(getApplicationContext()).closeDatabase();
     }
+
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
@@ -498,7 +494,6 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
     public void setOnUserLeaveHintListener(OnUserLeaveHintListener listener) {
         this.userLeaveHintListener = listener;
     }
-    
 
     @Override
     public void onProductsLoaded(List<SkuDetails> products) {
@@ -529,13 +524,7 @@ public class MainActivity extends AppCompatActivity implements BillingManager.Bi
         }
     }
 
-
     public interface OnUserLeaveHintListener {
         void onUserLeaveHint();
     }
 }
-
-
-
-
-

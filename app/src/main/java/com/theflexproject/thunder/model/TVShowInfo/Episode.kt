@@ -1,70 +1,87 @@
 package com.theflexproject.thunder.model.TVShowInfo
 
 import android.os.Parcelable
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.theflexproject.thunder.model.MyMedia
 import kotlinx.parcelize.Parcelize
 import java.util.Date
 
-@Entity
+@Entity(indices = [Index(value = ["gd_id"], unique = true)])
 @Parcelize
 data class Episode(
     @PrimaryKey(autoGenerate = true)
-    val idForDB: Int = 0,
+    var idForDB: Int = 0,
     
-    val fileName: String? = null,
-    val mimeType: String? = null,
+    @get:JvmName("getFileName") @set:JvmName("setFileName")
+    var file_name: String? = null,
+    @get:JvmName("getMimeType") @set:JvmName("setMimeType")
+    var mime_type: String? = null,
     
+    @get:JvmName("getModifiedTime") @set:JvmName("setModifiedTime")
     @JsonFormat(pattern = "E MMM dd HH:mm:ss z yyyy")
-    val modifiedTime: Date? = null,
+    var modified_time: Date? = null,
     
-    val size: String? = null,
-    val urlString: String? = null,
+    var size: String? = null,
     
+    @get:JvmName("getUrlString") @set:JvmName("setUrlString")
+    @ColumnInfo(name = "url_string")
+    var url_string: String? = null,
+    
+    @get:JvmName("getIndexId") @set:JvmName("setIndexId")
     @ColumnInfo(name = "index_id", defaultValue = "0")
-    val indexId: Int = 0,
+    var index_id: Int = 0,
     
     @ColumnInfo(name = "disabled", defaultValue = "0")
-    val disabled: Int = 0,
+    var disabled: Int = 0,
     
+    @get:JvmName("getGdId") @set:JvmName("setGdId")
     @ColumnInfo(name = "gd_id", defaultValue = "")
-    val gdId: String = "",
+    var gd_id: String = "",
     
-    val played: Int = 0,
+    @get:JvmName("getPlayed") @set:JvmName("setPlayed")
+    @ColumnInfo(name = "played")
+    var played: String? = null,
     
+    @get:JvmName("getSeasonId") @set:JvmName("setSeasonId")
     @ColumnInfo(name = "season_id")
-    val seasonId: Int = 0,
+    var season_id: Int = 0,
     
+    @get:JvmName("getAirDate") @set:JvmName("setAirDate")
     @ColumnInfo(name = "air_date")
-    val airDate: String? = null,
+    var air_date: String? = null,
     
+    @get:JvmName("getEpisodeNumber") @set:JvmName("setEpisodeNumber")
     @ColumnInfo(name = "episode_number")
-    val episodeNumber: Int = 0,
+    var episode_number: Int = 0,
     
-    val id: Int = 0,
-    val name: String? = null,
-    val overview: String? = null,
+    var id: Int = 0,
+    var name: String? = null,
+    var overview: String? = null,
     
+    @get:JvmName("getProductionCode") @set:JvmName("setProductionCode")
     @ColumnInfo(name = "production_code")
-    val productionCode: String? = null,
+    var production_code: String? = null,
     
-    val runtime: Int = 0,
+    var runtime: Int = 0,
     
+    @get:JvmName("getSeasonNumber") @set:JvmName("setSeasonNumber")
     @ColumnInfo(name = "season_number")
-    val seasonNumber: Int = 0,
+    var season_number: Int = 0,
     
+    @get:JvmName("getShowId") @set:JvmName("setShowId")
     @ColumnInfo(name = "show_id")
-    val showId: Long = 0,
+    var show_id: Long = 0,
     
+    @get:JvmName("getStillPath") @set:JvmName("setStillPath")
     @ColumnInfo(name = "still_path")
-    val stillPath: String? = null,
+    var still_path: String? = null,
     
+    @get:JvmName("getVoteAverage") @set:JvmName("setVoteAverage")
     @ColumnInfo(name = "vote_average")
-    val voteAverage: Double = 0.0,
+    var vote_average: Double = 0.0,
     
+    @get:JvmName("getVoteCount") @set:JvmName("setVoteCount")
     @ColumnInfo(name = "vote_count")
-    val voteCount: Int = 0
+    var vote_count: Int = 0
 ) : MyMedia, Parcelable

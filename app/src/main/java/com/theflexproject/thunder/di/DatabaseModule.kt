@@ -27,8 +27,11 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "nfgplus.db"
-        ).build()
+            "nfgplus_v4.db"
+        )
+            .createFromAsset("nfgplus.db")
+            .fallbackToDestructiveMigration()
+            .build()
     }
     
     @Provides

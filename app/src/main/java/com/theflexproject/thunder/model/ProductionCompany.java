@@ -14,11 +14,11 @@ public class ProductionCompany {
         this.id = id;
     }
 
-    public String getLogo_path() {
+    public String getLogoPath() {
         return logo_path;
     }
 
-    public void setLogo_path(String logo_path) {
+    public void setLogoPath(String logo_path) {
         this.logo_path = logo_path;
     }
 
@@ -48,3 +48,4 @@ public class ProductionCompany {
                 '}';
     }
 }
+

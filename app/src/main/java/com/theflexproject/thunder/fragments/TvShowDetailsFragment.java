@@ -204,16 +204,16 @@ public class TvShowDetailsFragment extends BaseFragment {
                         @SuppressLint("SetTextI18n")
                         @Override
                         public void run() {
-                            String ratings = String.valueOf((int)(tvShowDetails.getVote_average()*10));
-                            String year = tvShowDetails.getFirst_air_date();
+                            String ratings = String.valueOf((int)(tvShowDetails.getVoteAverage()*10));
+                            String year = tvShowDetails.getFirstAirDate();
                             String yearCrop = year.substring(0, year.indexOf('-'));
-                            String result = String.valueOf(tvShowDetails.getNumber_of_seasons());
-                            String logoLink = tvShowDetails.getLogo_path();
+                            String result = String.valueOf(tvShowDetails.getNumberOfSeasons());
+                            String logoLink = tvShowDetails.getLogoPath();
                             title.setText(tvShowDetails.getName() + " (" + yearCrop + ") ");
                             rating.setText(ratings + " - " + result + " Season" + " ... Selengkapnya");
                             System.out.println("Logo Link"+logoLink);
                             titleOri.setVisibility(View.VISIBLE);
-                            titleOri.setText(tvShowDetails.getOriginal_name());
+                            titleOri.setText(tvShowDetails.getOriginalName());
                             titleLayout.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
@@ -237,30 +237,30 @@ public class TvShowDetailsFragment extends BaseFragment {
                                 logo.setVisibility(View.GONE);
                             }
 
-                            if(tvShowDetails.getBackdrop_path()!=null){
+                            if(tvShowDetails.getBackdropPath()!=null){
                                 Glide.with(mActivity)
-                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
+                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdropPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                                         .into(backdrop);
                             }
-                            else if(tvShowDetails.getPoster_path()!=null){
+                            else if(tvShowDetails.getPosterPath()!=null){
                                     Glide.with(mActivity)
-                                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
+                                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
                                             .placeholder(new ColorDrawable(Color.BLACK))
                                             .diskCacheStrategy(DiskCacheStrategy.ALL)
                                             .into(backdrop);
                             }
-                            if((nextEpisode!=null && nextEpisode.getStill_path()!=null)) {
+                            if((nextEpisode!=null && nextEpisode.getStillPath()!=null)) {
                                 Glide.with(mActivity)
-                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + nextEpisode.getStill_path())
+                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + nextEpisode.getStillPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                                         .into(backdrop);
                             }
 
                             if (nextEpisode != null) {
-                                String buttonText = "S" + nextEpisode.getSeason_number() + " E" + nextEpisode.getEpisode_number();
+                                String buttonText = "S" + nextEpisode.getSeasonNumber() + " E" + nextEpisode.getEpisodeNumber();
                                 System.out.println(buttonText);
                             }
 
@@ -385,9 +385,9 @@ public class TvShowDetailsFragment extends BaseFragment {
 
     private void shareIt() {
         String title = tvShowDetails.getName();
-        String originalTitle = tvShowDetails.getOriginal_name();
+        String originalTitle = tvShowDetails.getOriginalName();
         String overview = tvShowDetails.getOverview();
-        String posterPath = "https://image.tmdb.org/t/p/w500" + tvShowDetails.getPoster_path();
+        String posterPath = "https://image.tmdb.org/t/p/w500" + tvShowDetails.getPosterPath();
         String movieId = String.valueOf(tvShowDetails.getId());
 
         // Tautan deep link lengkap

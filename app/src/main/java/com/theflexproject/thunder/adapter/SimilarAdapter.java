@@ -112,8 +112,8 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
             }
 
             // Ensure other fields are also checked for null
-            if (movie.getRelease_date() != null && movie.getRelease_date().length() >= 4) {
-                String year = movie.getRelease_date().substring(0, 4);
+            if (movie.getReleaseDate() != null && movie.getReleaseDate().length() >= 4) {
+                String year = movie.getReleaseDate().substring(0, 4);
                 holder.name.append(" (" + year + ")");
             }
             if (movie.getOverview() != null) {
@@ -122,14 +122,14 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
                 holder.desc.setText("No description available");
             }
 
-            if (movie.getPoster_path() != null) {
+            if (movie.getPosterPath() != null) {
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL + movie.getPoster_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + movie.getPosterPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL + movie.getBackdrop_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + movie.getBackdropPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.backdrop);
@@ -141,9 +141,9 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
 
             // Check if episode name is null before using it
             if (episode.getName() != null) {
-                holder.name.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
+                holder.name.setText("Episode " + episode.getEpisodeNumber() + ": " + episode.getName());
             } else {
-                holder.name.setText("Episode " + episode.getEpisode_number() + ": Unknown");
+                holder.name.setText("Episode " + episode.getEpisodeNumber() + ": Unknown");
             }
 
             // Handle description in a similar way
@@ -154,10 +154,10 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
             }
 
             // Handle still image path
-            String stillPath = episode.getStill_path();
+            String stillPath = episode.getStillPath();
             if (stillPath == null || stillPath.isEmpty()) {
-                String backdropUrl = Constants.TMDB_BACKDROP_IMAGE_BASE_URL + seasonDetails.getBackdrop_path();
-                if (seasonDetails.getBackdrop_path() != null && !seasonDetails.getBackdrop_path().isEmpty()) {
+                String backdropUrl = Constants.TMDB_BACKDROP_IMAGE_BASE_URL + seasonDetails.getBackdropPath();
+                if (seasonDetails.getBackdropPath() != null && !seasonDetails.getBackdropPath().isEmpty()) {
                     Glide.with(context)
                             .load(backdropUrl)
                             .placeholder(new ColorDrawable(Color.BLACK))
@@ -236,5 +236,6 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.SimilarA
         return false;
     }
 }
+
 
 

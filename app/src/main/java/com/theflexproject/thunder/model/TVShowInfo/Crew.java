@@ -77,7 +77,7 @@ public class Crew {
         this.name = name;
     }
 
-    public String getOriginal_name() {
+    public String getOriginalName() {
         return original_name;
     }
 

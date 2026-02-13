@@ -1,6 +1,6 @@
 package com.theflexproject.thunder.fragments;
 
-import static com.theflexproject.thunder.utils.SendGetRequestTMDB.tmdbGetByID;
+// 
 import static com.theflexproject.thunder.utils.StringUtils.tmdbIdExtractor_FromLink;
 import static com.theflexproject.thunder.utils.StringUtils.tmdbIdExtractor_FromLink_TV;
 
@@ -70,13 +70,13 @@ public class ChangeTMDBFragment extends BaseFragment {
                                 long id = tmdbIdExtractor_FromLink(link);
 
                                 if(id!=0){
-                                    tmdbGetByID(myMedia,id,false);
+                                    // 
                                 }
                                 else {
                                     boolean failed = false;
                                     try {
                                         id =Long.parseLong(link);
-                                        tmdbGetByID(myMedia,id,false);
+                                        // 
                                     }catch (Exception e){
                                         failed = true;
                                         System.out.println("Failed to parse long"+e);
@@ -93,12 +93,12 @@ public class ChangeTMDBFragment extends BaseFragment {
                                 //send get request tmdb tvshow
                                 long id = tmdbIdExtractor_FromLink_TV(link);
                                 if(id!=0){
-                                    tmdbGetByID(myMedia,id,true);
+                                    // 
                                 }
                                 else if(link.length()<15){
                                     try {
                                         id =Long.parseLong(link);
-                                        tmdbGetByID(myMedia,id,true);
+                                        // 
                                     }catch (Exception e){
                                         System.out.println("Failed to parse long"+e);
                                     }

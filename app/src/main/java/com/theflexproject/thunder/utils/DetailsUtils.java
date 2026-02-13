@@ -48,7 +48,8 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
-    public static List<Episode> getListEpisode(Context mActivity, int showId, int seasonId) {
+
+    public static List<Episode> getListEpisode(Context mActivity, int showId, int seasonNumber) {
         // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
         FutureTask<List<Episode>> futureTask = new FutureTask<>(new Callable<List<Episode>>() {
             @Override
@@ -57,7 +58,7 @@ public class DetailsUtils {
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .episodeDao()
-                        .getFromThisSeason(showId, seasonId);
+                        .getFromThisSeason(showId, seasonNumber);
             }
         });
 
@@ -72,6 +73,7 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static TVShowSeasonDetails getSeasonDetails(Context mActivity, int id) {
         // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
         FutureTask<TVShowSeasonDetails> futureTask = new FutureTask<>(new Callable<TVShowSeasonDetails>() {
@@ -96,6 +98,7 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static TVShow getSeriesDetails(Context mActivity, int id) {
         // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
         FutureTask<TVShow> futureTask = new FutureTask<>(new Callable<TVShow>() {
@@ -120,6 +123,7 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static Movie getMovieDetails(Context mActivity, int id) {
         // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
         FutureTask<Movie> futureTask = new FutureTask<>(new Callable<Movie>() {
@@ -144,6 +148,7 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static Movie getMovieSmallest(Context mActivity, int id) {
         // FutureTask yang akan menjalankan Callable dan mengembalikan hasilnya
         FutureTask<Movie> futureTask = new FutureTask<>(new Callable<Movie>() {
@@ -168,6 +173,7 @@ public class DetailsUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static List<Movie> getSourceList(Context mActivity, int id) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -192,6 +198,7 @@ public class DetailsUtils {
             executor.shutdown();
         }
     }
+
     public static List<Episode> getEpisodeSource(Context mActivity, int id) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -244,6 +251,7 @@ public class DetailsUtils {
             executor.shutdown();
         }
     }
+
     public static List<Movie> getHistoryMovies(Context mActivity, List<String> ids) {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -269,6 +277,7 @@ public class DetailsUtils {
             executor.shutdown();
         }
     }
+
     public static List<TVShow> getFavSeries(Context mActivity, List<String> ids) {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -294,6 +303,7 @@ public class DetailsUtils {
             executor.shutdown();
         }
     }
+
     @OptIn(markerClass = UnstableApi.class)
     public static List<Movie> getRecommendationMovies(Context mActivity, int id) {
         tmdbTrending movieSimilar = new tmdbTrending();

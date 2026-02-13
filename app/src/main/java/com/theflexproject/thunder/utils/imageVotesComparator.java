@@ -7,6 +7,6 @@ import java.util.Comparator;
 public class imageVotesComparator implements Comparator<Logo> {
     @Override
     public int compare(Logo o1 , Logo o2) {
-        return o2.getVote_count() - o1.getVote_count();
+        return o2.getVoteCount() - o1.getVoteCount();
     }
 }

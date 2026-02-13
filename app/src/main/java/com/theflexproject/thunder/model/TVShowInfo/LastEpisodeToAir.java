@@ -14,7 +14,7 @@ public class LastEpisodeToAir {
     public double vote_average;
     public int vote_count;
 
-    public String getAir_date() {
+    public String getAirDate() {
         return air_date;
     }
 
@@ -22,7 +22,7 @@ public class LastEpisodeToAir {
         this.air_date = air_date;
     }
 
-    public int getEpisode_number() {
+    public int getEpisodeNumber() {
         return episode_number;
     }
 
@@ -70,7 +70,7 @@ public class LastEpisodeToAir {
         this.runtime = runtime;
     }
 
-    public int getSeason_number() {
+    public int getSeasonNumber() {
         return season_number;
     }
 
@@ -78,15 +78,15 @@ public class LastEpisodeToAir {
         this.season_number = season_number;
     }
 
-    public int getShow_id() {
+    public int getShowId() {
         return show_id;
     }
 
-    public void setShow_id(int show_id) {
+    public void setShowId(int show_id) {
         this.show_id = show_id;
     }
 
-    public String getStill_path() {
+    public String getStillPath() {
         return still_path;
     }
 
@@ -94,7 +94,7 @@ public class LastEpisodeToAir {
         this.still_path = still_path;
     }
 
-    public double getVote_average() {
+    public double getVoteAverage() {
         return vote_average;
     }
 
@@ -102,7 +102,7 @@ public class LastEpisodeToAir {
         this.vote_average = vote_average;
     }
 
-    public int getVote_count() {
+    public int getVoteCount() {
         return vote_count;
     }
 
@@ -128,3 +128,4 @@ public class LastEpisodeToAir {
                 '}';
     }
 }
+

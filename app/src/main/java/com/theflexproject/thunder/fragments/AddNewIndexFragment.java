@@ -1,9 +1,9 @@
 package com.theflexproject.thunder.fragments;
 
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestGDIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestGoIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestMapleIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestSimpleProgramIndex;
+// 
+// 
+// 
+// 
 
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
@@ -208,13 +208,13 @@ public class AddNewIndexFragment extends BaseFragment {
 
                                     if (folderType2.equals("Series")) {
                                         if (indexType2.equals("GDIndex")) {
-                                            postRequestGDIndex(link2, user2, pass2, true, index_id2);
+                                            // 
                                         }
 
                                     }
                                     if (folderType.equals("Movies")) {
                                         if (indexType.equals("GDIndex")) {
-                                            postRequestGDIndex(link, user, pass, false, index_id);
+                                            // 
                                         }
 
                                     }
@@ -297,7 +297,7 @@ public class AddNewIndexFragment extends BaseFragment {
                                         System.out.println("After setting id" + indexLinkAgain.getId());
                                         if (folderType.equals("Movies")) {
                                             if (indexType.equals("GDIndex")) {
-                                                postRequestGDIndex(link, user, pass, false, index_id);
+                                                // 
                                             }
                                         }
                                         mActivity.runOnUiThread(new Runnable() {
@@ -384,12 +384,12 @@ public class AddNewIndexFragment extends BaseFragment {
                                         System.out.println("After setting id" + indexLinkAgain2.getId());
                                         if (folderType2.equals("Movies")) {
                                             if (indexType2.equals("GDIndex")) {
-                                                postRequestGDIndex(link2, user2, pass2, false, index_iddua);
+                                                // 
                                             }
                                         }
                                         if (folderType.equals("Movies")) {
                                             if (indexType.equals("GDIndex")) {
-                                                postRequestGDIndex(link, user, pass, false, index_id);
+                                                // 
                                             }
                                         }
 
@@ -466,7 +466,7 @@ public class AddNewIndexFragment extends BaseFragment {
 
                                         if (folderType.equals("TVShows")) {
                                             if (indexType.equals("GDIndex")) {
-                                                postRequestGDIndex(link, user, pass, true, index_id);
+                                                // 
                                             }
                                         }
                                         mActivity.runOnUiThread(new Runnable() {
@@ -560,13 +560,13 @@ public class AddNewIndexFragment extends BaseFragment {
 
                                         if (folderType2.equals("TVShows")) {
                                             if (indexType2.equals("GDIndex")) {
-                                                postRequestGDIndex(link2, user2, pass2, true, index_id2);
+                                                // 
                                             }
                                         }
 
                                         if (folderType.equals("TVShows")) {
                                             if (indexType.equals("GDIndex")) {
-                                                postRequestGDIndex(link, user, pass, true, index_id);
+                                                // 
                                             }
                                         }
 

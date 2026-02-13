@@ -8,9 +8,15 @@ binding = "DB"
 database_name = "nfgplus-db"
 database_id = "0af98dee-4081-441f-8c92-8e5f39ad28e7"
 
+[[d1_databases]]
+binding = "DEMO_DB"
+database_name = "nfgplus-demo-db"
+database_id = "3ba71093-6e83-4456-80f6-17b059f0438d"
+
 # CORS settings for Android app
 [vars]
 ALLOWED_ORIGINS = "https://nfgplus.app,http://localhost:*"
+ADMIN_API_KEY = "nfgplus_admin_123e65584d67186c1f265bfb54586e0a"
 
 # Routes
 routes = [

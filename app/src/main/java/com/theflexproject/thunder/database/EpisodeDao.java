@@ -5,6 +5,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
+import androidx.room.OnConflictStrategy;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 
 import java.util.List;
@@ -13,14 +14,15 @@ import java.util.List;
 public interface EpisodeDao {
     @Query("SELECT * FROM Episode ")
     List<Episode> getAll();
+
     @Query("SELECT * FROM Episode WHERE id=:id GROUP BY id ORDER BY size ASC")
     List<Episode> getAllById(int id);
 
     @Query("SELECT * FROM Episode WHERE id LIKE :id and disabled =0")
     Episode find(int id);
 
-    @Query("SELECT * FROM Episode WHERE fileName LIKE :fileName and disabled =0")
-    Episode findByFileName(String fileName);
+    @Query("SELECT * FROM Episode WHERE file_name LIKE :file_name and disabled =0")
+    Episode findByFileName(String file_name);
 
     @Query("SELECT * FROM Episode WHERE season_id=:season_id AND played=0 and disabled =0 order by episode_number limit 1 ")
     Episode getNextEpisodeInSeason(int season_id);
@@ -40,17 +42,16 @@ public interface EpisodeDao {
     @Query("UPDATE Episode SET played =:dateTime WHERE id = :episodeId and disabled =0")
     void updatePlayed(int episodeId, String dateTime);
 
-    @Query("SELECT * FROM Episode WHERE show_id=:show_id AND season_id=:season_id and disabled =0 GROUP BY id ORDER BY episode_number ASC")
-    List<Episode> getFromThisSeason(int show_id, int season_id);
-
+    @Query("SELECT * FROM Episode WHERE show_id=:show_id AND season_number=:season_number and disabled =0 GROUP BY id ORDER BY episode_number ASC")
+    List<Episode> getFromThisSeason(int show_id, int season_number);
 
     @Query("SELECT * FROM Episode WHERE season_id=:season_id and disabled =0")
     List<Episode> getFromSeasonOnly(int season_id);
 
-
     @Query("SELECT * FROM Episode WHERE show_id=:show_id and disabled =0")
     List<Episode> getFromThisShow(long show_id);
-    @Insert
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Episode... episodes);
 
     @Delete
@@ -59,11 +60,10 @@ public interface EpisodeDao {
     @Query("Delete from Episode where  index_id = :index_id")
     void deleteAllFromThisIndex(int index_id);
 
-
     @Query("select * from Episode where  index_id = :index_id and disabled =0")
     Episode findByLink(int index_id);
 
-    @Query("Delete from Episode where urlString=:link ")
+    @Query("Delete from Episode where url_string=:link ")
     void deleteByLink(String link);
 
     @Query("select count( distinct show_id ) from Episode  where index_id = :index_id ")
@@ -78,10 +78,12 @@ public interface EpisodeDao {
     @Query("SELECT * FROM Episode WHERE show_id=:show_id and disabled =0 order by season_number,episode_number limit 1 ")
     Episode getFirstAvailableEpisode(long show_id);
 
-
     @Query("SELECT * FROM Episode WHERE gd_id =:id")
     Episode findByGdId(String id);
 
     @Query("DELETE FROM Episode WHERE gd_id =:id")
     void deleteByGdId(String id);
+
+    @Query("DELETE FROM Episode")
+    void deleteAll();
 }

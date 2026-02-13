@@ -320,9 +320,9 @@ public class PlayerUtils {
                 DownloadManager.Request request = new DownloadManager.Request(uri);
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                        .setTitle(tvshow.getName() + " S"+season.getSeason_number()+" E" + selectedFile.getEpisode_number() + ": " +selectedFile.getName())
+                        .setTitle(tvshow.getName() + " S"+season.getSeasonNumber()+" E" + selectedFile.getEpisodeNumber() + ": " +selectedFile.getName())
                         .setVisibleInDownloadsUi(true)
-                        .setDescription("Downloading " + tvshow.getName() + " S"+season.getSeason_number()+" E" + selectedFile.getEpisode_number() + ": " +selectedFile.getName() + " " + huntu);
+                        .setDescription("Downloading " + tvshow.getName() + " S"+season.getSeasonNumber()+" E" + selectedFile.getEpisodeNumber() + ": " +selectedFile.getName() + " " + huntu);
                 long downloadId = manager.enqueue(request);
                 downloadItems.add(new DownloadItem(
                         selectedFile.getFileName(),
@@ -342,11 +342,11 @@ public class PlayerUtils {
             if (source instanceof Movie) {
                 Movie movieDetails = (Movie) source;
                 String title = movieDetails.getTitle();
-                String originalTitle = movieDetails.getOriginal_title();
-                String date = movieDetails.getRelease_date();
+                String originalTitle = movieDetails.getOriginalTitle();
+                String date = movieDetails.getReleaseDate();
                 String year = date.substring(0,date.indexOf('-'));
                 String overview = movieDetails.getOverview();
-                String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPoster_path();
+                String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPosterPath();
                 String movieId = String.valueOf(movieDetails.getId());
                 String deepLink = "https://nfgplus.my.id/reviews.html?id=" + movieId + "&type=movie";
                 String shareText = title + " (" + year + ")\n" + "\n" +
@@ -391,10 +391,10 @@ public class PlayerUtils {
                 }).start();
             } else if (source instanceof Episode) {
                 Episode episode = (Episode) source;
-                String title = tvShow.getName() + ": Season " + season.getSeason_number() + " Episode " + episode.getEpisode_number(); // Ganti dengan movieDetails.getTitle()
-                String originalTitle = episode.getName(); // Ganti dengan movieDetails.getOriginal_title()
+                String title = tvShow.getName() + ": Season " + season.getSeasonNumber() + " Episode " + episode.getEpisodeNumber(); // Ganti dengan movieDetails.getTitle()
+                String originalTitle = episode.getName(); // Ganti dengan movieDetails.getOriginalTitle()
                 String overview = tvShow.getOverview(); // Ganti dengan movieDetails.getOverview()
-                String posterPath = "https://image.tmdb.org/t/p/w500/" + tvShow.getPoster_path();
+                String posterPath = "https://image.tmdb.org/t/p/w500/" + tvShow.getPosterPath();
                 String movieId = String.valueOf(tvShow.getId()); // Ganti dengan movieDetails.getId()
 
                 // Tautan deep link lengkap
@@ -534,3 +534,4 @@ public class PlayerUtils {
         }
     }
 }
+

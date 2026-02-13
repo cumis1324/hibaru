@@ -168,9 +168,9 @@ public class SeasonDetailsFragment extends BaseFragment {
                         @Override
                         public void run() {
                             tvShowTitleText.setText(tvShow.getName());
-                            String logoLink = tvShow.getLogo_path();
+                            String logoLink = tvShow.getLogoPath();
                             System.out.println("Logo Link"+logoLink);
-                            titleOri.setText("Season " + tvShowSeasonDetails.getSeason_number());
+                            titleOri.setText("Season " + tvShowSeasonDetails.getSeasonNumber());
                             if(!logoLink.equals("")){
 
                                 logo.setVisibility(View.VISIBLE);
@@ -192,10 +192,10 @@ public class SeasonDetailsFragment extends BaseFragment {
                                 seasonName.setText(tvShowSeasonDetails.getName());
                             } else {
                                 seasonName.setVisibility(View.VISIBLE);
-                                seasonName.setText("Season" + tvShowSeasonDetails.getSeason_number());
+                                seasonName.setText("Season" + tvShowSeasonDetails.getSeasonNumber());
                             }
 
-                            int season_number = tvShowSeasonDetails.getSeason_number();
+                            int season_number = tvShowSeasonDetails.getSeasonNumber();
                             int number_of_episodes = episodes.size();
                             if (number_of_episodes > 0) {
 //                                seasonNumber.setVisibility(View.VISIBLE);
@@ -211,36 +211,36 @@ public class SeasonDetailsFragment extends BaseFragment {
 //                                overview.setVisibility(View.VISIBLE);
                                 overview.setText(tvShowSeasonDetails.getOverview());
                             }
-//                            if (tvShowSeasonDetails.getPoster_path() != null) {
+//                            if (tvShowSeasonDetails.getPosterPath() != null) {
 //                                Glide.with(mActivity)
-//                                        .load(TMDB_IMAGE_BASE_URL + tvShowSeasonDetails.getPoster_path())
+//                                        .load(TMDB_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
 //                                        .placeholder(new ColorDrawable(Color.BLACK))
 //                                        .into(poster);
 //                            } else {
 //                                Glide.with(mActivity)
-//                                        .load(TMDB_IMAGE_BASE_URL + tvShow.getPoster_path())
+//                                        .load(TMDB_IMAGE_BASE_URL + tvShow.getPosterPath())
 //                                        .placeholder(new ColorDrawable(Color.BLACK))
 //                                        .into(poster);
 //                            }
-                            if (nextEpisode != null && nextEpisode.getStill_path() != null) {
+                            if (nextEpisode != null && nextEpisode.getStillPath() != null) {
                                 Glide.with(mActivity)
-                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + nextEpisode.getStill_path())
+                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + nextEpisode.getStillPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .into(backdrop);
-                            }else if (tvShowSeasonDetails.getPoster_path() != null) {
+                            }else if (tvShowSeasonDetails.getPosterPath() != null) {
                                 Glide.with(mActivity)
-                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowSeasonDetails.getPoster_path())
+                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .into(backdrop);
-                            }else if (tvShow.getBackdrop_path() != null) {
+                            }else if (tvShow.getBackdropPath() != null) {
                                 Glide.with(mActivity)
-                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShow.getBackdrop_path())
+                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShow.getBackdropPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .into(backdrop);
                             } else {
-                                if (tvShowSeasonDetails.getPoster_path() != null) {
+                                if (tvShowSeasonDetails.getPosterPath() != null) {
                                     Glide.with(mActivity)
-                                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowSeasonDetails.getPoster_path())
+                                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
                                             .placeholder(new ColorDrawable(Color.BLACK))
                                             .into(backdrop);
                                 }
@@ -249,8 +249,8 @@ public class SeasonDetailsFragment extends BaseFragment {
                                 mActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        continueWatching.setText("S" + nextEpisode.getSeason_number() + " E" + nextEpisode.getEpisode_number());
-//                                        play.setText("S" + nextEpisode.getSeason_number() + " E" + nextEpisode.getEpisode_number());
+                                        continueWatching.setText("S" + nextEpisode.getSeasonNumber() + " E" + nextEpisode.getEpisodeNumber());
+//                                        play.setText("S" + nextEpisode.getSeasonNumber() + " E" + nextEpisode.getEpisodeNumber());
                                     }
                                 });
                                 if(nextEpisode.getName()!=null){

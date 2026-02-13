@@ -81,26 +81,26 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
            if(movie.getTitle()==null || movie.getTitle().isEmpty()){
             holder.name.setText(movie.getFileName());
             }else {
-               String year = movie.getRelease_date().substring(0, 4);
-               if (Objects.equals(movie.getOriginal_language(), "id")){
-                   holder.name.setText(movie.getOriginal_title()+ " (" + year + ")");
+               String year = movie.getReleaseDate().substring(0, 4);
+               if (Objects.equals(movie.getOriginalLanguage(), "id")){
+                   holder.name.setText(movie.getOriginalTitle()+ " (" + year + ")");
                }
                else {
                    holder.name.setText(movie.getTitle() + " (" + year + ")");
                }
            }
 
-            if(movie.getVote_average()!=0){
+            if(movie.getVoteAverage()!=0){
                 // holder.star.setVisibility(View.VISIBLE);
                 holder.textStar.setVisibility(View.VISIBLE);
                 DecimalFormat decimalFormat = new DecimalFormat("0.0");
-                String roundedVoteAverage = decimalFormat.format(movie.getVote_average());
+                String roundedVoteAverage = decimalFormat.format(movie.getVoteAverage());
                 holder.textStar.setText(roundedVoteAverage);
             }
 
-            if(movie.getPoster_path()!=null){
+            if(movie.getPosterPath()!=null){
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+movie.getPoster_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL+movie.getPosterPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
@@ -112,24 +112,24 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
         if(mediaList.get(position) instanceof TVShow){
             TVShow tvShow = ((TVShow)mediaList.get(position));
             if(tvShow.getName()!=null){
-                if(Objects.equals(tvShow.getOriginal_name(), "id")){
-                    String year = tvShow.getFirst_air_date().substring(0,4);
-                    holder.name.setText(tvShow.getOriginal_name() + " (" + year + ")");
+                if(Objects.equals(tvShow.getOriginalName(), "id")){
+                    String year = tvShow.getFirstAirDate().substring(0,4);
+                    holder.name.setText(tvShow.getOriginalName() + " (" + year + ")");
                 }else {
-                    String year = tvShow.getFirst_air_date().substring(0, 4);
+                    String year = tvShow.getFirstAirDate().substring(0, 4);
                     holder.name.setText(tvShow.getName() + " (" + year + ")");
                 }
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+tvShow.getPoster_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL+tvShow.getPosterPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
             }
-            if(tvShow.getVote_average()!=0){
+            if(tvShow.getVoteAverage()!=0){
                 // holder.star.setVisibility(View.VISIBLE);
                 holder.textStar.setVisibility(View.VISIBLE);
                 DecimalFormat decimalFormat = new DecimalFormat("0.0");
-                String roundedVoteAverage = decimalFormat.format(tvShow.getVote_average());
+                String roundedVoteAverage = decimalFormat.format(tvShow.getVoteAverage());
                 holder.textStar.setText(roundedVoteAverage);
             }
             holder.itemView.setOnClickListener(v -> loadSeries(tvShow.getId()));
@@ -140,11 +140,11 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
             TVShowSeasonDetails tvShowSeason = ((TVShowSeasonDetails)mediaList.get(position));
             if(tvShowSeason.getName()!=null){
                 //holder.name.setVisibility(View.VISIBLE);
-                holder.name.setText("Season "+tvShowSeason.getSeason_number());
+                holder.name.setText("Season "+tvShowSeason.getSeasonNumber());
 
                 holder.season2.setVisibility(View.VISIBLE);
                 holder.season2.setText(tvShowSeason.getName());
-                String poster_path = tvShowSeason.getPoster_path();
+                String poster_path = tvShowSeason.getPosterPath();
                 if(poster_path!=null){
                     Glide.with(context)
                             .load(Constants.TMDB_IMAGE_BASE_URL+poster_path)
@@ -241,5 +241,6 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
     }
 
 }
+
 
 

@@ -12,62 +12,75 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class TVShow(
     @PrimaryKey(autoGenerate = true)
-    val idForDB: Int = 0,
+    var idForDB: Int = 0,
     
-    val adult: Boolean = false,
+    var adult: Boolean = false,
     
+    @get:JvmName("getBackdropPath") @set:JvmName("setBackdropPath")
     @ColumnInfo(name = "backdrop_path")
-    val backdropPath: String? = null,
+    var backdrop_path: String? = null,
     
-    @ColumnInfo(name = "addToList", defaultValue = "0")
-    val addToList: Int = 0,
+    @get:JvmName("getAddToList") @set:JvmName("setAddToList")
+    @ColumnInfo(name = "add_to_list", defaultValue = "0")
+    var add_to_list: Int = 0,
     
+    @get:JvmName("getLogoPath") @set:JvmName("setLogoPath")
     @ColumnInfo(name = "logo_path", defaultValue = "")
-    val logoPath: String = "",
+    var logo_path: String = "",
     
-    val homepage: String? = null,
+    var homepage: String? = null,
     
+    @get:JvmName("getFirstAirDate") @set:JvmName("setFirstAirDate")
     @ColumnInfo(name = "first_air_date")
-    val firstAirDate: String? = null,
+    var first_air_date: String? = null,
     
-    val id: Int = 0,
+    var id: Int = 0,
     
+    @get:JvmName("getInProduction") @set:JvmName("setInProduction")
     @ColumnInfo(name = "in_production")
-    val inProduction: Boolean = false,
+    var in_production: Boolean = false,
     
+    @get:JvmName("getLastAirDate") @set:JvmName("setLastAirDate")
     @ColumnInfo(name = "last_air_date")
-    val lastAirDate: String? = null,
+    var last_air_date: String? = null,
     
-    val name: String? = null,
+    var name: String? = null,
     
+    @get:JvmName("getNumberOfEpisodes") @set:JvmName("setNumberOfEpisodes")
     @ColumnInfo(name = "number_of_episodes")
-    val numberOfEpisodes: Int = 0,
+    var number_of_episodes: Int = 0,
     
+    @get:JvmName("getNumberOfSeasons") @set:JvmName("setNumberOfSeasons")
     @ColumnInfo(name = "number_of_seasons")
-    val numberOfSeasons: Int = 0,
+    var number_of_seasons: Int = 0,
     
+    @get:JvmName("getOriginalName") @set:JvmName("setOriginalName")
     @ColumnInfo(name = "original_name")
-    val originalName: String? = null,
+    var original_name: String? = null,
     
-    val overview: String? = null,
-    val popularity: Double = 0.0,
+    var overview: String? = null,
+    var popularity: Double = 0.0,
     
+    @get:JvmName("getOriginalLanguage") @set:JvmName("setOriginalLanguage")
     @ColumnInfo(name = "original_language")
-    val originalLanguage: String? = null,
+    var original_language: String? = null,
     
+    @get:JvmName("getPosterPath") @set:JvmName("setPosterPath")
     @ColumnInfo(name = "poster_path")
-    val posterPath: String? = null,
+    var poster_path: String? = null,
     
-    val status: String? = null,
-    val seasons: List<Season>? = null,
-    val tagline: String? = null,
-    val type: String? = null,
+    var status: String? = null,
+    var seasons: ArrayList<Season>? = null,
+    var tagline: String? = null,
+    var type: String? = null,
     
+    @get:JvmName("getVoteAverage") @set:JvmName("setVoteAverage")
     @ColumnInfo(name = "vote_average")
-    val voteAverage: Double = 0.0,
+    var vote_average: Double = 0.0,
     
+    @get:JvmName("getVoteCount") @set:JvmName("setVoteCount")
     @ColumnInfo(name = "vote_count")
-    val voteCount: Int = 0,
+    var vote_count: Int = 0,
     
-    val genres: List<Genre>? = null
+    var genres: ArrayList<Genre>? = null
 ) : MyMedia, Parcelable

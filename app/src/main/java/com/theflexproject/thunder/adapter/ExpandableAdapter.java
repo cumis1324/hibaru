@@ -53,9 +53,8 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private int expandedPosition = -1; // -1 berarti tidak ada yang diperluas
     private final Map<Integer, List<Episode>> episodeMap = new HashMap<>();
 
-
-
-    public ExpandableAdapter(Context context, TVShow tvShow, List<TVShowSeasonDetails> seasons, FragmentManager fragmentManager) {
+    public ExpandableAdapter(Context context, TVShow tvShow, List<TVShowSeasonDetails> seasons,
+            FragmentManager fragmentManager) {
         this.context = context;
         this.dataList = new ArrayList<>(seasons);
         this.tvShow = tvShow;
@@ -121,10 +120,10 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         @SuppressLint("SetTextI18n")
         void bind(TVShowSeasonDetails season, int position) {
-            seasonName.setText("Season " + season.getSeason_number() + ": " + season.getName());
+            seasonName.setText("Season " + season.getSeasonNumber() + ": " + season.getName());
             seasonDetails.setText(season.getOverview());
             Glide.with(context)
-                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + season.getPoster_path())
+                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + season.getPosterPath())
                     .apply(new RequestOptions().fitCenter().override(Target.SIZE_ORIGINAL))
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -158,7 +157,6 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             isExpanded = false;
         }
 
-
         private void expandEpisodes(int position, TVShowSeasonDetails season) {
             if (!episodeMap.containsKey(position)) {
                 new FetchEpisodesTask(season, position).execute();
@@ -182,7 +180,7 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             @Override
             protected List<Episode> doInBackground(Void... voids) {
                 // Panggil API untuk mendapatkan daftar episode
-                return DetailsUtils.getListEpisode(context, tvShow.getId(), season.getId());
+                return DetailsUtils.getListEpisode(context, tvShow.getId(), season.getSeasonNumber());
             }
 
             @Override
@@ -209,21 +207,21 @@ public class ExpandableAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         @OptIn(markerClass = UnstableApi.class)
         @SuppressLint("SetTextI18n")
         void bind(TVShowSeasonDetails season, Episode episode) {
-            if (episode.getEpisode_number()!=0) {
-                episodeName.setText("Episode " + episode.getEpisode_number() + ": " + episode.getName());
+            if (episode.getEpisodeNumber() != 0) {
+                episodeName.setText("Episode " + episode.getEpisodeNumber() + ": " + episode.getName());
                 itemView.setOnClickListener(v -> {
-                    PlayerFragment playerFragment = new PlayerFragment(tvShow, season, episode.id);
-                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                    PlayerFragment playerFragment = new PlayerFragment(tvShow, season, episode.getId());
+                    FragmentTransaction transaction = fragmentManager.beginTransaction();
 
-                        Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
-                        if (oldFragment != null) {
-                            transaction.hide(oldFragment);
-                        }
-                        transaction.add(R.id.container, playerFragment).addToBackStack(null);
-                        transaction.commit();
+                    Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
+                    if (oldFragment != null) {
+                        transaction.hide(oldFragment);
+                    }
+                    transaction.add(R.id.container, playerFragment).addToBackStack(null);
+                    transaction.commit();
 
                 });
-            }else {
+            } else {
                 Toast.makeText(context, "No Episodes Found", Toast.LENGTH_SHORT).show();
             }
         }

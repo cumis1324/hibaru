@@ -96,27 +96,27 @@ public class HistoryEpisodeAdapter extends RecyclerView.Adapter<HistoryEpisodeAd
     public void onBindViewHolder(@NonNull HistoryEpisodeAdapterHolder holder, @SuppressLint("RecyclerView") int position) {
         if (episodeList != null) {
             Episode episode = episodeList.get(position);
-            tvShow = DatabaseClient.getInstance(context.getApplicationContext()).getAppDatabase().tvShowDao().find(episode.show_id);
+            tvShow = DatabaseClient.getInstance(context.getApplicationContext()).getAppDatabase().tvShowDao().find(episode.getShowId());
             String seriesName = tvShow.getName();
             if (seriesName!= null){
                 holder.judulSeries.setText(seriesName);
             }
-            if (episode.getEpisode_number() > 9 && episode.getEpisode_number() > 999) {
-                holder.episodeNumber.setText("E" + episode.getEpisode_number());
+            if (episode.getEpisodeNumber() > 9 && episode.getEpisodeNumber() > 999) {
+                holder.episodeNumber.setText("E" + episode.getEpisodeNumber());
             } else {
-                holder.episodeNumber.setText("E0" + episode.getEpisode_number());
+                holder.episodeNumber.setText("E0" + episode.getEpisodeNumber());
             }
-            if (episode.getSeason_number() > 9) {
-                holder.seasonNumber.setText("S" + episode.getSeason_number());
+            if (episode.getSeasonNumber() > 9) {
+                holder.seasonNumber.setText("S" + episode.getSeasonNumber());
             } else {
-                holder.seasonNumber.setText("S0" + episode.getSeason_number());
+                holder.seasonNumber.setText("S0" + episode.getSeasonNumber());
             }
             if (episode.getName() != null) {
                 holder.episodeName.setText(episode.getName());
             }
-            if (episode.getStill_path() != null) {
+            if (episode.getStillPath() != null) {
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL + episode.getStill_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + episode.getStillPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.episodeStill);
@@ -284,8 +284,8 @@ public class HistoryEpisodeAdapter extends RecyclerView.Adapter<HistoryEpisodeAd
                 addToLastPlayed(episode.getId());
                 Intent in = new Intent(itemView.getContext(), PlayerActivity.class);
                 in.putExtra("url", episode.getUrlString());
-                in.putExtra("season", String.valueOf(episode.getSeason_number()));
-                in.putExtra("number", String.valueOf(episode.getEpisode_number()));
+                in.putExtra("season", String.valueOf(episode.getSeasonNumber()));
+                in.putExtra("number", String.valueOf(episode.getEpisodeNumber()));
                 in.putExtra("episode", episode.getName());
                 in.putExtra("title", tvShow.getName());
                 in.putExtra("tmdbId", String.valueOf(episode.getId()));
@@ -324,3 +324,4 @@ public class HistoryEpisodeAdapter extends RecyclerView.Adapter<HistoryEpisodeAd
         itemView.startAnimation(popIn);
     }
 }
+

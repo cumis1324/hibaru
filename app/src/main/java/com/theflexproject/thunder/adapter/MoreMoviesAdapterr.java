@@ -45,7 +45,7 @@ public class MoreMoviesAdapterr extends RecyclerView.Adapter<MoreMoviesAdapterr.
     public MoreMoviesAdapterr(Context context, List<MyMedia> moreList, OnItemClickListener listener) {
         this.context = context;
         this.moreList = moreList;
-        this.listener= listener;
+        this.listener = listener;
     }
 
     @NonNull
@@ -59,18 +59,18 @@ public class MoreMoviesAdapterr extends RecyclerView.Adapter<MoreMoviesAdapterr.
     public void onBindViewHolder(@NonNull MoreMoviesAdapterrHolder holder, @SuppressLint("RecyclerView") int position) {
         if (moreList.get(position) instanceof Movie) {
             Movie movie = ((Movie) moreList.get(position));
-            if (movie.getBackdrop_path() != null) {
+            if (movie.getBackdropPath() != null) {
                 holder.moreName.setText(movie.getTitle());
                 Glide.with(context)
-                        .load(TMDB_IMAGE_BASE_URL + movie.getBackdrop_path())
+                        .load(TMDB_IMAGE_BASE_URL + movie.getBackdropPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.moreposter);
 
-                if (movie.getLogo_path() != null) {
+                if (movie.getLogoPath() != null) {
                     holder.moreLogo.setVisibility(View.VISIBLE);
                     Glide.with(context)
-                            .load(TMDB_IMAGE_BASE_URL + movie.getLogo_path())
+                            .load(TMDB_IMAGE_BASE_URL + movie.getLogoPath())
                             .apply(new RequestOptions()
                                     .fitCenter()
                                     .override(Target.SIZE_ORIGINAL))
@@ -78,22 +78,20 @@ public class MoreMoviesAdapterr extends RecyclerView.Adapter<MoreMoviesAdapterr.
                             .placeholder(new ColorDrawable(Color.TRANSPARENT))
                             .into(holder.moreLogo);
                 }
-                if (movie.getLogo_path() == null) {
+                if (movie.getLogoPath() == null) {
                     holder.moreLogo.setVisibility(View.GONE);
                 }
-                if (movie.getOverview() != null){
-                holder.overview.setText(movie.getOverview());
+                if (movie.getOverview() != null) {
+                    holder.overview.setText(movie.getOverview());
                 }
-                if(movie.getPlayed()!=0){
+                if (movie.getPlayed() != null) {
                     holder.watched.setVisibility(View.VISIBLE);
                 }
             }
 
-
         }
-        setAnimation(holder.itemView,position);
+        setAnimation(holder.itemView, position);
     }
-
 
     @Override
     public int getItemCount() {
@@ -104,16 +102,13 @@ public class MoreMoviesAdapterr extends RecyclerView.Adapter<MoreMoviesAdapterr.
         return Math.min(moreList.size(), limit);
     }
 
-
-
-    public class MoreMoviesAdapterrHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class MoreMoviesAdapterrHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         ImageView moreposter;
         ImageView moreLogo;
         TextView moreName;
         TextView overview;
         TextView watched;
-
 
         public MoreMoviesAdapterrHolder(@NonNull View itemView) {
             super(itemView);
@@ -124,23 +119,22 @@ public class MoreMoviesAdapterr extends RecyclerView.Adapter<MoreMoviesAdapterr.
             overview = itemView.findViewById(R.id.moreoverview);
             watched = itemView.findViewById(R.id.markWatchedEpisode2);
 
-
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            listener.onClick(v,getAbsoluteAdapterPosition());
+            listener.onClick(v, getAbsoluteAdapterPosition());
         }
 
-
-
     }
+
     public interface OnItemClickListener {
         public void onClick(View view, int position);
     }
-    private void setAnimation(View itemView , int position){
-        Animation popIn = AnimationUtils.loadAnimation(context,R.anim.pop_in);
+
+    private void setAnimation(View itemView, int position) {
+        Animation popIn = AnimationUtils.loadAnimation(context, R.anim.pop_in);
         itemView.startAnimation(popIn);
     }
 

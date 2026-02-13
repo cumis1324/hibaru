@@ -17,7 +17,7 @@ public class Result {
     public double vote_average;
     public int vote_count;
 
-    public String getBackdrop_path() {
+    public String getBackdropPath() {
         return backdrop_path;
     }
 
@@ -25,7 +25,7 @@ public class Result {
         this.backdrop_path = backdrop_path;
     }
 
-    public String getFirst_air_date() {
+    public String getFirstAirDate() {
         return first_air_date;
     }
 
@@ -65,7 +65,7 @@ public class Result {
         this.origin_country = origin_country;
     }
 
-    public String getOriginal_language() {
+    public String getOriginalLanguage() {
         return original_language;
     }
 
@@ -73,7 +73,7 @@ public class Result {
         this.original_language = original_language;
     }
 
-    public String getOriginal_name() {
+    public String getOriginalName() {
         return original_name;
     }
 
@@ -97,7 +97,7 @@ public class Result {
         this.popularity = popularity;
     }
 
-    public String getPoster_path() {
+    public String getPosterPath() {
         return poster_path;
     }
 
@@ -105,7 +105,7 @@ public class Result {
         this.poster_path = poster_path;
     }
 
-    public double getVote_average() {
+    public double getVoteAverage() {
         return vote_average;
     }
 
@@ -113,7 +113,7 @@ public class Result {
         this.vote_average = vote_average;
     }
 
-    public int getVote_count() {
+    public int getVoteCount() {
         return vote_count;
     }
 
@@ -140,3 +140,4 @@ public class Result {
                 '}';
     }
 }
+

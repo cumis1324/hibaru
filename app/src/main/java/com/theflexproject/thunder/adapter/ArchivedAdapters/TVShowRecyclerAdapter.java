@@ -39,7 +39,7 @@ package com.theflexproject.thunder.adapter.ArchivedAdapters;
 //            if(tvShow.getName()!=null){
 //                holder.name.setText(tvShow.getName());
 //                Glide.with(context)
-//                        .load(Constants.TMDB_IMAGE_BASE_URL+tvShow.getPoster_path())
+//                        .load(Constants.TMDB_IMAGE_BASE_URL+tvShow.getPosterPath())
 //                        .placeholder(new ColorDrawable(Color.BLACK))
 //                        .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
 //                        .into(holder.poster);
@@ -50,8 +50,8 @@ package com.theflexproject.thunder.adapter.ArchivedAdapters;
 //            if(tvShowSeason.getName()!=null){
 //                holder.name.setText(tvShowSeason.getName());
 //                String poster_path =null;
-//                if(tvShowSeason.getPoster_path()!=null){
-//                    poster_path = tvShowSeason.getPoster_path();
+//                if(tvShowSeason.getPosterPath()!=null){
+//                    poster_path = tvShowSeason.getPosterPath();
 //                    Glide.with(context)
 //                            .load(Constants.TMDB_IMAGE_BASE_URL+poster_path)
 //                            .placeholder(new ColorDrawable(Color.BLACK))
@@ -102,3 +102,4 @@ package com.theflexproject.thunder.adapter.ArchivedAdapters;
 //        itemView.startAnimation(popIn);
 //    }
 //}
+

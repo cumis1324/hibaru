@@ -26,7 +26,8 @@ public class SplashScreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Uri data = getIntent().getData();
         setContentView(R.layout.activity_splash);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
@@ -38,16 +39,16 @@ public class SplashScreenActivity extends AppCompatActivity {
                     handleSignIn(data);
                 },
                 null,
-                4000  // Add null for the optional token argument
+                4000 // Add null for the optional token argument
         );
     }
 
     private void handleSignIn(Uri data) {
         Intent intent;
         if (currentUser != null) {
-            intent = new Intent(SplashScreenActivity.this, LoadingActivity.class);
+            intent = new Intent(SplashScreenActivity.this, SyncActivity.class);
             if (data != null) {
-                intent.setData(data);  // Tambahkan URI ke Intent
+                intent.setData(data); // Tambahkan URI ke Intent
             }
         } else {
             intent = new Intent(SplashScreenActivity.this, SignInActivity.class);

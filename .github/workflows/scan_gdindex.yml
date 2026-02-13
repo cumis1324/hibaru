@@ -1,0 +1,86 @@
+name: GDIndex Scheduled Scan
+
+on:
+  schedule:
+    # Run at 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Target GDIndex URL (Leave empty to use Secret)'
+        required: false
+      type:
+        description: 'Type (auto, movie, tv)'
+        required: false
+        default: 'auto'
+
+jobs:
+  scan-gdindex:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # 6 hours max
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r cloudflare-backend/admin_tools/requirements.txt
+
+    - name: Run Scan Script
+      env:
+        # Secrets
+        ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+        TMDB_KEY: ${{ secrets.TMDB_KEY }}
+        GDINDEX_URL: ${{ secrets.GDINDEX_URL }}
+        GD_USER: ${{ secrets.GD_USER }}
+        GD_PASS: ${{ secrets.GD_PASS }}
+        
+        # Inputs (Manual Override)
+        INPUT_URL: ${{ github.event.inputs.url }}
+        INPUT_TYPE: ${{ github.event.inputs.type }}
+      run: |
+        if [ ! -z "$INPUT_URL" ]; then
+          # --- MANUAL TRIGGER (Single URL) ---
+          TARGET_TYPE="${INPUT_TYPE:-auto}"
+          echo ">>> [MANUAL] Starting scan: $INPUT_URL [Type: $TARGET_TYPE]"
+          
+          python cloudflare-backend/admin_tools/import_gdindex.py \
+            --url "$INPUT_URL" \
+            --admin-key "$ADMIN_KEY" \
+            --tmdb-key "$TMDB_KEY" \
+            --type "$TARGET_TYPE" \
+            $AUTH_ARGS
+            
+        else
+          # --- SCHEDULED TRIGGER (Sequential) ---
+          echo ">>> [SCHEDULE] Starting Sequential Scan..."
+          
+          # 1. Movie Scan
+          # URL: https://drive4.nfgplusmirror.workers.dev/1:/Movie/
+          echo ">>> [1/2] Scanning Movies..."
+          python cloudflare-backend/admin_tools/import_gdindex.py \
+            --url "https://drive4.nfgplusmirror.workers.dev/1:/Movie/" \
+            --admin-key "$ADMIN_KEY" \
+            --tmdb-key "$TMDB_KEY" \
+            --type movie \
+            $AUTH_ARGS
+
+          # 2. TV Series Scan (Wait for Movie to finish)
+          # URL: https://drive4.nfgplusmirror.workers.dev/1:/Series/
+          echo ">>> [2/2] Scanning TV Series..."
+          python cloudflare-backend/admin_tools/import_gdindex.py \
+            --url "https://drive4.nfgplusmirror.workers.dev/1:/Series/" \
+            --admin-key "$ADMIN_KEY" \
+            --tmdb-key "$TMDB_KEY" \
+            --type tv \
+            $AUTH_ARGS
+            
+          echo ">>> Sequential Scan Completed!"
+        fi

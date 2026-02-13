@@ -29,13 +29,14 @@ public class HomeNewFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_home_new, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        android.util.Log.d("HomeFragmentDebug", "HomeNewFragment onViewCreated called");
         initWidgets();
 
         // Initialize TabLayout and ViewPager2 after initWidgets()

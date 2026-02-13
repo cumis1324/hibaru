@@ -2,6 +2,7 @@ package com.theflexproject.thunder.network
 
 import retrofit2.Response
 import retrofit2.http.*
+import com.theflexproject.thunder.network.dto.*
 
 interface NFGPlusApi {
     
@@ -10,11 +11,16 @@ interface NFGPlusApi {
     suspend fun getMovies(
         @Query("limit") limit: Int = 50,
         @Query("offset") offset: Int = 0,
-        @Query("search") search: String? = null
+        @Query("search") search: String? = null,
+        @Query("updated_after") updatedAfter: String? = null,
+        @Header("X-Demo-Mode") demoMode: Boolean = false
     ): Response<MoviesResponse>
     
     @GET("api/movies/{id}")
-    suspend fun getMovieById(@Path("id") id: Int): Response<MovieDto>
+    suspend fun getMovieById(
+        @Path("id") id: Int,
+        @Header("X-Demo-Mode") demoMode: Boolean = false
+    ): Response<MovieDto>
     
     @POST("api/movies")
     suspend fun createMovie(@Body movie: MovieDto): Response<ApiResponse<Int>>
@@ -32,19 +38,25 @@ interface NFGPlusApi {
     @GET("api/tvshows")
     suspend fun getTVShows(
         @Query("limit") limit: Int = 50,
-        @Query("offset") offset: Int = 0
+        @Query("offset") offset: Int = 0,
+        @Query("updated_after") updatedAfter: String? = null,
+        @Header("X-Demo-Mode") demoMode: Boolean = false
     ): Response<TVShowsResponse>
     
     @GET("api/tvshows/{id}")
     suspend fun getTVShowById(@Path("id") id: Int): Response<TVShowDto>
     
     @GET("api/tvshows/{id}/seasons")
-    suspend fun getSeasons(@Path("id") showId: Int): Response<SeasonsResponse>
+    suspend fun getSeasons(
+        @Path("id") showId: Int,
+        @Header("X-Demo-Mode") demoMode: Boolean = false
+    ): Response<SeasonsResponse>
     
     @GET("api/tvshows/{id}/episodes")
     suspend fun getEpisodes(
         @Path("id") showId: Int,
-        @Query("season") seasonNumber: Int? = null
+        @Query("season") seasonNumber: Int? = null,
+        @Header("X-Demo-Mode") demoMode: Boolean = false
     ): Response<EpisodesResponse>
     
     // Episodes

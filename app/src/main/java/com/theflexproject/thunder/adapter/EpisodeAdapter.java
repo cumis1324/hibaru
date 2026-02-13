@@ -83,7 +83,8 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
     FirebaseManager manager;
     private DatabaseReference databaseReference;
 
-    public EpisodeAdapter(TVShow tvShow, Context context, List<Episode> episodeList, EpisodeAdapter.OnItemClickListener listener) {
+    public EpisodeAdapter(TVShow tvShow, Context context, List<Episode> episodeList,
+            EpisodeAdapter.OnItemClickListener listener) {
         this.context = context;
         this.episodeList = episodeList;
         this.listener = listener;
@@ -110,22 +111,22 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
     public void onBindViewHolder(@NonNull EpisodeAdapterHolder holder, @SuppressLint("RecyclerView") int position) {
         if (episodeList != null) {
             Episode episode = episodeList.get(position);
-            if (episode.getEpisode_number() > 9 && episode.getEpisode_number() > 999) {
-                holder.episodeNumber.setText("E" + episode.getEpisode_number());
+            if (episode.getEpisodeNumber() > 9 && episode.getEpisodeNumber() > 999) {
+                holder.episodeNumber.setText("E" + episode.getEpisodeNumber());
             } else {
-                holder.episodeNumber.setText("E0" + episode.getEpisode_number());
+                holder.episodeNumber.setText("E0" + episode.getEpisodeNumber());
             }
-            if (episode.getSeason_number() > 9) {
-                holder.seasonNumber.setText("S" + episode.getSeason_number());
+            if (episode.getSeasonNumber() > 9) {
+                holder.seasonNumber.setText("S" + episode.getSeasonNumber());
             } else {
-                holder.seasonNumber.setText("S0" + episode.getSeason_number());
+                holder.seasonNumber.setText("S0" + episode.getSeasonNumber());
             }
             if (episode.getName() != null) {
                 holder.episodeName.setText(episode.getName());
             }
-            if (episode.getStill_path() != null) {
+            if (episode.getStillPath() != null) {
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL + episode.getStill_path())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + episode.getStillPath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.episodeStill);
@@ -138,7 +139,7 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                 holder.runtime.setVisibility(View.VISIBLE);
                 holder.runtime.setText(result);
             }
-            if (episode.getPlayed() != 0) {
+            if (episode.getPlayed() != null) {
                 holder.watched.setVisibility(View.VISIBLE);
             }
 
@@ -150,22 +151,21 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                 public void onClick(View v) {
                     if (Build.VERSION.SDK_INT < 32) {
                         // Check if the app has the WRITE_EXTERNAL_STORAGE permission
-                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                != PackageManager.PERMISSION_GRANTED) {
+                        if (ContextCompat.checkSelfPermission(context,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                             // Request the permission if it is not granted
                             ActivityCompat.requestPermissions(((Activity) context),
-                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
                                     REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION);
 
                         } else {
                             // Permission is already granted, proceed with the download
                             holder.startDownload(episode);
                         }
-                    }else {
+                    } else {
                         holder.startDownload(episode);
                     }
                 }
-
 
             });
 
@@ -184,16 +184,18 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                             long runtime = (long) episode.getRuntime() * 60 * 1000;
                             double progress = (double) lastPosition / runtime;
 
-                            holder.episodeStill.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                                @Override
-                                public void onGlobalLayout() {
-                                    holder.episodeStill.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                            holder.episodeStill.getViewTreeObserver()
+                                    .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                                        @Override
+                                        public void onGlobalLayout() {
+                                            holder.episodeStill.getViewTreeObserver()
+                                                    .removeOnGlobalLayoutListener(this);
 
-                                    int progressWidth = (int) (holder.episodeStill.getWidth() * progress);
-                                    holder.progressOverlay.getLayoutParams().width = progressWidth;
-                                    holder.progressOverlay.requestLayout();
-                                }
-                            });
+                                            int progressWidth = (int) (holder.episodeStill.getWidth() * progress);
+                                            holder.progressOverlay.getLayoutParams().width = progressWidth;
+                                            holder.progressOverlay.requestLayout();
+                                        }
+                                    });
                         }
                     }
                 }
@@ -207,7 +209,6 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
 
         setAnimation(holder.itemView, position);
     }
-
 
     @Override
     public int getItemCount() {
@@ -310,7 +311,8 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
         }
 
         private void playEpisode(Episode episode) {
-            SharedPreferences sharedPreferences = itemView.getContext().getSharedPreferences("Settings", Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = itemView.getContext().getSharedPreferences("Settings",
+                    Context.MODE_PRIVATE);
             boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING", false);
 
             if (savedEXT) {
@@ -322,8 +324,8 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                 addToLastPlayed(episode.getId());
                 Intent in = new Intent(itemView.getContext(), PlayerActivity.class);
                 in.putExtra("url", episode.getUrlString());
-                in.putExtra("season", String.valueOf(episode.getSeason_number()));
-                in.putExtra("number", String.valueOf(episode.getEpisode_number()));
+                in.putExtra("season", String.valueOf(episode.getSeasonNumber()));
+                in.putExtra("number", String.valueOf(episode.getEpisodeNumber()));
                 in.putExtra("episode", episode.getName());
                 in.putExtra("title", tvShow.getName());
                 in.putExtra("tmdbId", String.valueOf(episode.getId()));
@@ -331,12 +333,14 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                 Toast.makeText(itemView.getContext(), "Play", Toast.LENGTH_LONG).show();
             }
         }
+
         private void startDownload(Episode episode) {
             String customFolderPath = "/nfgplus/series/";
             DownloadManager manager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
             Uri uri = Uri.parse(episode.getUrlString());
             DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + episode.getFileName());
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
+                    customFolderPath + episode.getFileName());
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                     .setDescription("Downloading");
             long downloadId = manager.enqueue(request);
@@ -346,20 +350,21 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
                     downloadId,
                     episode.getName(),
                     -1,
-                    0
-            ));
+                    0));
             Toast.makeText(context, "Download Started", Toast.LENGTH_LONG).show();
         }
 
         private void addToLastPlayed(int id) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-            Thread thread = new Thread(() -> DatabaseClient.getInstance(itemView.getContext()).getAppDatabase().episodeDao().updatePlayed(id, currentDateTime+" added"));
+            Thread thread = new Thread(() -> DatabaseClient.getInstance(itemView.getContext()).getAppDatabase()
+                    .episodeDao().updatePlayed(id, currentDateTime + " added"));
             thread.start();
         }
 
         void blurBottom() {
-            ((Activity) context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            ((Activity) context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
             ((Activity) context).getWindow().setStatusBarColor(Color.TRANSPARENT);
             final float radius = 5f;
             final Drawable windowBackground = ((Activity) context).getWindow().getDecorView().getBackground();

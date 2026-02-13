@@ -1,6 +1,5 @@
 package com.theflexproject.thunder.fragments;
 
-
 import static com.theflexproject.thunder.utils.ColapsingTitle.collapseTitle;
 import static com.theflexproject.thunder.utils.ColapsingTitle.expandTitle;
 
@@ -42,7 +41,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
 public class SearchFragment extends BaseFragment {
     RecyclerView recyclerView;
     RecyclerView recyclerViewGenres;
@@ -68,7 +66,7 @@ public class SearchFragment extends BaseFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_search, container, false);
     }
@@ -84,14 +82,14 @@ public class SearchFragment extends BaseFragment {
         setOnClickListner();
         showSearchResults();
 
-
     }
 
     void showSearchResults() {
 
         try {
             searchBox.setOnEditorActionListener((v, actionId, event) -> {
-                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN
+                        && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                     if (!searchBox.getText().toString().isEmpty()) {
                         Thread thread = new Thread(() -> {
                             Log.i(" ", "in thread");
@@ -136,7 +134,6 @@ public class SearchFragment extends BaseFragment {
             Log.i(e.toString(), "Exception");
         }
     }
-
 
     @OptIn(markerClass = UnstableApi.class)
     private void setOnClickListner() {

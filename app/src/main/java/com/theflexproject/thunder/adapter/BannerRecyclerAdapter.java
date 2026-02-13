@@ -76,26 +76,26 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Movie movie = mediaList.get(position);
-        String year = movie.getRelease_date().substring(0, 4);
-        if (Objects.equals(movie.getOriginal_language(), "id")){
-            holder.name.setText(movie.getOriginal_title()+ " (" + year + ")");
+        String year = movie.getReleaseDate().substring(0, 4);
+        if (Objects.equals(movie.getOriginalLanguage(), "id")){
+            holder.name.setText(movie.getOriginalTitle()+ " (" + year + ")");
         }
         else {
             holder.name.setText(movie.getTitle() + " (" + year + ")");
         }
 
-        if (movie.getBackdrop_path() != null) {
+        if (movie.getBackdropPath() != null) {
             Glide.with(context)
-                    .load(TMDB_IMAGE_BASE_URL + movie.getBackdrop_path())
+                    .load(TMDB_IMAGE_BASE_URL + movie.getBackdropPath())
                     .placeholder(new ColorDrawable(Color.BLACK))
                     .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                     .into(holder.poster);
 
-            if (movie.getLogo_path() != null) {
+            if (movie.getLogoPath() != null) {
                 holder.logo.setVisibility(View.VISIBLE);
                 holder.name.setVisibility(View.VISIBLE);
                 Glide.with(context)
-                        .load(TMDB_IMAGE_BASE_URL + movie.getLogo_path())
+                        .load(TMDB_IMAGE_BASE_URL + movie.getLogoPath())
                         .apply(new RequestOptions()
                                 .fitCenter()
                                 .override(Target.SIZE_ORIGINAL))
@@ -199,3 +199,4 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         void onClick(View view, int position);
     }
 }
+

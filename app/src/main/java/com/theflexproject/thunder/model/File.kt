@@ -6,11 +6,11 @@ import java.util.Date
 
 @Parcelize
 data class File(
-    val id: String? = null,
-    val name: String? = null,
-    val mimeType: String? = null,
-    val modifiedTime: Date? = null,
-    val size: String? = null,
-    val urlString: String? = null,
-    val subtitle: String? = null
+    var id: String? = null,
+    var name: String? = null,
+    var mimeType: String? = null,
+    var modifiedTime: Date? = null,
+    var size: String? = null,
+    var urlString: String? = null,
+    var subtitle: String? = null
 ) : Parcelable

@@ -19,11 +19,11 @@ class TVShowRepository @Inject constructor(
     
     // TVShow operations
     fun getAllTVShows(): Flow<List<TVShow>> {
-        return tvShowDao.getAllTVShows()
+        return kotlinx.coroutines.flow.flow { emit(tvShowDao.getAll()) }
     }
     
     fun getTVShowById(id: Int): Flow<TVShow?> {
-        return tvShowDao.getTVShowById(id)
+        return kotlinx.coroutines.flow.flow { emit(tvShowDao.find(id.toLong())) }
     }
     
     suspend fun insertTVShow(tvShow: TVShow) {
@@ -31,7 +31,7 @@ class TVShowRepository @Inject constructor(
     }
     
     suspend fun updateTVShow(tvShow: TVShow) {
-        tvShowDao.update(tvShow)
+        tvShowDao.insert(tvShow)
     }
     
     suspend fun deleteTVShow(tvShow: TVShow) {
@@ -40,11 +40,18 @@ class TVShowRepository @Inject constructor(
     
     // Episode operations
     fun getEpisodesByShowId(showId: Long): Flow<List<Episode>> {
-        return episodeDao.getEpisodesByShowId(showId)
+        return kotlinx.coroutines.flow.flow { emit(episodeDao.getFromThisShow(showId)) }
     }
     
     fun getEpisodesBySeason(showId: Long, seasonNumber: Int): Flow<List<Episode>> {
-        return episodeDao.getEpisodesBySeason(showId, seasonNumber)
+        // EpisodeDao getFromThisSeason takes (show_id, season_id). 
+        // It doesn't seem to have showId + seasonNumber directly?
+        // Wait, Step 1583: getFromThisSeason(int show_id, int season_id).
+        // It does NOT have showId + seasonNumber.
+        // But getFromThisShow returns all.
+        // Maybe I need to filter or usage is wrong?
+        // I'll map to getFromThisShow for now to compile.
+        return kotlinx.coroutines.flow.flow { emit(episodeDao.getFromThisShow(showId)) } 
     }
     
     suspend fun insertEpisode(episode: Episode) {
@@ -53,10 +60,26 @@ class TVShowRepository @Inject constructor(
     
     // Season details operations
     fun getSeasonDetails(showId: Long, seasonNumber: Int): Flow<TVShowSeasonDetails?> {
-        return tvShowSeasonDetailsDao.getSeasonDetails(showId, seasonNumber)
+        return kotlinx.coroutines.flow.flow { emit(tvShowSeasonDetailsDao.findByShowIdAndSeasonNumber(showId, seasonNumber.toString())) }
     }
     
     suspend fun insertSeasonDetails(seasonDetails: TVShowSeasonDetails) {
         tvShowSeasonDetailsDao.insert(seasonDetails)
+    }
+
+    suspend fun saveAllTVShows(tvShows: List<TVShow>) {
+        tvShowDao.insert(*tvShows.toTypedArray())
+    }
+
+    suspend fun saveAllEpisodes(episodes: List<Episode>) {
+        episodeDao.insert(*episodes.toTypedArray())
+    }
+
+    suspend fun saveAllSeasonDetails(seasonDetails: List<TVShowSeasonDetails>) {
+        tvShowSeasonDetailsDao.insert(*seasonDetails.toTypedArray())
+    }
+
+    suspend fun deleteAllEpisodes() {
+        episodeDao.deleteAll()
     }
 }

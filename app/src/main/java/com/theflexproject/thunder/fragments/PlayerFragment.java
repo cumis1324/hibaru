@@ -717,7 +717,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
         if (movieDetails != null) {
             String titleText = movieDetails.getTitle();
-            String year = movieDetails.getRelease_date();
+            String year = movieDetails.getReleaseDate();
             urlString = movieDetails.getUrlString();
             String newUrl = urlString.replaceAll(
                     "drive\\d*\\.nfgplusmirror\\.workers.dev",
@@ -729,9 +729,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             mActivity.getSupportFragmentManager().beginTransaction()
                     .replace(R.id.detail_container, new DetailFragment(movieId, true))
                     .commit();
-            if(movieDetails.getBackdrop_path()!=null) {
+            if(movieDetails.getBackdropPath()!=null) {
                 Glide.with(mActivity)
-                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdropPath())
                         .apply(new RequestOptions()
                                 .fitCenter()
                                 .override(Target.SIZE_ORIGINAL))
@@ -739,9 +739,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .into(imageView);
             }else {
-                if(movieDetails.getPoster_path()!=null) {
+                if(movieDetails.getPosterPath()!=null) {
                     Glide.with(mActivity)
-                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
+                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPosterPath())
                             .apply(new RequestOptions()
                                     .fitCenter()
                                     .override(Target.SIZE_ORIGINAL))
@@ -770,7 +770,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .replace(R.id.detail_container, new DetailFragment(tvShowDetails, seasonDetails, episode))
                         .commit();
-                epstitle.setText("Season: "+seasonDetails.getSeason_number()
+                epstitle.setText("Season: "+seasonDetails.getSeasonNumber()
                         +" Episode: "+ episode.getName());
                 epstitle.setVisibility(View.VISIBLE);
                 tmdbId = String.valueOf(episode.getId());
@@ -784,9 +784,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 }else {initializePlayer(newUrl);}
                 sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
             }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
-            if(tvShowDetails.getBackdrop_path()!=null) {
+            if(tvShowDetails.getBackdropPath()!=null) {
                 Glide.with(mActivity)
-                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdrop_path())
+                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdropPath())
                         .apply(new RequestOptions()
                                 .fitCenter()
                                 .override(Target.SIZE_ORIGINAL))
@@ -794,9 +794,9 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .into(imageView);
             }else {
-                if(tvShowDetails.getPoster_path()!=null) {
+                if(tvShowDetails.getPosterPath()!=null) {
                     Glide.with(mActivity)
-                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
+                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
                             .apply(new RequestOptions()
                                     .fitCenter()
                                     .override(Target.SIZE_ORIGINAL))
@@ -923,3 +923,4 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
 
 }
+

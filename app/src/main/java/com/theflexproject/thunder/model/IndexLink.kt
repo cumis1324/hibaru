@@ -10,14 +10,14 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class IndexLink(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    var id: Int = 0,
     
-    val link: String? = null,
-    val username: String? = null,
-    val password: String? = null,
-    val indexType: String? = null,
-    val folderType: String? = null,
+    var link: String? = null,
+    var username: String? = null,
+    var password: String? = null,
+    var indexType: String? = null,
+    var folderType: String? = null,
     
     @ColumnInfo(name = "disabled", defaultValue = "0")
-    val disabled: Int = 0
+    var disabled: Int = 0
 ) : Parcelable

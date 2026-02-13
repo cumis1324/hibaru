@@ -187,16 +187,16 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private void loadTvDetails() {
         if (tvShowDetails!=null) {
             String titleText = tvShowDetails.getName();
-            String year = tvShowDetails.getFirst_air_date();
+            String year = tvShowDetails.getFirstAirDate();
             String yearCrop = year.substring(0,year.indexOf('-'));
             DecimalFormat decimalFormat = new DecimalFormat("0.0");
-            String ratings = (decimalFormat.format(tvShowDetails.getVote_average()));
-            String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVote_count());
+            String ratings = (decimalFormat.format(tvShowDetails.getVoteAverage()));
+            String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVoteCount());
             rating.setText(ratings + " from " + result + " Votes");
-            judul.setText(titleText + " ("+yearCrop+")" +"\n" + "Season " + season.getSeason_number() + " Episode " + episode.getEpisode_number());
+            judul.setText(titleText + " ("+yearCrop+")" +"\n" + "Season " + season.getSeasonNumber() + " Episode " + episode.getEpisodeNumber());
             deskripsi.setText(tvShowDetails.getOverview());
             Glide.with(mActivity)
-                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPoster_path())
+                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
                     .apply(new RequestOptions()
                             .fitCenter()
                             .override(Target.SIZE_ORIGINAL))
@@ -216,17 +216,17 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         movieDetails = DetailsUtils.getMovieDetails(mActivity, id);
         if (movieDetails!=null) {
             String titleText = movieDetails.getTitle();
-            String year = movieDetails.getRelease_date();
+            String year = movieDetails.getReleaseDate();
             String yearCrop = year.substring(0,year.indexOf('-'));
             DecimalFormat decimalFormat = new DecimalFormat("0.0");
-            String ratings = (decimalFormat.format(movieDetails.getVote_average()));
-            String result = StringUtils.runtimeIntegerToString(movieDetails.getVote_count());
+            String ratings = (decimalFormat.format(movieDetails.getVoteAverage()));
+            String result = StringUtils.runtimeIntegerToString(movieDetails.getVoteCount());
             rating.setText(ratings + " from " + result + " Votes");
-            judul.setText(titleText +"\n" + movieDetails.getOriginal_title() + " ("+yearCrop+")");
+            judul.setText(titleText +"\n" + movieDetails.getOriginalTitle() + " ("+yearCrop+")");
             String description = movieDetails.getOverview();
             deskripsi.setText(description);
             Glide.with(mActivity)
-                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
+                    .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPosterPath())
                     .apply(new RequestOptions()
                             .fitCenter()
                             .override(Target.SIZE_ORIGINAL))
@@ -547,3 +547,4 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         };
     }
 }
+

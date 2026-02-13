@@ -49,7 +49,7 @@
 //        if(mediaList.get(position).getTitle()!=null){
 //            holder.name.setText(mediaList.get(position).getTitle());
 //            Glide.with(context)
-//                    .load(Constants.TMDB_IMAGE_BASE_URL+mediaList.get(position).getPoster_path())
+//                    .load(Constants.TMDB_IMAGE_BASE_URL+mediaList.get(position).getPosterPath())
 //                    .placeholder(new ColorDrawable(Color.BLACK))
 //                    .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
 //                    .into(holder.poster);
@@ -58,7 +58,7 @@
 //            Glide.with(context).clear(holder.poster);
 //        }
 //
-//        String year = mediaList.get(position).getRelease_date();
+//        String year = mediaList.get(position).getReleaseDate();
 //        if(year!=null&&year.length()>4) {
 //            holder.movieYear.setVisibility(View.VISIBLE);
 //            holder.movieYear.setText(year.substring(0,year.indexOf('-')));
@@ -108,3 +108,4 @@
 //        itemView.startAnimation(popIn);
 //    }
 //}
+

@@ -1,10 +1,10 @@
 package com.theflexproject.thunder.utils;
 
 import static com.theflexproject.thunder.MainActivity.context;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestGDIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestGoIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestMapleIndex;
-import static com.theflexproject.thunder.utils.SendPostRequest.postRequestSimpleProgramIndex;
+// 
+// 
+// 
+// 
 
 import android.content.Context;
 
@@ -47,31 +47,31 @@ public class IndexUtils{
 
                     if(folderType.equals("Movies")) {
                         if(indexType.equals("GDIndex")) {
-                            postRequestGDIndex(link,user,pass,false,id);
+                            // 
                         }
                         if(indexType.equals("GoIndex")) {
-                            postRequestGoIndex(link,user,pass,false,id);
+                            // 
                         }
                         if(indexType.equals("MapleIndex")){
-                            postRequestMapleIndex(link,user,pass,false,id);
+                            // 
                         }
                         if(indexType.equals("SimpleProgram")){
-                            postRequestSimpleProgramIndex(link,user,pass,false,id);
+                            // 
                         }
                     }
 
                     if(folderType.equals("TVShows")){
                         if(indexType.equals("GDIndex")) {
-                            postRequestGDIndex(link,user,pass,true,id);
+                            // 
                         }
                         if(indexType.equals("GoIndex")) {
-                            postRequestGoIndex(link,user,pass,true,id);
+                            // 
                         }
                         if(indexType.equals("MapleIndex")){
-                            postRequestMapleIndex(link,user,pass,true,id);
+                            // 
                         }
                         if(indexType.equals("SimpleProgram")){
-                            postRequestSimpleProgramIndex(link,user,pass,true,id);
+                            // 
                         }
                     }
 

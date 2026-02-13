@@ -1,69 +1,85 @@
 package com.theflexproject.thunder.model
 
 import android.os.Parcelable
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import kotlinx.parcelize.Parcelize
 import java.util.Date
 
-@Entity
+@Entity(indices = [Index(value = ["gd_id"], unique = true)])
 @Parcelize
 data class Movie(
     @PrimaryKey(autoGenerate = true)
-    val fileidForDB: Int = 0,
+    var fileidForDB: Int = 0,
     
-    val fileName: String? = null,
-    val mimeType: String? = null,
-    val modifiedTime: Date? = null,
-    val size: String? = null,
-    val urlString: String? = null,
+    @get:JvmName("getFileName") @set:JvmName("setFileName")
+    var file_name: String? = null,
+    @get:JvmName("getMimeType") @set:JvmName("setMimeType")
+    var mime_type: String? = null,
+    @get:JvmName("getModifiedTime") @set:JvmName("setModifiedTime")
+    var modified_time: Date? = null,
+    var size: String? = null,
+    @get:JvmName("getUrlString") @set:JvmName("setUrlString")
+    var url_string: String? = null,
     
+    @get:JvmName("getGdId") @set:JvmName("setGdId")
     @ColumnInfo(name = "gd_id", defaultValue = "")
-    val gdId: String = "",
+    var gd_id: String = "",
     
+    @get:JvmName("getLogoPath") @set:JvmName("setLogoPath")
     @ColumnInfo(name = "logo_path", defaultValue = "")
-    val logoPath: String = "",
+    var logo_path: String = "",
     
+    @get:JvmName("getIndexId") @set:JvmName("setIndexId")
     @ColumnInfo(name = "index_id", defaultValue = "0")
-    val indexId: Int = 0,
+    var index_id: Int = 0,
     
     @ColumnInfo(name = "disabled", defaultValue = "0")
-    val disabled: Int = 0,
+    var disabled: Int = 0,
     
-    @ColumnInfo(name = "addToList", defaultValue = "0")
-    val addToList: Int = 0,
+    @get:JvmName("getAddToList") @set:JvmName("setAddToList")
+    @ColumnInfo(name = "add_to_list", defaultValue = "0")
+    var add_to_list: Int = 0,
     
-    val played: Int = 0,
+    @get:JvmName("getPlayed") @set:JvmName("setPlayed")
+    @ColumnInfo(name = "played")
+    var played: String? = null,
     
     // TMDB Fields
-    val adult: Boolean = false,
+    var adult: Boolean = false,
+    @get:JvmName("getBackdropPath") @set:JvmName("setBackdropPath")
     @ColumnInfo(name = "backdrop_path")
-    val backdropPath: String? = null,
-    val budget: Long = 0,
-    val genres: List<Genre>? = null,
-    val homepage: String? = null,
-    val id: Int = 0,
+    var backdrop_path: String? = null,
+    var budget: Long = 0,
+    var genres: ArrayList<Genre>? = null,
+    var homepage: String? = null,
+    var id: Int = 0,
+    @get:JvmName("getImdbId") @set:JvmName("setImdbId")
     @ColumnInfo(name = "imdb_id")
-    val imdbId: String? = null,
+    var imdb_id: String? = null,
+    @get:JvmName("getOriginalLanguage") @set:JvmName("setOriginalLanguage")
     @ColumnInfo(name = "original_language")
-    val originalLanguage: String? = null,
+    var original_language: String? = null,
+    @get:JvmName("getOriginalTitle") @set:JvmName("setOriginalTitle")
     @ColumnInfo(name = "original_title")
-    val originalTitle: String? = null,
-    val overview: String? = null,
-    val popularity: Double = 0.0,
+    var original_title: String? = null,
+    var overview: String? = null,
+    var popularity: Double = 0.0,
+    @get:JvmName("getPosterPath") @set:JvmName("setPosterPath")
     @ColumnInfo(name = "poster_path")
-    val posterPath: String? = null,
+    var poster_path: String? = null,
+    @get:JvmName("getReleaseDate") @set:JvmName("setReleaseDate")
     @ColumnInfo(name = "release_date")
-    val releaseDate: String? = null,
-    val revenue: Long = 0,
-    val runtime: Int = 0,
-    val status: String? = null,
-    val tagline: String? = null,
-    val title: String? = null,
-    val video: Boolean = false,
+    var release_date: String? = null,
+    var revenue: Long = 0,
+    var runtime: Int = 0,
+    var status: String? = null,
+    var tagline: String? = null,
+    var title: String? = null,
+    var video: Boolean = false,
+    @get:JvmName("getVoteAverage") @set:JvmName("setVoteAverage")
     @ColumnInfo(name = "vote_average")
-    val voteAverage: Double = 0.0,
+    var vote_average: Double = 0.0,
+    @get:JvmName("getVoteCount") @set:JvmName("setVoteCount")
     @ColumnInfo(name = "vote_count")
-    val voteCount: Int = 0
+    var vote_count: Int = 0
 ) : MyMedia, Parcelable

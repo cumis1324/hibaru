@@ -47,19 +47,19 @@ public class DrakorBannerAdapter extends RecyclerView.Adapter<DrakorBannerAdapte
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
-        if(mediaList.get(position).getBackdrop_path()!=null){
-            String year = mediaList.get(position).getFirst_air_date().substring(0,4);
+        if(mediaList.get(position).getBackdropPath()!=null){
+            String year = mediaList.get(position).getFirstAirDate().substring(0,4);
             holder.name.setText(mediaList.get(position).getName() + " (" + year + ")");
             Glide.with(context)
-                    .load(TMDB_IMAGE_BASE_URL +mediaList.get(position).getBackdrop_path())
+                    .load(TMDB_IMAGE_BASE_URL +mediaList.get(position).getBackdropPath())
                     .placeholder(new ColorDrawable(Color.BLACK))
                     .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                     .into(holder.poster);
 
-            if(mediaList.get(position).getLogo_path()!=null){
+            if(mediaList.get(position).getLogoPath()!=null){
                 holder.logo.setVisibility(View.VISIBLE);
                 Glide.with(context)
-                        .load(TMDB_IMAGE_BASE_URL +mediaList.get(position).getLogo_path())
+                        .load(TMDB_IMAGE_BASE_URL +mediaList.get(position).getLogoPath())
                         .apply(new RequestOptions()
                                 .fitCenter()
                                 .override(Target.SIZE_ORIGINAL))
@@ -103,3 +103,4 @@ public class DrakorBannerAdapter extends RecyclerView.Adapter<DrakorBannerAdapte
     }
 
 }
+

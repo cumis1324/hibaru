@@ -70,7 +70,7 @@ public class SignInActivity extends AppCompatActivity {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
-                .requestProfile()  // Request profile information
+                .requestProfile() // Request profile information
                 .build();
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -100,7 +100,8 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void blurTop() {
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
     }
 
@@ -120,9 +121,10 @@ public class SignInActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(SignInActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignInActivity.this, LoadingActivity.class));
+                            startActivity(new Intent(SignInActivity.this, SyncActivity.class));
                         } else {
-                            Toast.makeText(SignInActivity.this, "Sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(SignInActivity.this, "Sign in failed " + task.getException().getMessage(),
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -144,7 +146,8 @@ public class SignInActivity extends AppCompatActivity {
                 firebaseAuthWithGoogle(account.getIdToken());
                 // You might want to save this info to your server or display it in the UI
             } catch (ApiException e) {
-                Toast.makeText(this, "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG)
+                        .show();
             }
         }
     }
@@ -163,21 +166,21 @@ public class SignInActivity extends AppCompatActivity {
 
                             Map<String, Object> userMap = new HashMap<>();
                             userMap.put("username", user.getDisplayName());
-                            //userMap.put("firstName", user.getGivenName());
-                            //userMap.put("lastName", user.getFamilyName());
+                            // userMap.put("firstName", user.getGivenName());
+                            // userMap.put("lastName", user.getFamilyName());
                             userMap.put("email", user.getEmail());
                             assert user.getPhotoUrl() != null;
                             userMap.put("profileImage", user.getPhotoUrl().toString());
 
-
                             userReference.setValue(userMap);
                             Toast.makeText(SignInActivity.this, "Google sign in successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignInActivity.this, LoadingActivity.class));
+                            startActivity(new Intent(SignInActivity.this, SyncActivity.class));
                         } else {
-                            Toast.makeText(SignInActivity.this, "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(SignInActivity.this,
+                                    "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG)
+                                    .show();
                         }
                     }
                 });
     }
 }
-

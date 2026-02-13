@@ -353,10 +353,10 @@ public class MovieDetailsFragment extends BaseFragment{
                            @Override
                            public void run() {
                                String titleText = movieDetails.getTitle();
-                               String year = movieDetails.getRelease_date();
+                               String year = movieDetails.getReleaseDate();
                                String yearCrop = year.substring(0,year.indexOf('-'));
                                String deskripsi = movieDetails.getOverview();
-                               String ratings = (int)(movieDetails.getVote_average()*10)+"%";
+                               String ratings = (int)(movieDetails.getVoteAverage()*10)+"%";
                                String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
                                rating.setText(ratings + " - " + result + " ...Selengkapnya");
                                title.setText(titleText + " ("+yearCrop+")");
@@ -423,11 +423,11 @@ public class MovieDetailsFragment extends BaseFragment{
                                        // Handle onCancelled event
                                    }
                                });
-                               quality.setText(movieDetails.getOriginal_title());
+                               quality.setText(movieDetails.getOriginalTitle());
                                quality.setVisibility(View.VISIBLE);
 
 
-                               String logoLink = movieDetails.getLogo_path();
+                               String logoLink = movieDetails.getLogoPath();
                                System.out.println("Logo Link"+logoLink);
 
                                if(logoLink!=null && !logoLink.equals("")){
@@ -445,11 +445,11 @@ public class MovieDetailsFragment extends BaseFragment{
                                    logo.setVisibility(View.GONE);
                                }
 
-                               if(movieDetails.getBackdrop_path()!=null) {
+                               if(movieDetails.getBackdropPath()!=null) {
 //
 
                                            Glide.with(mActivity)
-                                                   .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdrop_path())
+                                                   .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdropPath())
                                                    .apply(new RequestOptions()
                                                            .fitCenter()
                                                            .override(Target.SIZE_ORIGINAL))
@@ -458,9 +458,9 @@ public class MovieDetailsFragment extends BaseFragment{
                                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                                                    .into(backdrop);
                                }else {
-                                   if(movieDetails.getPoster_path()!=null) {
+                                   if(movieDetails.getPosterPath()!=null) {
                                                Glide.with(mActivity)
-                                                       .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPoster_path())
+                                                       .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPosterPath())
                                                        .apply(new RequestOptions()
                                                                .fitCenter()
                                                                .override(Target.SIZE_ORIGINAL))
@@ -594,7 +594,7 @@ public class MovieDetailsFragment extends BaseFragment{
                                 in.putExtra("title", selectedFile.getTitle());
                                 String tmdbId = String.valueOf(selectedFile.getId());
                                 in.putExtra("tmdbId", tmdbId);
-                                String inYear = selectedFile.getRelease_date();
+                                String inYear = selectedFile.getReleaseDate();
                                 in.putExtra("year", inYear.substring(0,inYear.indexOf('-')));
                                 startActivity(in);
                                 Toast.makeText(getContext(), "Playing " + movieDetails.getTitle() + " " + huntu, Toast.LENGTH_LONG).show();
@@ -804,9 +804,9 @@ public class MovieDetailsFragment extends BaseFragment{
     private void shareDynamicLink(String dynamicLink) {
         // Create a share intent
         String title = movieDetails.getTitle();
-        String originalTitle = movieDetails.getOriginal_title();
+        String originalTitle = movieDetails.getOriginalTitle();
         String overview = movieDetails.getOverview();
-        String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPoster_path();
+        String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPosterPath();
         String movieId = String.valueOf(movieDetails.getId());
 
         // Tautan deep link lengkap

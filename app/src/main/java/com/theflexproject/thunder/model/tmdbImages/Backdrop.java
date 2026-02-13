@@ -41,7 +41,7 @@ public class Backdrop {
         this.file_path = file_path;
     }
 
-    public double getVote_average() {
+    public double getVoteAverage() {
         return vote_average;
     }
 
@@ -49,7 +49,7 @@ public class Backdrop {
         this.vote_average = vote_average;
     }
 
-    public int getVote_count() {
+    public int getVoteCount() {
         return vote_count;
     }
 
@@ -65,3 +65,4 @@ public class Backdrop {
         this.width = width;
     }
 }
+
