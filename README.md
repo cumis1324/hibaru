@@ -1,105 +1,94 @@
-# NFGPlus - Aplikasi Streaming Film dan Serial TV
+# NFGPlus - Modern Android Streaming Application
 
-## Apa Fungsi dari Aplikasi Ini?
+**NFGPlus** has been modernized to a robust, **Offline-First** streaming application powered by **Cloudflare D1** and **Kotlin**. It allows users to stream movies and TV shows from Google Drive sources with a seamless synchronization experience.
 
-**NFGPlus** adalah aplikasi streaming Android yang memungkinkan pengguna untuk menonton film dan serial TV secara online. Aplikasi ini menyediakan platform yang lengkap untuk streaming media dengan berbagai fitur canggih.
+## 🚀 Key Features
 
-## Fitur Utama
+### 🔄 **Hybrid Synchronization (Smart Sync)**
+- **Offline-First**: Uses pre-populated Room Database (`nfgplus.db`) for instant load times.
+- **Delta Sync**: Only fetches data modified since the last sync timestamp, saving bandwidth.
+- **Background Sync**: `SyncWorker` keeps data fresh automatically every 24 hours.
 
-### 🎬 **Streaming Film dan Serial TV**
-- Menonton film terbaru dan populer
-- Streaming serial TV dengan episode lengkap
-- Dukungan kualitas video yang dapat disesuaikan
-- Player video yang mendukung berbagai format
+### 🎭 **Dynamic Demo Mode**
+- **Role-Based Data**: Automatically switches database sources based on the logged-in user.
+- **Admin/Demo User**: Connects to a dedicated `nfgplus-demo-db` for testing without affecting production data.
+- **Auto-Wipe**: Ensures clean state transition when switching between Production and Demo modes.
 
-### 📚 **Perpustakaan Media Lengkap**
-- Katalog film yang luas dari berbagai genre
-- Koleksi serial TV termasuk drakor (drama Korea)
-- Film Indonesia dan konten lokal
-- Sistem pencarian dan filter yang mudah digunakan
+### 🤖 **Automated Content Indexing**
+- **GitHub Actions**: Scheduled workflows automatically scan GDIndex sources (Google Drive) 4 times a day.
+- **Sequential Scanning**: Prioritizes Movies, then TV Series to ensuring orderly updates.
+- **Manual Trigger**: Admins can trigger specific scans manually via GitHub UI.
 
-### 🔍 **Fitur Pencarian dan Rekomendasi**
-- Pencarian film dan serial berdasarkan judul
-- Rekomendasi berdasarkan rating dan popularitas
-- Kategori trending mingguan
-- Film dan serial yang baru ditambahkan
-
-### 👤 **Manajemen Akun Pengguna**
-- Sistem login dengan Firebase Authentication
-- Profil pengguna yang dapat dikustomisasi
-- Sinkronisasi data antar perangkat
-- Riwayat tontonan
-
-### 📱 **Fitur Premium**
-- Langganan premium untuk akses tanpa iklan
-- Integrasi dengan sistem pembayaran
-- Akses ke konten eksklusif
-- Kualitas streaming yang lebih tinggi
-
-### 🔧 **Fitur Teknis Lanjutan**
-- **Index Management**: Mengelola berbagai sumber konten (GDIndex, GoIndex, MapleIndex, SimpleProgram)
-- **Database Sync**: Sinkronisasi database otomatis dengan server
-- **Offline Support**: Download konten untuk ditonton offline
-- **Multi-platform**: Mendukung Android TV dan smartphone
-
-## Arsitektur Aplikasi
-
-### **Komponen Utama:**
-
-1. **MainActivity** - Activity utama dengan navigasi bottom navigation
-2. **PlayerFragment** - Fragment untuk memutar video dengan ExoPlayer
-3. **HomeFragment** - Halaman utama dengan rekomendasi dan trending
-4. **SearchFragment** - Fitur pencarian konten
-5. **LibraryFragment** - Perpustakaan media pengguna
-6. **SettingsFragment** - Pengaturan aplikasi
-
-### **Teknologi yang Digunakan:**
-
-- **Framework**: Android Native (Java)
-- **Database**: Room Database untuk penyimpanan lokal
-- **Authentication**: Firebase Auth
-- **Media Player**: ExoPlayer/Media3
-- **Image Loading**: Glide
-- **Backend**: Firebase Realtime Database
-- **Analytics**: Firebase Analytics
-- **Ads**: Google AdMob
-
-### **Sumber Konten:**
-Aplikasi mendukung berbagai jenis index server:
-- **GDIndex**: Google Drive sebagai sumber konten
-- **GoIndex**: Index server berbasis Go
-- **MapleIndex**: Index server Maple
-- **SimpleProgram**: Program sederhana untuk indexing
-
-## Cara Penggunaan
-
-1. **Download dan Install** aplikasi NFGPlus
-2. **Daftar/Login** menggunakan akun Google atau email
-3. **Scan Library** untuk memuat konten dari server
-4. **Browse** katalog film dan serial TV
-5. **Pilih** konten yang ingin ditonton
-6. **Stream** langsung atau download untuk offline
-7. **Upgrade** ke premium untuk pengalaman tanpa iklan
-
-## Target Pengguna
-
-- Pecinta film dan serial TV
-- Pengguna yang mencari alternatif streaming legal
-- Penggemar konten Asia (khususnya drakor)
-- Pengguna yang menginginkan fleksibilitas streaming
-
-## Keunggulan Aplikasi
-
-✅ **Gratis dengan opsi premium**
-✅ **Interface yang user-friendly**
-✅ **Katalog konten yang luas**
-✅ **Kualitas streaming yang baik**
-✅ **Dukungan download offline**
-✅ **Regular update konten**
-✅ **Kompatibel dengan Android TV**
+### 📺 **Modern Android Experience**
+- **Native Player**: Custom UI on top of Media3/ExoPlayer for high-performance playback.
+- **TV Show Support**: Complete support for Seasons and Episodes with intricate metadata.
+- **Search & Filter**: Fast local search and filtering by genre, year, and popularity.
 
 ---
 
-**Versi Aplikasi**: Asthadasa (v80)
-**Package Name**: com.gelaskaca.nfgplus
-**Target SDK**: 36 (Android 14+)
+## 🏗️ Architecture
+
+### **Android Client**
+- **Language**: Kotlin 100%
+- **DI**: Hilt (Dagger)
+- **Concurrency**: Coroutines & Flow
+- **Local DB**: Room Database (SQLite)
+- **Network**: Retrofit + OkHttp
+- **Background**: WorkManager
+
+### **Backend (Serverless)**
+- **Platform**: Cloudflare Workers
+- **Language**: TypeScript
+- **Database**: Cloudflare D1 (Serverless SQLite)
+- **API**: RESTful endpoints with bearer token authentication.
+
+### **Automation**
+- **Script**: Python (`import_gdindex.py`) using `requests` and `thefuzz` for TMDB matching.
+- **Scheduler**: GitHub Actions Cron Job.
+
+---
+
+## 🛠️ Setup & Installation
+
+### 1. Android Client
+1.  Open the `app` folder in Android Studio.
+2.  Create `local.properties` (if missing) and add keys.
+3.  Build and Run:
+    ```bash
+    ./gradlew assembleDebug
+    ```
+
+### 2. Cloudflare Backend
+1.  Navigate to `cloudflare-backend`:
+    ```bash
+    cd cloudflare-backend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Deploy to Cloudflare:
+    ```bash
+    wrangler deploy
+    ```
+    *Make sure to configure `wrangler.toml` with your specific D1 Database IDs.*
+
+### 3. GitHub Actions (Automation)
+1.  Go to your Repository **Settings** -> **Secrets and variables** -> **Actions**.
+2.  Add the following secrets:
+    -   `ADMIN_KEY`: Your Worker's Admin API Key (from `wrangler.toml`).
+    -   `TMDB_KEY`: Your TMDB API Key.
+    -   `(Optional)` `GD_USER` & `GD_PASS`: If your GDIndex is password protected.
+3.  The workflow `.github/workflows/scan_gdindex.yml` will run automatically.
+
+---
+
+## 📦 Data Migration Notes
+
+- **Asset Database**: The app ships with a `nfgplus.db` asset. This version (`v32`) uses **snake_case** column names.
+- **Migration**: The app automatically handles migration from legacy versions, but a clean install is recommended for the best performance with the new sync engine.
+
+---
+
+## 📝 License
+Proprietary Software. All rights reserved.
