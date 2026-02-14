@@ -28,10 +28,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.nativead.NativeAd;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.EpisodeAdapter;
 import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
@@ -47,14 +43,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
-
 public class SeasonDetailsFragment extends BaseFragment {
 
     String tvShowName;
     TextView tvShowTitleText;
     TextView titleOri;
     TextView seasonName;
-//    TextView seasonNumber;
+    // TextView seasonNumber;
     TextView numberOfEpisodes;
 
     TextView overview;
@@ -66,7 +61,7 @@ public class SeasonDetailsFragment extends BaseFragment {
     ImageView dot3;
     TextView episodeTitle;
 
-//    ImageView poster;
+    // ImageView poster;
     ImageView backdrop;
 
     TVShowSeasonDetails tvShowSeasonDetails;
@@ -80,13 +75,11 @@ public class SeasonDetailsFragment extends BaseFragment {
 
     Episode nextEpisode;
 
-
-
     public SeasonDetailsFragment() {
         // Required empty public constructor
     }
 
-    public SeasonDetailsFragment(TVShow tvShow , TVShowSeasonDetails tvShowSeasonDetails) {
+    public SeasonDetailsFragment(TVShow tvShow, TVShowSeasonDetails tvShowSeasonDetails) {
         this.tvShow = tvShow;
         this.tvShowSeasonDetails = tvShowSeasonDetails;
     }
@@ -97,17 +90,16 @@ public class SeasonDetailsFragment extends BaseFragment {
 
     }
 
-
     @Override
-    public View onCreateView(LayoutInflater inflater , ViewGroup container ,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_season_details_new , container , false);
+        return inflater.inflate(R.layout.fragment_season_details_new, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view , savedInstanceState);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         initWidgets(view);
         loadDetails();
 
@@ -117,13 +109,12 @@ public class SeasonDetailsFragment extends BaseFragment {
         tvShowTitleText = view.findViewById(R.id.showTitle);
         titleOri = view.findViewById(R.id.titleOriSeason);
         seasonName = view.findViewById(R.id.seasonTitle);
-//        seasonNumber = view.findViewById(R.id.seasonNumber);
+        // seasonNumber = view.findViewById(R.id.seasonNumber);
         numberOfEpisodes = view.findViewById(R.id.noOfEpisodesInSeason);
         overview = view.findViewById(R.id.overviewDescTVShowSeason);
-//        overviewText = view.findViewById(R.id.overviewTextInSeason);
-//        poster = view.findViewById(R.id.seasonPosterInDetails);
+        // overviewText = view.findViewById(R.id.overviewTextInSeason);
+        // poster = view.findViewById(R.id.seasonPosterInDetails);
         backdrop = view.findViewById(R.id.tvShowBackdropInSeason);
-
 
         logo = view.findViewById(R.id.tvLogoInSeason);
         continueWatching = view.findViewById(R.id.continueWatchingText);
@@ -131,7 +122,6 @@ public class SeasonDetailsFragment extends BaseFragment {
         dot3 = view.findViewById(R.id.dot3);
         listEpisode = view.findViewById(R.id.listEpisode);
         listEpisode.requestFocus();
-
 
         play = view.findViewById(R.id.playInSeasonDetails);
 
@@ -154,7 +144,7 @@ public class SeasonDetailsFragment extends BaseFragment {
                             .getInstance(mActivity)
                             .getAppDatabase()
                             .episodeDao()
-                            .getFromThisSeason(tvShow.getId() , tvShowSeasonDetails.getId());
+                            .getFromThisSeason(tvShow.getId(), tvShowSeasonDetails.getId());
 
                     nextEpisode = DatabaseClient
                             .getInstance(mActivity)
@@ -163,15 +153,15 @@ public class SeasonDetailsFragment extends BaseFragment {
                             .getNextEpisodeInSeason(tvShowSeasonDetails.getId());
 
                     System.out.println("episodes in season details" + episodes);
-                    Log.i("tvShowDetails Object" , tvShowSeasonDetails.toString());
+                    Log.i("tvShowDetails Object", tvShowSeasonDetails.toString());
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             tvShowTitleText.setText(tvShow.getName());
                             String logoLink = tvShow.getLogoPath();
-                            System.out.println("Logo Link"+logoLink);
+                            System.out.println("Logo Link" + logoLink);
                             titleOri.setText("Season " + tvShowSeasonDetails.getSeasonNumber());
-                            if(!logoLink.equals("")){
+                            if (!logoLink.equals("")) {
 
                                 logo.setVisibility(View.VISIBLE);
                                 Glide.with(mActivity)
@@ -183,7 +173,7 @@ public class SeasonDetailsFragment extends BaseFragment {
                                         .placeholder(new ColorDrawable(Color.TRANSPARENT))
                                         .into(logo);
                             }
-                            if(logoLink.equals("")&&tvShow.getName()!=null){
+                            if (logoLink.equals("") && tvShow.getName() != null) {
                                 tvShowTitleText.setVisibility(View.VISIBLE);
                                 tvShowTitleText.setText(tvShow.getName());
                             }
@@ -198,41 +188,41 @@ public class SeasonDetailsFragment extends BaseFragment {
                             int season_number = tvShowSeasonDetails.getSeasonNumber();
                             int number_of_episodes = episodes.size();
                             if (number_of_episodes > 0) {
-//                                seasonNumber.setVisibility(View.VISIBLE);
-//                                seasonNumber.setText("Season " + season_number);
+                                // seasonNumber.setVisibility(View.VISIBLE);
+                                // seasonNumber.setText("Season " + season_number);
                                 numberOfEpisodes.setVisibility(View.VISIBLE);
                                 numberOfEpisodes.setText(number_of_episodes + " Episodes");
                             }
-//                            if (tvShow.getName() != null) {
-//                                tvShowTitleText.setText(tvShow.getName());
-//                            }
+                            // if (tvShow.getName() != null) {
+                            // tvShowTitleText.setText(tvShow.getName());
+                            // }
                             if (tvShowSeasonDetails.getOverview().length() > 1) {
-//                                overviewText.setVisibility(View.VISIBLE);
-//                                overview.setVisibility(View.VISIBLE);
+                                // overviewText.setVisibility(View.VISIBLE);
+                                // overview.setVisibility(View.VISIBLE);
                                 overview.setText(tvShowSeasonDetails.getOverview());
                             }
-//                            if (tvShowSeasonDetails.getPosterPath() != null) {
-//                                Glide.with(mActivity)
-//                                        .load(TMDB_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
-//                                        .placeholder(new ColorDrawable(Color.BLACK))
-//                                        .into(poster);
-//                            } else {
-//                                Glide.with(mActivity)
-//                                        .load(TMDB_IMAGE_BASE_URL + tvShow.getPosterPath())
-//                                        .placeholder(new ColorDrawable(Color.BLACK))
-//                                        .into(poster);
-//                            }
+                            // if (tvShowSeasonDetails.getPosterPath() != null) {
+                            // Glide.with(mActivity)
+                            // .load(TMDB_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
+                            // .placeholder(new ColorDrawable(Color.BLACK))
+                            // .into(poster);
+                            // } else {
+                            // Glide.with(mActivity)
+                            // .load(TMDB_IMAGE_BASE_URL + tvShow.getPosterPath())
+                            // .placeholder(new ColorDrawable(Color.BLACK))
+                            // .into(poster);
+                            // }
                             if (nextEpisode != null && nextEpisode.getStillPath() != null) {
                                 Glide.with(mActivity)
                                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + nextEpisode.getStillPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .into(backdrop);
-                            }else if (tvShowSeasonDetails.getPosterPath() != null) {
+                            } else if (tvShowSeasonDetails.getPosterPath() != null) {
                                 Glide.with(mActivity)
                                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowSeasonDetails.getPosterPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .into(backdrop);
-                            }else if (tvShow.getBackdropPath() != null) {
+                            } else if (tvShow.getBackdropPath() != null) {
                                 Glide.with(mActivity)
                                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShow.getBackdropPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
@@ -249,17 +239,18 @@ public class SeasonDetailsFragment extends BaseFragment {
                                 mActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        continueWatching.setText("S" + nextEpisode.getSeasonNumber() + " E" + nextEpisode.getEpisodeNumber());
-//                                        play.setText("S" + nextEpisode.getSeasonNumber() + " E" + nextEpisode.getEpisodeNumber());
+                                        continueWatching.setText("S" + nextEpisode.getSeasonNumber() + " E"
+                                                + nextEpisode.getEpisodeNumber());
+                                        // play.setText("S" + nextEpisode.getSeasonNumber() + " E" +
+                                        // nextEpisode.getEpisodeNumber());
                                     }
                                 });
-                                if(nextEpisode.getName()!=null){
+                                if (nextEpisode.getName() != null) {
                                     dot3.setVisibility(View.VISIBLE);
                                     episodeTitle.setVisibility(View.VISIBLE);
                                     episodeTitle.setText(nextEpisode.getName());
                                 }
                             }
-
 
                             loadEpisodesRecycler();
                         }
@@ -268,7 +259,7 @@ public class SeasonDetailsFragment extends BaseFragment {
             });
             thread.start();
         } catch (NullPointerException exception) {
-            Log.i("Error" , exception.toString());
+            Log.i("Error", exception.toString());
         }
     }
 
@@ -278,18 +269,19 @@ public class SeasonDetailsFragment extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.i(" " , "in thread");
+                Log.i(" ", "in thread");
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.i(" " , episodes.toString());
+                        Log.i(" ", episodes.toString());
 
                         episodesRecycler = mActivity.findViewById(R.id.recyclerEpisodes);
                         episodesRecycler.setVisibility(View.VISIBLE);
-                        ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.VERTICAL , false);
+                        ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(
+                                getContext(), LinearLayoutManager.VERTICAL, false);
                         episodesRecycler.setLayoutManager(linearLayoutManager);
                         episodesRecycler.setHasFixedSize(true);
-                        episodeAdapter = new EpisodeAdapter(tvShow, mActivity, episodes , listener);
+                        episodeAdapter = new EpisodeAdapter(tvShow, mActivity, episodes, listener);
                         episodesRecycler.setAdapter(episodeAdapter);
                         episodeAdapter.notifyDataSetChanged();
                     }
@@ -299,27 +291,26 @@ public class SeasonDetailsFragment extends BaseFragment {
         thread.start();
     }
 
-
     private void setOnClickListner() {
-        SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings" , Context.MODE_PRIVATE);
-        boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING" , false);
+        SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING", false);
 
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (savedEXT) {
-                    //External Player
+                    // External Player
                     addToLastPlayed();
-                    Intent intent = new Intent(Intent.ACTION_VIEW , Uri.parse(nextEpisode.getUrlString()));
-                    intent.setDataAndType(Uri.parse(nextEpisode.getUrlString()) , "video/*");
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(nextEpisode.getUrlString()));
+                    intent.setDataAndType(Uri.parse(nextEpisode.getUrlString()), "video/*");
                     startActivity(intent);
                 } else {
-                    //Play video
+                    // Play video
                     addToLastPlayed();
-                    Intent in = new Intent(getActivity() , PlayerActivity.class);
-                    in.putExtra("url" , nextEpisode.getUrlString());
+                    Intent in = new Intent(getActivity(), PlayerActivity.class);
+                    in.putExtra("url", nextEpisode.getUrlString());
                     startActivity(in);
-                    Toast.makeText(getContext() , "Play" , Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Play", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -327,9 +318,11 @@ public class SeasonDetailsFragment extends BaseFragment {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy",
+                                Locale.ENGLISH);
                         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-                        DatabaseClient.getInstance(getContext()).getAppDatabase().episodeDao().updatePlayed(nextEpisode.getId(), currentDateTime+" added");
+                        DatabaseClient.getInstance(getContext()).getAppDatabase().episodeDao()
+                                .updatePlayed(nextEpisode.getId(), currentDateTime + " added");
                     }
                 });
                 thread.start();
@@ -337,7 +330,7 @@ public class SeasonDetailsFragment extends BaseFragment {
         });
         listener = new EpisodeAdapter.OnItemClickListener() {
             @Override
-            public void onClick(View view , int position) {
+            public void onClick(View view, int position) {
 
             }
         };

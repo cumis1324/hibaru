@@ -1,0 +1,188 @@
+﻿> Task :clean
+> Task :app:clean
+> Task :nativetemplates:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:dataBindingMergeDependencyArtifactsDebug
+> Task :app:generateDebugResValues
+> Task :app:generateDebugResources
+> Task :app:processDebugGoogleServices
+> Task :nativetemplates:preBuild UP-TO-DATE
+> Task :nativetemplates:preDebugBuild UP-TO-DATE
+> Task :nativetemplates:generateDebugResValues
+> Task :nativetemplates:generateDebugResources
+> Task :nativetemplates:packageDebugResources
+> Task :app:packageDebugResources
+> Task :app:generateDebugBuildConfig
+> Task :nativetemplates:writeDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests
+> Task :nativetemplates:parseDebugLocalResources
+> Task :app:extractDeepLinksDebug
+> Task :app:checkDebugAarMetadata
+> Task :nativetemplates:extractDeepLinksDebug
+> Task :nativetemplates:javaPreCompileDebug
+> Task :nativetemplates:processDebugManifest
+> Task :app:javaPreCompileDebug
+> Task :nativetemplates:generateDebugRFile
+> Task :nativetemplates:compileDebugLibraryResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:parseDebugLocalResources
+
+> Task :nativetemplates:compileDebugJavaWithJavac
+Java compiler version 21 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+./gradlew.bat : 
+warning: [options] 
+source value 8 is 
+obsolete and will be 
+removed in a future 
+release
+At line:1 char:1
++ ./gradlew.bat 
+clean assembleDebug 
+> build_log_revision_
+8.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo   
+           : 
+NotSpecified: (w    
+arning: [optio... 
+fut    ure 
+release:String) [    
+], RemoteException
+    + 
+FullyQualifiedError  
+  Id : 
+NativeCommandErr    
+or
+ 
+warning: [options] 
+target value 8 is 
+obsolete and will be 
+removed in a future 
+release
+warning: [options] 
+To suppress warnings 
+about obsolete 
+options, use 
+-Xlint:-options.
+3 warnings
+
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :nativetemplates:mergeDebugShaders
+> Task :nativetemplates:compileDebugShaders NO-SOURCE
+> Task :nativetemplates:generateDebugAssets UP-TO-DATE
+> Task :nativetemplates:bundleLibCompileToJarDebug
+> Task :nativetemplates:mergeDebugAssets
+> Task :app:mergeDebugAssets
+> Task :nativetemplates:processDebugJavaRes NO-SOURCE
+> Task :nativetemplates:bundleLibRuntimeToJarDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:processDebugManifestForPackage
+> Task :nativetemplates:mergeDebugJniLibFolders
+> Task :nativetemplates:mergeDebugNativeLibs NO-SOURCE
+> Task :nativetemplates:copyDebugJniLibsProjectOnly
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :nativetemplates:stripDebugDebugSymbols NO-SOURCE
+> Task :nativetemplates:copyDebugJniLibsProjectAndLocalJars
+> Task :nativetemplates:extractDebugAnnotations
+> Task :nativetemplates:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :nativetemplates:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :nativetemplates:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :nativetemplates:prepareDebugArtProfile UP-TO-DATE
+> Task :nativetemplates:prepareLintJarForPublish UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses
+> Task :nativetemplates:mergeDebugJavaResource
+> Task :nativetemplates:syncDebugLibJars
+> Task :nativetemplates:bundleDebugAar
+> Task :nativetemplates:assembleDebug
+> Task :app:desugarDebugFileDependencies
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libffmpegJNI.so, libgav1JNI.so. Run with --info option to learn more.
+
+> Task :app:compressDebugAssets
+> Task :app:mergeDebugResources
+> Task :app:dataBindingGenBaseClassesDebug
+> Task :app:l8DexDesugarLibDebug
+> Task :app:processDebugResources
+> Task :app:mergeExtDexDebug
+> Task :app:kaptGenerateStubsDebugKotlin
+
+> Task :app:kaptDebugKotlin
+warning: Kapt support in Moshi Kotlin Code Gen is deprecated and will be removed in 2.0. Please migrate to KSP. https://github.com/square/moshi#codegen
+
+> Task :app:compileDebugKotlin
+w: file:///D:/Project/nfgplus/app/src/main/java/com/theflexproject/thunder/SyncActivity.kt:25:13 Variable 'progressBar' is never used
+w: file:///D:/Project/nfgplus/app/src/main/java/com/theflexproject/thunder/fragments/HomeFragment.kt:74:31 Parameter 'section' is never used, could be renamed to _
+w: file:///D:/Project/nfgplus/app/src/main/java/com/theflexproject/thunder/network/dto/DtoMappers.kt:18:19 Elvis operator (?:) always returns the left operand of non-nullable type String
+w: file:///D:/Project/nfgplus/app/src/main/java/com/theflexproject/thunder/network/dto/DtoMappers.kt:81:17 Elvis operator (?:) always returns the left operand of non-nullable type String
+w: file:///D:/Project/nfgplus/app/src/main/java/com/theflexproject/thunder/repository/TVShowRepository.kt:46:43 Parameter 'seasonNumber' is never used
+
+> Task :app:compileDebugJavaWithJavac
+Note: Some input 
+files use or 
+override a 
+deprecated API.
+Note: Recompile with 
+-Xlint:deprecation 
+for details.
+Note: Some input 
+files use unchecked 
+or unsafe operations.
+Note: Recompile with 
+-Xlint:unchecked for 
+details.
+
+> Task :app:hiltAggregateDepsDebug
+
+> Task :app:hiltJavaCompileDebug
+warning: Kapt 
+support in Moshi 
+Kotlin Code Gen is 
+deprecated and will 
+be removed in 2.0. 
+Please migrate to 
+KSP. https://github.c
+om/square/moshi#codeg
+en
+1 warning
+
+> Task :app:processDebugJavaRes
+> Task :app:mergeDebugJavaResource
+> Task :app:transformDebugClassesWithAsm
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeProjectDexDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+
+[Incubating] Problems report is available at: file:///D:/Project/nfgplus/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2m 41s
+77 actionable tasks: 72 executed, 5 up-to-date

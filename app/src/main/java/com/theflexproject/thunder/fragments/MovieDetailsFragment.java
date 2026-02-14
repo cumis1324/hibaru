@@ -86,6 +86,7 @@ import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.player.PlayerActivity;
 import com.theflexproject.thunder.utils.MovieQualityExtractor;
 import com.theflexproject.thunder.utils.StringUtils;
+import com.theflexproject.thunder.utils.UnityAdHelper;
 import com.theflexproject.thunder.utils.sizetoReadablesize;
 
 import java.time.ZonedDateTime;
@@ -129,6 +130,7 @@ public class MovieDetailsFragment extends BaseFragment {
     private DatabaseReference databaseReference;
     View progressOverlay;
     MaterialTextView title;
+    private FrameLayout template;
 
     public MovieDetailsFragment() {
 
@@ -167,6 +169,15 @@ public class MovieDetailsFragment extends BaseFragment {
         quality = view.findViewById(R.id.fakebutton);
         moreMovieView = view.findViewById(R.id.recyclerEpisodes2);
         saweria = view.findViewById(R.id.saweria);
+        template = view.findViewById(R.id.banner_container);
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        if (isSubscribed) {
+            template.setVisibility(View.GONE);
+        } else {
+            UnityAdHelper.INSTANCE.loadBanner(mActivity, template);
+        }
 
         initWidgets(view);
         loadDetails();

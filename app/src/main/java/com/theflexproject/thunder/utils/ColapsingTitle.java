@@ -4,8 +4,6 @@ import android.animation.ObjectAnimator;
 import android.view.View;
 import android.widget.TextView;
 
-import com.google.android.ads.nativetemplates.TemplateView;
-
 public class ColapsingTitle {
     public static void collapseTitle(TextView homeTitle) {
         ObjectAnimator animation = ObjectAnimator.ofFloat(homeTitle, "translationY", 0, -homeTitle.getHeight());

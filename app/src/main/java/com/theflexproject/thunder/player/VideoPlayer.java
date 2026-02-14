@@ -1,6 +1,5 @@
 package com.theflexproject.thunder.player;
 
-
 import static android.content.ContentValues.TAG;
 
 import android.app.Activity;
@@ -41,20 +40,6 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.ui.PlayerView;
 
-
-import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.OnUserEarnedRewardListener;
-import com.google.android.gms.ads.interstitial.InterstitialAd;
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import com.google.android.gms.ads.rewarded.RewardItem;
-import com.google.android.gms.ads.rewarded.RewardedAd;
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
-import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd;
-import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -75,7 +60,8 @@ import java.util.Map;
 import java.util.Objects;
 
 @UnstableApi
-public class VideoPlayer extends AppCompatActivity implements View.OnClickListener, PlayerView.ControllerVisibilityListener {
+public class VideoPlayer extends AppCompatActivity
+        implements View.OnClickListener, PlayerView.ControllerVisibilityListener {
 
     public static final String KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters";
     public static final String KEY_ITEM_INDEX = "item_index";
@@ -87,7 +73,6 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
     protected PlayerView playerView;
 
     protected LinearLayout debugRootView;
-
 
     private DataSource.Factory dataSourceFactory;
     private MediaItem mediaItem;
@@ -117,7 +102,7 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
         intent = getIntent();
         manager = new FirebaseManager();
         String tmdbId = intent.getStringExtra("tmdbId");
-        databaseReference = FirebaseDatabase.getInstance().getReference("History/"+tmdbId);
+        databaseReference = FirebaseDatabase.getInstance().getReference("History/" + tmdbId);
         decorView = getWindow().getDecorView();
         playerView = findViewById(R.id.player_view);
         playerHelper = new PlayerHelper();
@@ -139,9 +124,6 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
-
-
-
         playerTitle = findViewById(R.id.playerTitle);
         nfgpluslog = findViewById(R.id.nfgpluslogo);
         playerEpsTitle = findViewById(R.id.playerEpsTitle);
@@ -155,52 +137,52 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
                     .build();
         }
 
-
     }
 
-
-    private void loadReward(){
+    private void loadReward() {
         // Using Unity Ads instead of AdMob
-        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.loadRewardedAd(VideoPlayer.this);
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.loadRewardedAd();
 
         if (playerHelper != null) {
             playerHelper.setPlayWhenReady(false);
         }
 
-        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.showRewardedAd(VideoPlayer.this, new com.theflexproject.thunder.utils.UnityAdHelper.AdCallback() {
-            @Override
-            public void onAdComplete() {
-                Log.d(TAG, "Reward ad completed successfully");
-                if (playerHelper != null) {
-                    playerHelper.setPlayWhenReady(true);
-                }
-                if (playerView != null) {
-                    playerView.onResume();
-                }
-            }
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.showRewardedAd(VideoPlayer.this,
+                new com.theflexproject.thunder.utils.UnityAdHelper.AdCallback() {
+                    @Override
+                    public void onAdComplete() {
+                        Log.d(TAG, "Reward ad completed successfully");
+                        if (playerHelper != null) {
+                            playerHelper.setPlayWhenReady(true);
+                        }
+                        if (playerView != null) {
+                            playerView.onResume();
+                        }
+                    }
 
-            @Override
-            public void onAdFailed() {
-                Log.e(TAG, "Reward ad failed");
-                if (playerHelper != null) {
-                    playerHelper.setPlayWhenReady(true);
-                }
-                if (playerView != null) {
-                    playerView.onResume();
-                }
-            }
-        });
+                    @Override
+                    public void onAdFailed() {
+                        Log.e(TAG, "Reward ad failed");
+                        if (playerHelper != null) {
+                            playerHelper.setPlayWhenReady(true);
+                        }
+                        if (playerView != null) {
+                            playerView.onResume();
+                        }
+                    }
+                });
     }
-    private void loadTitle(){
+
+    private void loadTitle() {
         String titleString = intent.getStringExtra("title");
         String yearString = intent.getStringExtra("year");
         String seasonString = intent.getStringExtra("season");
         String epsnumString = intent.getStringExtra("number");
         String titleEpisode = intent.getStringExtra("episode");
-        if (yearString!=null) {
+        if (yearString != null) {
             playerTitle.setText(titleString + " (" + yearString + ")");
             playerEpsTitle.setVisibility(View.GONE);
-        }else {
+        } else {
             playerTitle.setText(titleString);
             playerEpsTitle.setText("Season " + seasonString + " Episode " + epsnumString + " : " + titleEpisode);
             playerEpsTitle.setVisibility(View.VISIBLE);
@@ -209,8 +191,7 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
         playerTitle.setVisibility(View.VISIBLE);
     }
 
-    private void savePlayed(){
-
+    private void savePlayed() {
 
     }
 
@@ -224,6 +205,7 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
             loadReward();
         }
     }
+
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -240,6 +222,7 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
             enterPictureInPictureMode(new PictureInPictureParams.Builder().build());
         }
     }
+
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -257,7 +240,6 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
             showControls();
         }
     }
-
 
     @Override
     public void onResume() {
@@ -302,7 +284,6 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
         super.onBackPressed();
     }
 
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -331,22 +312,25 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
         playerTitle.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
         playerEpsTitle.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
     }
+
     @Override
     public void onClick(View view) {
 
     }
 
-    public void addToPlayed(){
+    public void addToPlayed() {
         Integer tmdbId = Integer.valueOf(intent.getStringExtra("tmdbId"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
         // Update the played field in your local database asynchronously
         AsyncTask.execute(() -> {
             String yearString = intent.getStringExtra("year");
-            if(yearString!=null) {
-                DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().movieDao().updatePlayed(tmdbId, currentDateTime + " added");
-            }else{
-                DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().episodeDao().updatePlayed(tmdbId, currentDateTime + " added");
+            if (yearString != null) {
+                DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().movieDao().updatePlayed(tmdbId,
+                        currentDateTime + " added");
+            } else {
+                DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().episodeDao().updatePlayed(tmdbId,
+                        currentDateTime + " added");
             }
         });
     }
@@ -362,15 +346,12 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
     // Internal methods
 
-
     /**
      * @return Whether initialization was successful.
      */
 
-
     private MediaSource.Factory createMediaSourceFactory() {
-        DefaultDrmSessionManagerProvider drmSessionManagerProvider =
-                new DefaultDrmSessionManagerProvider();
+        DefaultDrmSessionManagerProvider drmSessionManagerProvider = new DefaultDrmSessionManagerProvider();
         drmSessionManagerProvider.setDrmHttpDataSourceFactory(
                 DemoUtil.getHttpDataSourceFactory(/* context= */ this));
         return new DefaultMediaSourceFactory(/* context= */ this)
@@ -380,11 +361,10 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
     private void setRenderersFactory(
             ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
-        RenderersFactory renderersFactory =
-                DemoUtil.buildRenderersFactory(/* context= */ this, preferExtensionDecoders);
+        RenderersFactory renderersFactory = DemoUtil.buildRenderersFactory(/* context= */ this,
+                preferExtensionDecoders);
         playerBuilder.setRenderersFactory(renderersFactory);
     }
-
 
     protected void releasePlayer() {
         if (playerHelper != null) {
@@ -418,10 +398,8 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
             userMap.put("lastPlayed", currentDateTime);
             userReference.setValue(userMap);
 
-
         }
     }
-
 
     protected void clearStartPosition() {
         startAutoPlay = true;
@@ -464,4 +442,3 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
     }
 }
-

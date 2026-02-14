@@ -1,6 +1,5 @@
 package com.theflexproject.thunder.player;
 
-
 import android.annotation.SuppressLint;
 import android.app.PictureInPictureParams;
 import android.content.Intent;
@@ -48,14 +47,6 @@ import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
 import androidx.media3.datasource.DataSource;
-import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.OnUserEarnedRewardListener;
-import com.google.android.gms.ads.rewarded.RewardItem;
-import com.google.android.gms.ads.rewarded.RewardedAd;
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -73,7 +64,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-public class PlayerActivity extends AppCompatActivity implements View.OnClickListener, PlayerView.ControllerVisibilityListener {
+public class PlayerActivity extends AppCompatActivity
+        implements View.OnClickListener, PlayerView.ControllerVisibilityListener {
 
     public static final String KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters";
     public static final String KEY_ITEM_INDEX = "item_index";
@@ -109,7 +101,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private boolean ad25;
     private boolean ad50;
     private boolean ad75;
-    private AdRequest adRequest;
 
     @OptIn(markerClass = UnstableApi.class)
     @Override
@@ -123,7 +114,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         databaseReference = FirebaseDatabase.getInstance().getReference("History/");
         decorView = getWindow().getDecorView();
 
-
         uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -136,7 +126,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
         dataSourceFactory = DemoUtil.getDataSourceFactory(/* context= */ this);
-
 
         playerView = findViewById(R.id.player_view);
         playerTitle = findViewById(R.id.playerTitle);
@@ -152,9 +141,8 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
 
         if (savedInstanceState != null) {
-            trackSelectionParameters =
-                    TrackSelectionParameters.fromBundle(
-                            Objects.requireNonNull(savedInstanceState.getBundle(KEY_TRACK_SELECTION_PARAMETERS)));
+            trackSelectionParameters = TrackSelectionParameters.fromBundle(
+                    Objects.requireNonNull(savedInstanceState.getBundle(KEY_TRACK_SELECTION_PARAMETERS)));
             startAutoPlay = savedInstanceState.getBoolean(KEY_AUTO_PLAY);
             startItemIndex = savedInstanceState.getInt(KEY_ITEM_INDEX);
             startPosition = savedInstanceState.getLong(KEY_POSITION);
@@ -164,54 +152,54 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             clearStartPosition();
         }
 
-
     }
 
-
-    private void loadReward(){
+    private void loadReward() {
         // Using Unity Ads instead of AdMob
-        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.loadRewardedAd(PlayerActivity.this);
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.loadRewardedAd();
 
         if (player != null) {
             player.setPlayWhenReady(false);
         }
 
-        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.showRewardedAd(PlayerActivity.this, new com.theflexproject.thunder.utils.UnityAdHelper.AdCallback() {
-            @Override
-            public void onAdComplete() {
-                Log.d(TAG, "Reward ad completed successfully");
-                if (player != null) {
-                    player.setPlayWhenReady(true);
-                }
-                if (playerView != null) {
-                    playerView.onResume();
-                }
-            }
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.showRewardedAd(PlayerActivity.this,
+                new com.theflexproject.thunder.utils.UnityAdHelper.AdCallback() {
+                    @Override
+                    public void onAdComplete() {
+                        Log.d(TAG, "Reward ad completed successfully");
+                        if (player != null) {
+                            player.setPlayWhenReady(true);
+                        }
+                        if (playerView != null) {
+                            playerView.onResume();
+                        }
+                    }
 
-            @Override
-            public void onAdFailed() {
-                Log.e(TAG, "Reward ad failed");
-                if (player != null) {
-                    player.setPlayWhenReady(true);
-                }
-                if (playerView != null) {
-                    playerView.onResume();
-                }
-            }
-        });
+                    @Override
+                    public void onAdFailed() {
+                        Log.e(TAG, "Reward ad failed");
+                        if (player != null) {
+                            player.setPlayWhenReady(true);
+                        }
+                        if (playerView != null) {
+                            playerView.onResume();
+                        }
+                    }
+                });
     }
+
     @SuppressLint("SetTextI18n")
-    private void loadTitle(){
+    private void loadTitle() {
         String titleString = intent.getStringExtra("title");
         String yearString = intent.getStringExtra("year");
         String seasonString = intent.getStringExtra("season");
         String epsnumString = intent.getStringExtra("number");
         String titleEpisode = intent.getStringExtra("episode");
-        if (yearString!=null) {
+        if (yearString != null) {
             if (yearString.equals(offline)) {
                 playerTitle.setText(titleString);
                 playerEpsTitle.setVisibility(View.GONE);
-            }else {
+            } else {
                 playerTitle.setText(titleString + " (" + yearString + ")");
                 playerEpsTitle.setVisibility(View.GONE);
             }
@@ -224,8 +212,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         playerTitle.setVisibility(View.VISIBLE);
     }
 
-    private void savePlayed(){
-
+    private void savePlayed() {
 
     }
 
@@ -248,6 +235,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             }
         }
     }
+
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
@@ -255,6 +243,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             enterPictureInPictureMode(new PictureInPictureParams.Builder().build());
         }
     }
+
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -272,7 +261,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             showControls();
         }
     }
-
 
     @Override
     public void onResume() {
@@ -316,7 +304,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -345,25 +332,28 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         playerTitle.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
         playerEpsTitle.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
     }
+
     @Override
     public void onClick(View view) {
 
     }
 
-    public void addToPlayed(){
+    public void addToPlayed() {
         Integer tmdbId = Integer.valueOf(intent.getStringExtra("tmdbId"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
         // Update the played field in your local database asynchronously
-        if (!Objects.equals(tmdbId, "offline")){
-        AsyncTask.execute(() -> {
-            String yearString = intent.getStringExtra("year");
-            if(yearString!=null) {
-                DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().movieDao().updatePlayed(tmdbId, currentDateTime + " added");
-            }else{
-                DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().episodeDao().updatePlayed(tmdbId, currentDateTime + " added");
-            }
-        });
+        if (!Objects.equals(tmdbId, "offline")) {
+            AsyncTask.execute(() -> {
+                String yearString = intent.getStringExtra("year");
+                if (yearString != null) {
+                    DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().movieDao().updatePlayed(tmdbId,
+                            currentDateTime + " added");
+                } else {
+                    DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().episodeDao()
+                            .updatePlayed(tmdbId, currentDateTime + " added");
+                }
+            });
         }
     }
 
@@ -378,8 +368,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     // Internal methods
 
-
-
     /**
      * @return Whether initialization was successful.
      */
@@ -388,12 +376,11 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
             String urlString = intent.getStringExtra("url");
             Uri uri = Uri.parse(urlString);
-            Log.i("Inside Player",uri.toString());
+            Log.i("Inside Player", uri.toString());
             mediaItem = MediaItem.fromUri(uri);
 
-            ExoPlayer.Builder playerBuilder =
-                    new ExoPlayer.Builder(/* context= */ this)
-                            .setMediaSourceFactory(createMediaSourceFactory());
+            ExoPlayer.Builder playerBuilder = new ExoPlayer.Builder(/* context= */ this)
+                    .setMediaSourceFactory(createMediaSourceFactory());
             setRenderersFactory(playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
             player = playerBuilder.build();
             player.setTrackSelectionParameters(trackSelectionParameters);
@@ -403,36 +390,37 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             player.setPlayWhenReady(startAutoPlay);
             playerView.setPlayer(player);
 
-
         }
         String userId = manager.getCurrentUser().getUid();
         String tmdbId = intent.getStringExtra("tmdbId");
         if (tmdbId != null) {
-            if (!tmdbId.equals(offline)){
-            DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
-            userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        // Get the last position from the database
-                        Long lastPosition = dataSnapshot.getValue(Long.class);
-                        if (lastPosition != null) {
-                            // Update the startPosition with the retrieved value
-                            startPosition = lastPosition;
+            if (!tmdbId.equals(offline)) {
+                DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
+                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            // Get the last position from the database
+                            Long lastPosition = dataSnapshot.getValue(Long.class);
+                            if (lastPosition != null) {
+                                // Update the startPosition with the retrieved value
+                                startPosition = lastPosition;
 
-                            // Seek the player to the last position
-                            player.seekTo(startPosition);
-                            String formattedPosition = formatDuration(startPosition);
-                            Toast.makeText(getApplicationContext(), "Resuming to your last position " + formattedPosition, Toast.LENGTH_LONG).show();
+                                // Seek the player to the last position
+                                player.seekTo(startPosition);
+                                String formattedPosition = formatDuration(startPosition);
+                                Toast.makeText(getApplicationContext(),
+                                        "Resuming to your last position " + formattedPosition, Toast.LENGTH_LONG)
+                                        .show();
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    // Handle onCancelled event
-                }
-            });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        // Handle onCancelled event
+                    }
+                });
             }
         }
 
@@ -443,14 +431,12 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         player.setMediaItem(mediaItem, /* resetPosition= */ !haveStartPosition);
         player.prepare();
 
-
         return true;
     }
 
     @OptIn(markerClass = UnstableApi.class)
     private MediaSource.Factory createMediaSourceFactory() {
-        DefaultDrmSessionManagerProvider drmSessionManagerProvider =
-                new DefaultDrmSessionManagerProvider();
+        DefaultDrmSessionManagerProvider drmSessionManagerProvider = new DefaultDrmSessionManagerProvider();
         drmSessionManagerProvider.setDrmHttpDataSourceFactory(
                 DemoUtil.getHttpDataSourceFactory(/* context= */ this));
         return new DefaultMediaSourceFactory(/* context= */ this)
@@ -461,11 +447,10 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     @OptIn(markerClass = UnstableApi.class)
     private void setRenderersFactory(
             ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
-        RenderersFactory renderersFactory =
-                DemoUtil.buildRenderersFactory(/* context= */ this, preferExtensionDecoders);
+        RenderersFactory renderersFactory = DemoUtil.buildRenderersFactory(/* context= */ this,
+                preferExtensionDecoders);
         playerBuilder.setRenderersFactory(renderersFactory);
     }
-
 
     protected void releasePlayer() {
         if (player != null) {
@@ -493,20 +478,18 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             String tmdbId = intent.getStringExtra("tmdbId");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-            if (tmdbId != null){
-                if (!tmdbId.equals(offline)){
-            DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
-            Map<String, Object> userMap = new HashMap<>();
-            userMap.put("lastPosition", startPosition);
-            userMap.put("lastPlayed", currentDateTime);
-            userReference.setValue(userMap);
+            if (tmdbId != null) {
+                if (!tmdbId.equals(offline)) {
+                    DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("lastPosition", startPosition);
+                    userMap.put("lastPlayed", currentDateTime);
+                    userReference.setValue(userMap);
                 }
             }
 
-
         }
     }
-
 
     protected void clearStartPosition() {
         startAutoPlay = true;
@@ -523,7 +506,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         public void onPlaybackStateChanged(@Player.State int playbackState) {
             playerView.onPause();
-            if (playbackState == Player.STATE_READY){
+            if (playbackState == Player.STATE_READY) {
                 load3ads();
             }
             if (playbackState == Player.STATE_ENDED) {
@@ -545,19 +528,19 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void load3ads() {
-        if (player != null){
+        if (player != null) {
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
-            if (tp > 0){
-                if (!ad25 && cp >= tp * 0.25){
+            if (tp > 0) {
+                if (!ad25 && cp >= tp * 0.25) {
                     loadReward();
                     ad25 = true;
                 }
-                if (!ad50 && cp >= tp * 0.50){
+                if (!ad50 && cp >= tp * 0.50) {
                     loadReward();
                     ad50 = true;
                 }
-                if (!ad75 && cp >= tp * 0.75){
+                if (!ad75 && cp >= tp * 0.75) {
                     loadReward();
                     ad75 = true;
                 }
@@ -565,4 +548,3 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 }
-

@@ -32,6 +32,9 @@ public class SplashScreenActivity extends AppCompatActivity {
         firebaseManager = new FirebaseManager();
         currentUser = firebaseManager.getCurrentUser();
 
+        // Initialize Unity Ads
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.init(this);
+
         HandlerCompat.postDelayed(
                 new android.os.Handler(Looper.getMainLooper()),
                 () -> {

@@ -43,12 +43,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.interstitial.InterstitialAd;
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -76,7 +70,6 @@ import eightbitlab.com.blurview.RenderScriptBlur;
 public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeAdapterHolder> {
 
     Context context;
-    InterstitialAd mInterstitialAd;
     List<Episode> episodeList;
     TVShow tvShow;
     private EpisodeAdapter.OnItemClickListener listener;
@@ -256,58 +249,6 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeA
         public void onClick(View v) {
             listener.onClick(v, getAbsoluteAdapterPosition());
 
-        }
-
-        private void loadAds() {
-            AdRequest adRequest = new AdRequest.Builder().build();
-
-            InterstitialAd.load(context, "ca-app-pub-7142401354409440/5207281951", adRequest,
-                    new InterstitialAdLoadCallback() {
-                        @Override
-                        public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                            mInterstitialAd = interstitialAd;
-                            Log.i(TAG, "onAdLoaded");
-
-                            mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                                @Override
-                                public void onAdClicked() {
-                                    Log.d(TAG, "Ad was clicked.");
-                                }
-
-                                @Override
-                                public void onAdDismissedFullScreenContent() {
-                                    Log.d(TAG, "Ad dismissed fullscreen content.");
-                                    mInterstitialAd = null;
-                                }
-
-                                @Override
-                                public void onAdFailedToShowFullScreenContent(AdError adError) {
-                                    Log.e(TAG, "Ad failed to show fullscreen content.");
-                                    mInterstitialAd = null;
-                                }
-
-                                @Override
-                                public void onAdImpression() {
-                                    Log.d(TAG, "Ad recorded an impression.");
-                                }
-
-                                @Override
-                                public void onAdShowedFullScreenContent() {
-                                    Log.d(TAG, "Ad showed fullscreen content.");
-                                }
-                            });
-
-                            if (mInterstitialAd != null) {
-                                mInterstitialAd.show((Activity) context);
-                            }
-                        }
-
-                        @Override
-                        public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                            Log.d(TAG, loadAdError.toString());
-                            mInterstitialAd = null;
-                        }
-                    });
         }
 
         private void playEpisode(Episode episode) {

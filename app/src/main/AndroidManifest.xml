@@ -56,17 +56,10 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <property
-            android:name="android.adservices.AD_SERVICES_CONFIG"
-            android:resource="@xml/gma_ad_services_config"
-            tools:replace="android:resource" />
 
         <meta-data
             android:name="com.google.android.gms.auth.api.signin.default_web_client_id"
             android:value="@string/default_web_client_id" />
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-7142401354409440~1389765379" />
 
         <service
             android:name=".MyFirebaseMessagingService"

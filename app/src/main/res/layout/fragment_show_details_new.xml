@@ -267,17 +267,14 @@
                             android:textSize="18sp"
                             android:visibility="visible"/>
                     </RelativeLayout>
-                    <com.google.android.ads.nativetemplates.TemplateView
-                        android:id="@+id/my_template"
-                        android:focusable="true"
-                        android:focusableInTouchMode="false"
-                        android:clickable="true"
-                        android:background="@drawable/button_selector"
-                        android:nextFocusUp="@id/overviewDescTVShow"
-                        android:nextFocusDown="@id/recyclerSeasons"
-                        app:gnt_template_type="@layout/iklan_besar"
+                    <FrameLayout
+                        android:id="@+id/banner_container"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:minHeight="50dp"
+                        android:visibility="gone"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp" />
 
 
                 </LinearLayout>

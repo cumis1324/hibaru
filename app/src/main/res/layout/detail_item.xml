@@ -13,11 +13,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <com.google.android.ads.nativetemplates.TemplateView
+            <FrameLayout
                 android:id="@+id/iklan_kecil"
-                app:gnt_template_type="@layout/iklan_kecil_layout"
                 android:layout_width="match_parent"
-                android:layout_height="80dp" />
+                android:layout_height="60dp"
+                android:visibility="gone" />
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -179,11 +179,12 @@
                 android:layout_height="wrap_content"
                 tools:listitem="@layout/item_credits"
                 android:padding="15dp"/>
-            <com.google.android.ads.nativetemplates.TemplateView
+            <FrameLayout
                 android:id="@+id/iklan_besar"
-                app:gnt_template_type="@layout/iklan_besar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:minHeight="50dp"
+                android:visibility="gone" />
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/similarAndEpisode"
                 android:layout_width="match_parent"

@@ -125,7 +125,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         saweria = view.findViewById(R.id.saweria);
-        template = view.findViewById(R.id.my_template);
+        template = view.findViewById(R.id.banner_container);
         botnav = mActivity.findViewById(R.id.bottom_navigation);
         botnav.setVisibility(View.GONE);
         manager = new FirebaseManager();

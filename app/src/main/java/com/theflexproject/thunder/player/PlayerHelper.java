@@ -21,8 +21,6 @@ import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
-
-import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.firebase.database.DatabaseReference;
 import com.theflexproject.thunder.model.FirebaseManager;
 
@@ -58,7 +56,6 @@ public class PlayerHelper {
     int uiOptions;
     View decorView;
     private String TAG = "PlayerActivity";
-    private RewardedAd rewardedAd;
     FirebaseManager manager;
     private DatabaseReference databaseReference;
 
@@ -73,19 +70,20 @@ public class PlayerHelper {
         player.prepare();
         player.play();
     }
+
     private MediaSource.Factory createMediaSourceFactory() {
-        DefaultDrmSessionManagerProvider drmSessionManagerProvider =
-                new DefaultDrmSessionManagerProvider();
+        DefaultDrmSessionManagerProvider drmSessionManagerProvider = new DefaultDrmSessionManagerProvider();
         drmSessionManagerProvider.setDrmHttpDataSourceFactory(
                 DemoUtil.getHttpDataSourceFactory(/* context= */ playerView.getContext()));
         return new DefaultMediaSourceFactory(/* context= */ playerView.getContext())
                 .setDataSourceFactory(dataSourceFactory)
                 .setDrmSessionManagerProvider(drmSessionManagerProvider);
     }
+
     private void setRenderersFactory(
             ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
-        RenderersFactory renderersFactory =
-                DemoUtil.buildRenderersFactory(/* context= */ playerView.getContext(), preferExtensionDecoders);
+        RenderersFactory renderersFactory = DemoUtil.buildRenderersFactory(/* context= */ playerView.getContext(),
+                preferExtensionDecoders);
         playerBuilder.setRenderersFactory(renderersFactory);
     }
 
@@ -126,7 +124,6 @@ public class PlayerHelper {
 
     public void prepare() {
     }
-
 
     public TrackSelectionParameters getTrackSelectionParameters() {
         return null;

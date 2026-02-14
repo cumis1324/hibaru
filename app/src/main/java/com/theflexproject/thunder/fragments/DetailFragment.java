@@ -77,15 +77,14 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
-public class DetailFragment extends BaseFragment implements BillingManager.BillingCallback{
+public class DetailFragment extends BaseFragment implements BillingManager.BillingCallback {
     private Movie movieDetails;
     private int id;
     private boolean isMovie;
     private MaterialTextView deskripsi, judul;
     private ShapeableImageView poster;
     private MaterialButton rating, donasi, watchlist, download, share, subscribe;
-    private RecyclerView moreItem;
+    private FrameLayout template, templateBesar;
     RelativeLayout frameDeskripsi;
     private FrameLayout bannerContainerKecil, bannerContainerBesar;
     private RecyclerView similarView, castView;
@@ -93,7 +92,9 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private SimilarAdapter.OnItemClickListener similarListener;
     private List<MyMedia> similarOrEpisode;
     private BillingManager billingManager;
-    private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
+    private TVShow tvShowDetails;
+    private TVShowSeasonDetails season;
+    private Episode episode;
     private List<SkuDetails> skuDetailsList = new ArrayList<>();
     private List<SkuDetails> skuSubList = new ArrayList<>();
 
@@ -101,15 +102,18 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private List<MyMedia> mediaList, castList;
     private boolean isSubscribed;
     private Credits credits;
-    public DetailFragment(){
+
+    public DetailFragment() {
     }
-    public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode){
+
+    public DetailFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, Episode episode) {
         this.isMovie = false;
         this.tvShowDetails = tvShowDetails;
         this.season = seasonDetails;
         this.episode = episode;
     }
-    public DetailFragment (int id, boolean isMovie){
+
+    public DetailFragment(int id, boolean isMovie) {
         this.id = id;
         this.isMovie = isMovie;
     }
@@ -125,15 +129,14 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
 
         // Inflate layout untuk fragment
         View view = inflater.inflate(R.layout.detail_item, container, false);
         initWidget(view);
         if (isMovie) {
             loadMovieDetails(id);
-        }
-        else {
+        } else {
             loadTvDetails();
         }
         listener();
@@ -146,16 +149,15 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private void buttonListener() {
         download.setOnClickListener(v -> {
             if (Build.VERSION.SDK_INT < 32) {
-                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(requireContext(),
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(requireActivity(),
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
                             REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION);
-                }else {
+                } else {
                     PlayerUtils.download(mActivity, sources, tvShowDetails, season);
                 }
-            }
-            else {
+            } else {
                 PlayerUtils.download(mActivity, sources, tvShowDetails, season);
             }
         });
@@ -163,30 +165,30 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         watchlist.setOnClickListener(v -> PlayerUtils.watchlist(mActivity, mediaList, tvShowDetails, season));
     }
 
-
     private void listener() {
-        frameDeskripsi.setOnClickListener(v ->  {
-            if (isMovie){
+        frameDeskripsi.setOnClickListener(v -> {
+            if (isMovie) {
                 VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(movieDetails.getId(), true);
-                bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
-            }else {
+                bottomSheet.show(mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+            } else {
                 VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(tvShowDetails);
-                bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+                bottomSheet.show(mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
             }
         });
     }
 
     @SuppressLint("SetTextI18n")
     private void loadTvDetails() {
-        if (tvShowDetails!=null) {
+        if (tvShowDetails != null) {
             String titleText = tvShowDetails.getName();
             String year = tvShowDetails.getFirstAirDate();
-            String yearCrop = year.substring(0,year.indexOf('-'));
+            String yearCrop = year.substring(0, year.indexOf('-'));
             DecimalFormat decimalFormat = new DecimalFormat("0.0");
             String ratings = (decimalFormat.format(tvShowDetails.getVoteAverage()));
             String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVoteCount());
             rating.setText(ratings + " from " + result + " Votes");
-            judul.setText(titleText + " ("+yearCrop+")" +"\n" + "Season " + season.getSeasonNumber() + " Episode " + episode.getEpisodeNumber());
+            judul.setText(titleText + " (" + yearCrop + ")" + "\n" + "Season " + season.getSeasonNumber() + " Episode "
+                    + episode.getEpisodeNumber());
             deskripsi.setText(tvShowDetails.getOverview());
             Glide.with(mActivity)
                     .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
@@ -196,7 +198,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(poster);
-            sources = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
+            sources = (List<MyMedia>) (List<?>) DetailsUtils.getEpisodeSource(mActivity, episode.getId());
             mediaList = new ArrayList<>();
             mediaList.add(episode);
             loadEpisodes(season.getId());
@@ -207,15 +209,15 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     @SuppressLint("SetTextI18n")
     private void loadMovieDetails(int id) {
         movieDetails = DetailsUtils.getMovieDetails(mActivity, id);
-        if (movieDetails!=null) {
+        if (movieDetails != null) {
             String titleText = movieDetails.getTitle();
             String year = movieDetails.getReleaseDate();
-            String yearCrop = year.substring(0,year.indexOf('-'));
+            String yearCrop = year.substring(0, year.indexOf('-'));
             DecimalFormat decimalFormat = new DecimalFormat("0.0");
             String ratings = (decimalFormat.format(movieDetails.getVoteAverage()));
             String result = StringUtils.runtimeIntegerToString(movieDetails.getVoteCount());
             rating.setText(ratings + " from " + result + " Votes");
-            judul.setText(titleText +"\n" + movieDetails.getOriginalTitle() + " ("+yearCrop+")");
+            judul.setText(titleText + "\n" + movieDetails.getOriginalTitle() + " (" + yearCrop + ")");
             String description = movieDetails.getOverview();
             deskripsi.setText(description);
             Glide.with(mActivity)
@@ -226,7 +228,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                     .placeholder(new ColorDrawable(Color.TRANSPARENT))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(poster);
-            sources = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, id);
+            sources = (List<MyMedia>) (List<?>) DetailsUtils.getSourceList(mActivity, id);
             mediaList = new ArrayList<>();
             mediaList.add(movieDetails);
             loadSimilar(id);
@@ -239,9 +241,9 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private void loadCast(int id, boolean isMovie) {
         new Thread(() -> {
             tmdbTrending credit = new tmdbTrending();
-            if (isMovie){
-            credits = credit.getMovieCredits(id);
-            }else {
+            if (isMovie) {
+                credits = credit.getMovieCredits(id);
+            } else {
                 credits = credit.getTvCredits(id);
             }
             List<Cast> cast = credits.getCastList();
@@ -252,15 +254,15 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             getActivity().runOnUiThread(() -> {
                 FragmentManager fragmentManager;
                 fragmentManager = getActivity().getSupportFragmentManager();
-                castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                castView.setLayoutManager(
+                        new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
                 castView.setHasFixedSize(true);
-                creditsAdapter = new CreditsAdapter(getContext(), castList , fragmentManager);
+                creditsAdapter = new CreditsAdapter(getContext(), castList, fragmentManager);
                 castView.setAdapter(creditsAdapter);
                 castView.setNestedScrollingEnabled(false);
             });
         }).start();
     }
-
 
     @SuppressLint("SetTextI18n")
     private void initWidget(View view) {
@@ -297,6 +299,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         } else {
             // Gunakan Unity Ads Banner untuk kedua container
             try {
+                UnityAdHelper.INSTANCE.init(mActivity);
                 UnityAdHelper.INSTANCE.loadBanner(mActivity, bannerContainerKecil);
                 UnityAdHelper.INSTANCE.loadBanner(mActivity, bannerContainerBesar);
             } catch (Exception e) {
@@ -304,7 +307,6 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             }
         }
         similarView = view.findViewById(R.id.similarAndEpisode);
-
 
     }
 
@@ -378,17 +380,16 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
 
         // Set title
 
-
-        // Gunakan for loop dengan index untuk menghindari ConcurrentModificationException
+        // Gunakan for loop dengan index untuk menghindari
+        // ConcurrentModificationException
         for (int i = 0; i < skuSubList.size(); i++) {
             SkuDetails skuDetails = skuSubList.get(i);
-            title.setText("Langganan "+ skuDetails.getPrice() +" perbulan \n untuk menikmati nfgplus tanpa iklan");
+            title.setText("Langganan " + skuDetails.getPrice() + " perbulan \n untuk menikmati nfgplus tanpa iklan");
             // Create ImageView for displaying the image
             ImageView imageView = new ImageView(getContext());
             LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
             imageLayoutParams.setMargins(0, 16, 0, 16); // Optional margin
             imageView.setLayoutParams(imageLayoutParams);
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -397,12 +398,15 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             int paddingInPx = (int) TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
                     5,
-                    getResources().getDisplayMetrics()
-            );
+                    getResources().getDisplayMetrics());
             imageView.setPadding(paddingInPx, paddingInPx, paddingInPx, paddingInPx);
 
             // Load image using Glide
-            String imageUrl = "https://drive3.nfgplusmirror.workers.dev/0:/photo_2024-11-01_18-36-55_7432395722672046100.jpg"; // Replace with your image URL
+            String imageUrl = "https://drive3.nfgplusmirror.workers.dev/0:/photo_2024-11-01_18-36-55_7432395722672046100.jpg"; // Replace
+                                                                                                                               // with
+                                                                                                                               // your
+                                                                                                                               // image
+                                                                                                                               // URL
             Glide.with(getContext())
                     .load(imageUrl)
                     .into(imageView);
@@ -417,12 +421,10 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             subscribeButton.setTextColor(getResources().getColor(R.color.white)); // Button text color
             subscribeButton.setOnClickListener(v -> billingManager.startSubscription(getActivity(), skuDetails));
 
-
             // Add margins and layout params to button
             LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
             buttonLayoutParams.setMargins(0, 16, 0, 16); // Optional margin for button
             subscribeButton.setLayoutParams(buttonLayoutParams);
 
@@ -437,21 +439,19 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         bottomSheetDialog.show();
     }
 
-
-
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         billingManager.endConnection();
     }
+
     private void loadSimilar(int id) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 List<Movie> similarMovie = DetailsUtils.getSimilarMovies(mActivity, id);
                 List<Movie> recommendationMovie = DetailsUtils.getRecommendationMovies(mActivity, id);
-                if (similarMovie!=null){
+                if (similarMovie != null) {
                     movieListener();
                     similarOrEpisode = new ArrayList<>();
                     similarOrEpisode.addAll(similarMovie);
@@ -462,28 +462,32 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                         public void run() {
                             similarView.setVisibility(View.VISIBLE);
                             ScaleCenterItemLayoutManager linearLayoutManager;
-                            if (isTVDevice(mActivity)){
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-                            }
-                            else {
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                            if (isTVDevice(mActivity)) {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(),
+                                        LinearLayoutManager.HORIZONTAL, false);
+                            } else {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(),
+                                        LinearLayoutManager.VERTICAL, false);
                             }
                             similarView.setLayoutManager(linearLayoutManager);
-                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity,
+                                    (List<MyMedia>) (List<?>) similarOrEpisode, similarListener);
                             similarView.setAdapter(moreMovieRecycler);
                             moreMovieRecycler.notifyDataSetChanged();
                         }
                     });
                 }
-            }});
+            }
+        });
         thread.start();
     }
+
     private void loadEpisodes(int seasonId) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 List<Episode> listEpisode = DetailsUtils.getListEpisode(mActivity, tvShowDetails.getId(), seasonId);
-                if (listEpisode!=null){
+                if (listEpisode != null) {
                     movieListener();
                     similarOrEpisode = new ArrayList<>();
                     similarOrEpisode.addAll(listEpisode);
@@ -493,29 +497,33 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                         public void run() {
                             similarView.setVisibility(View.VISIBLE);
                             ScaleCenterItemLayoutManager linearLayoutManager;
-                            if (isTVDevice(mActivity)){
+                            if (isTVDevice(mActivity)) {
 
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-                            }
-                            else {
-                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(),
+                                        LinearLayoutManager.HORIZONTAL, false);
+                            } else {
+                                linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(),
+                                        LinearLayoutManager.VERTICAL, false);
                             }
                             similarView.setLayoutManager(linearLayoutManager);
-                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity, (List<MyMedia>) (List<?>) similarOrEpisode, tvShowDetails, similarListener);
+                            SimilarAdapter moreMovieRecycler = new SimilarAdapter(mActivity,
+                                    (List<MyMedia>) (List<?>) similarOrEpisode, tvShowDetails, similarListener);
                             similarView.setAdapter(moreMovieRecycler);
                             moreMovieRecycler.notifyDataSetChanged();
                         }
                     });
                 }
-            }});
+            }
+        });
         thread.start();
     }
+
     private void movieListener() {
         similarListener = new SimilarAdapter.OnItemClickListener() {
             @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View view, int position) {
-                if (similarOrEpisode.get(position) instanceof Movie){
+                if (similarOrEpisode.get(position) instanceof Movie) {
                     Movie movie = (Movie) similarOrEpisode.get(position);
                     String url = movie.getUrlString();
                     int movieId = movie.getId();
@@ -526,14 +534,15 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
                         Log.e("Error", "Current fragment is not PlayerFragment");
                     }
                 }
-                if (similarOrEpisode.get(position) instanceof Episode){
+                if (similarOrEpisode.get(position) instanceof Episode) {
                     Episode episodeSelected = (Episode) similarOrEpisode.get(position);
                     String url = episodeSelected.getUrlString();
 
                     episode = episodeSelected;
                     Fragment currentFragment = mActivity.getSupportFragmentManager().findFragmentById(R.id.container);
                     if (currentFragment instanceof PlayerFragment) {
-                        ((PlayerFragment) currentFragment).updateEpisode(tvShowDetails, season, episodeSelected.getId());
+                        ((PlayerFragment) currentFragment).updateEpisode(tvShowDetails, season,
+                                episodeSelected.getId());
                     } else {
                         Log.e("Error", "Current fragment is not PlayerFragment");
                     }
@@ -544,4 +553,3 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
         };
     }
 }
-

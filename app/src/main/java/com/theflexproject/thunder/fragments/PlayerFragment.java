@@ -81,7 +81,6 @@ import com.bumptech.glide.request.target.Target;
 import com.theflexproject.thunder.utils.AdHelper;
 
 import com.theflexproject.thunder.utils.UnityAdHelper;
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.firebase.database.DatabaseReference;
@@ -158,7 +157,6 @@ public class PlayerFragment extends BaseFragment
     View customControls;
     private NestedScrollView nestedScrollView;
     private Episode episode;
-    private AdRequest adRequest;
     private boolean isSubscribed;
 
     private View decorView;
@@ -480,10 +478,7 @@ public class PlayerFragment extends BaseFragment
                                                  // setiap
                                                  // detik
                 if (!isSubscribed) {
-                    // requestAds();
-                    // AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
-                    adRequest = AdHelper.getAdRequest(mActivity);
-                    PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
+                    // Unity Ads are handled in loadReward() or elsewhere
                 }
             }
         }

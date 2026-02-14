@@ -53,7 +53,6 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import androidx.media3.ui.PlayerView;
 
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -101,8 +100,8 @@ public class PlayerUtils {
     private static View decorView;
     private static ViewGroup rootView;
 
-
-    public static void enterFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
+    public static void enterFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle,
+            ImageButton fullscreen) {
         int uiOptions;
         decorView = mActivity.getWindow().getDecorView();
         rootView = decorView.findViewById(android.R.id.content);
@@ -123,7 +122,9 @@ public class PlayerUtils {
         mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         fullscreen.setImageResource(R.drawable.ic_exit_fullscreen);
     }
-    public static void exitFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle, ImageButton fullscreen) {
+
+    public static void exitFullscreen(Activity mActivity, FrameLayout playerFrame, TextView movietitle,
+            ImageButton fullscreen) {
         decorView = mActivity.getWindow().getDecorView();
         rootView = decorView.findViewById(android.R.id.content);
         int statusBarHeight = getStatusBarHeight(mActivity);
@@ -140,7 +141,6 @@ public class PlayerUtils {
             playerFrame.setLayoutParams(params);
         });
 
-
         decorView.setSystemUiVisibility(uiOptions);
 
         if (!isTVDevice(mActivity)) {
@@ -155,9 +155,8 @@ public class PlayerUtils {
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-
     @OptIn(markerClass = UnstableApi.class)
-    public static boolean subOn(DefaultTrackSelector trackSelector){
+    public static boolean subOn(DefaultTrackSelector trackSelector) {
         DefaultTrackSelector.Parameters builders = trackSelector.getParameters();
         return builders.getRendererDisabled(C.TRACK_TYPE_VIDEO);
     }
@@ -184,12 +183,13 @@ public class PlayerUtils {
             lastPositionRef.addListenerForSingleValueEvent(lastPositionListener);
         }
     }
-    public static void saveResume (Player player, String tmdbId){
+
+    public static void saveResume(Player player, String tmdbId) {
         long startPosition = Math.max(0, player.getContentPosition());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-        if (tmdbId != null){
-            if (!tmdbId.equals(OFFLINE)){
+        if (tmdbId != null) {
+            if (!tmdbId.equals(OFFLINE)) {
                 DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
                 Map<String, Object> userMap = new HashMap<>();
                 userMap.put("lastPosition", startPosition);
@@ -198,6 +198,7 @@ public class PlayerUtils {
             }
         }
     }
+
     private static int getStatusBarHeight(Activity mActivity) {
         int result = 0;
         int resourceId = mActivity.getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -213,6 +214,7 @@ public class PlayerUtils {
         String total = formatTime(duration);
         timer.setText(current + " / " + total);
     }
+
     @SuppressLint("DefaultLocale")
     static String formatTime(long timeMs) {
         long totalSeconds = timeMs / 1000;
@@ -236,14 +238,15 @@ public class PlayerUtils {
                 .setDataSourceFactory(dataSourceFactory)
                 .setDrmSessionManagerProvider(drmProvider);
     }
-    public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView, Object adRequest) {
+
+    public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView) {
         SharedPreferences prefs = mCtx.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         adStart = prefs.getBoolean("adStart", false);
         ad25 = prefs.getBoolean("ad25", false);
         ad50 = prefs.getBoolean("ad50", false);
         ad75 = prefs.getBoolean("ad75", false);
-        if (player != null){
+        if (player != null) {
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
             if (!adStart && cp <= 5000) {
@@ -251,18 +254,18 @@ public class PlayerUtils {
                 editor.putBoolean("adStart", true);
                 editor.apply();
             }
-            if (tp > 0){
-                if (!ad25 && cp >= tp * 0.25 && adStart){
+            if (tp > 0) {
+                if (!ad25 && cp >= tp * 0.25 && adStart) {
                     AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad25", true);
                     editor.apply();
                 }
-                if (!ad50 && cp >= tp * 0.50 && ad25){
+                if (!ad50 && cp >= tp * 0.50 && ad25) {
                     AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad50", true);
                     editor.apply();
                 }
-                if (!ad75 && cp >= tp * 0.75 && ad50){
+                if (!ad75 && cp >= tp * 0.75 && ad50) {
                     AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad75", true);
                     editor.apply();
@@ -270,7 +273,9 @@ public class PlayerUtils {
             }
         }
     }
-    public static void download(Context mActivity, List<MyMedia> sourceList, TVShow tvshow, TVShowSeasonDetails season){
+
+    public static void download(Context mActivity, List<MyMedia> sourceList, TVShow tvshow,
+            TVShowSeasonDetails season) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle("Select File to Download");
         List<String> sourcesOptions = new ArrayList<>();
@@ -285,7 +290,7 @@ public class PlayerUtils {
                 sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
             }
         }
-        final int[] selectedIndex = {0};
+        final int[] selectedIndex = { 0 };
         builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
             selectedIndex[0] = which; // Simpan indeks pilihan terbaru
         });
@@ -298,7 +303,8 @@ public class PlayerUtils {
                 DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
                 Uri uri = Uri.parse(selectedFile.getUrlString());
                 DownloadManager.Request request = new DownloadManager.Request(uri);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
+                        customFolderPath + selectedFile.getFileName());
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                         .setTitle(selectedFile.getTitle())
                         .setVisibleInDownloadsUi(true)
@@ -309,8 +315,7 @@ public class PlayerUtils {
                         downloadId,
                         selectedFile.getTitle(),
                         -1,
-                        0
-                ));
+                        0));
             } else if (selectedSource instanceof Episode) {
                 Episode selectedFile = (Episode) selectedSource;
                 String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
@@ -318,33 +323,36 @@ public class PlayerUtils {
                 DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
                 Uri uri = Uri.parse(selectedFile.getUrlString());
                 DownloadManager.Request request = new DownloadManager.Request(uri);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
+                        customFolderPath + selectedFile.getFileName());
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                        .setTitle(tvshow.getName() + " S"+season.getSeasonNumber()+" E" + selectedFile.getEpisodeNumber() + ": " +selectedFile.getName())
+                        .setTitle(tvshow.getName() + " S" + season.getSeasonNumber() + " E"
+                                + selectedFile.getEpisodeNumber() + ": " + selectedFile.getName())
                         .setVisibleInDownloadsUi(true)
-                        .setDescription("Downloading " + tvshow.getName() + " S"+season.getSeasonNumber()+" E" + selectedFile.getEpisodeNumber() + ": " +selectedFile.getName() + " " + huntu);
+                        .setDescription("Downloading " + tvshow.getName() + " S" + season.getSeasonNumber() + " E"
+                                + selectedFile.getEpisodeNumber() + ": " + selectedFile.getName() + " " + huntu);
                 long downloadId = manager.enqueue(request);
                 downloadItems.add(new DownloadItem(
                         selectedFile.getFileName(),
                         downloadId,
                         selectedFile.getName(),
                         -1,
-                        0
-                ));
-
+                        0));
 
             }
         });
         builder.create().show();
     }
-    public static void share(Context mActivity, Activity activity, List<MyMedia> sourceList, TVShow tvShow, TVShowSeasonDetails season){
+
+    public static void share(Context mActivity, Activity activity, List<MyMedia> sourceList, TVShow tvShow,
+            TVShowSeasonDetails season) {
         for (MyMedia source : sourceList) {
             if (source instanceof Movie) {
                 Movie movieDetails = (Movie) source;
                 String title = movieDetails.getTitle();
                 String originalTitle = movieDetails.getOriginalTitle();
                 String date = movieDetails.getReleaseDate();
-                String year = date.substring(0,date.indexOf('-'));
+                String year = date.substring(0, date.indexOf('-'));
                 String overview = movieDetails.getOverview();
                 String posterPath = "https://image.tmdb.org/t/p/w500" + movieDetails.getPosterPath();
                 String movieId = String.valueOf(movieDetails.getId());
@@ -364,14 +372,16 @@ public class PlayerUtils {
                         Bitmap bitmap = BitmapFactory.decodeStream(input);
 
                         // Menyimpan gambar ke penyimpanan lokal
-                        File file = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "shared_image.jpg");
+                        File file = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                                "shared_image.jpg");
                         FileOutputStream outputStream = new FileOutputStream(file);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                         outputStream.flush();
                         outputStream.close();
 
                         // Dapatkan URI lokal menggunakan FileProvider
-                        Uri imageUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileprovider", file);
+                        Uri imageUri = FileProvider.getUriForFile(mActivity,
+                                mActivity.getPackageName() + ".fileprovider", file);
 
                         // Buat intent untuk berbagi teks dan gambar
                         Intent shareIntent = new Intent();
@@ -383,7 +393,8 @@ public class PlayerUtils {
                         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
                         // Menjalankan intent di UI thread
-                        activity.runOnUiThread(() -> mActivity.startActivity(Intent.createChooser(shareIntent, "Bagikan " + title)));
+                        activity.runOnUiThread(
+                                () -> mActivity.startActivity(Intent.createChooser(shareIntent, "Bagikan " + title)));
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -391,7 +402,8 @@ public class PlayerUtils {
                 }).start();
             } else if (source instanceof Episode) {
                 Episode episode = (Episode) source;
-                String title = tvShow.getName() + ": Season " + season.getSeasonNumber() + " Episode " + episode.getEpisodeNumber(); // Ganti dengan movieDetails.getTitle()
+                String title = tvShow.getName() + ": Season " + season.getSeasonNumber() + " Episode "
+                        + episode.getEpisodeNumber(); // Ganti dengan movieDetails.getTitle()
                 String originalTitle = episode.getName(); // Ganti dengan movieDetails.getOriginalTitle()
                 String overview = tvShow.getOverview(); // Ganti dengan movieDetails.getOverview()
                 String posterPath = "https://image.tmdb.org/t/p/w500/" + tvShow.getPosterPath();
@@ -399,7 +411,6 @@ public class PlayerUtils {
 
                 // Tautan deep link lengkap
                 String deepLink = "https://nfgplus.my.id/reviews.html?id=" + movieId + "&type=tv";
-
 
                 // Menyusun teks yang ingin dibagikan
                 String shareText = title + "\n" +
@@ -418,14 +429,16 @@ public class PlayerUtils {
                         Bitmap bitmap = BitmapFactory.decodeStream(input);
 
                         // Menyimpan gambar ke penyimpanan lokal
-                        File file = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "shared_image.jpg");
+                        File file = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                                "shared_image.jpg");
                         FileOutputStream outputStream = new FileOutputStream(file);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                         outputStream.flush();
                         outputStream.close();
 
                         // Dapatkan URI lokal menggunakan FileProvider
-                        Uri imageUri = FileProvider.getUriForFile(mActivity, mActivity.getPackageName() + ".fileprovider", file);
+                        Uri imageUri = FileProvider.getUriForFile(mActivity,
+                                mActivity.getPackageName() + ".fileprovider", file);
 
                         // Buat intent untuk berbagi teks dan gambar
                         Intent shareIntent = new Intent();
@@ -437,9 +450,8 @@ public class PlayerUtils {
                         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
                         // Menjalankan intent di UI thread
-                        activity.runOnUiThread(() ->
-                                mActivity.startActivity(Intent.createChooser(shareIntent, "Bagikan " + title))
-                        );
+                        activity.runOnUiThread(
+                                () -> mActivity.startActivity(Intent.createChooser(shareIntent, "Bagikan " + title)));
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -451,39 +463,40 @@ public class PlayerUtils {
 
     }
 
-    public static void watchlist(Context mActivity, List<MyMedia> sourceList, TVShow tvShowDetails, TVShowSeasonDetails season) {
+    public static void watchlist(Context mActivity, List<MyMedia> sourceList, TVShow tvShowDetails,
+            TVShowSeasonDetails season) {
         for (MyMedia source : sourceList) {
             if (source instanceof Movie) {
                 Movie movieDetails = (Movie) source;
                 String tmdbId = String.valueOf(movieDetails.getId());
                 String userId = manager.getCurrentUser().getUid();
-                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId)
+                        .child(tmdbId);
                 DatabaseReference value = userReference.child("value");
                 value.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(!snapshot.exists()){
+                        if (!snapshot.exists()) {
 
                             Map<String, Object> userMap = new HashMap<>();
                             userMap.put("value", 1);
                             userReference.setValue(userMap);
 
-                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Added To List", Toast.LENGTH_LONG).show();
 
-                        }else{
+                        } else {
                             userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
+                                    if (task.isSuccessful()) {
                                         System.out.println("Favorit dihapus");
-                                    }
-                                    else {
+                                    } else {
                                         System.out.println("Favorit dihapus");
                                     }
                                 }
                             });
 
-                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Removed From List", Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -495,33 +508,33 @@ public class PlayerUtils {
             } else if (source instanceof Episode) {
                 String tmdbId = String.valueOf(tvShowDetails.getId());
                 String userId = manager.getCurrentUser().getUid();
-                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId)
+                        .child(tmdbId);
                 DatabaseReference value = userReference.child("value");
                 value.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(!snapshot.exists()){
+                        if (!snapshot.exists()) {
 
                             Map<String, Object> userMap = new HashMap<>();
                             userMap.put("value", 1);
                             userReference.setValue(userMap);
 
-                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Added To List", Toast.LENGTH_LONG).show();
 
-                        }else{
+                        } else {
                             userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
+                                    if (task.isSuccessful()) {
                                         System.out.println("Favorit dihapus");
-                                    }
-                                    else {
+                                    } else {
                                         System.out.println("Favorit dihapus");
                                     }
                                 }
                             });
 
-                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Removed From List", Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -534,4 +547,3 @@ public class PlayerUtils {
         }
     }
 }
-
