@@ -15,6 +15,7 @@ import com.theflexproject.thunder.databinding.FragmentHomeBinding
 import com.theflexproject.thunder.model.Movie
 import com.theflexproject.thunder.model.TVShowInfo.TVShow
 import com.theflexproject.thunder.ui.home.HomeSectionAdapter
+import com.theflexproject.thunder.ui.home.HomeSectionItem
 import com.theflexproject.thunder.ui.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -92,8 +93,19 @@ class HomeFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     binding.swipeRefresh.isRefreshing = state.isLoading
-                    adapter.submitList(state.sections)
-                    
+
+                    // Convert HomeSection list to HomeSectionItem list with ads interspersed
+                    val itemsWithAds = mutableListOf<HomeSectionItem>()
+                    state.sections.forEachIndexed { index, section ->
+                        itemsWithAds.add(HomeSectionItem.SectionItem(section))
+                        // Add banner ad after every 2 sections (or customize as needed)
+                        if ((index + 1) % 2 == 0) {
+                            itemsWithAds.add(HomeSectionItem.AdBannerItem)
+                        }
+                    }
+
+                    adapter.submitList(itemsWithAds)
+
                     if (state.error != null) {
                         // Handle error (e.g., show Toast or Snackbar)
                     }

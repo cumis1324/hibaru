@@ -6,7 +6,6 @@ import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.theflexproject.thunder.data.sync.SyncWorker
@@ -37,9 +36,6 @@ class MyApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        
-        // Initialize MobileAds
-        MobileAds.initialize(this)
         
         // Initialize Firebase
         FirebaseApp.initializeApp(this)

@@ -236,7 +236,7 @@ public class PlayerUtils {
                 .setDataSourceFactory(dataSourceFactory)
                 .setDrmSessionManagerProvider(drmProvider);
     }
-    public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView, AdRequest adRequest) {
+    public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView, Object adRequest) {
         SharedPreferences prefs = mCtx.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         adStart = prefs.getBoolean("adStart", false);
@@ -247,23 +247,23 @@ public class PlayerUtils {
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
             if (!adStart && cp <= 5000) {
-                AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
-                editor.putBoolean("adStart", true); // Flag untuk mencegah pemanggilan ulang
+                AdHelper.loadReward(mCtx, activity, player, playerView);
+                editor.putBoolean("adStart", true);
                 editor.apply();
             }
             if (tp > 0){
                 if (!ad25 && cp >= tp * 0.25 && adStart){
-                    AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                    AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad25", true);
                     editor.apply();
                 }
                 if (!ad50 && cp >= tp * 0.50 && ad25){
-                    AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                    AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad50", true);
                     editor.apply();
                 }
                 if (!ad75 && cp >= tp * 0.75 && ad50){
-                    AdHelper.loadReward(mCtx, activity, player, playerView, adRequest);
+                    AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad75", true);
                     editor.apply();
                 }

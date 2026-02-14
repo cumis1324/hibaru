@@ -5,25 +5,6 @@ import static android.content.Context.DOWNLOAD_SERVICE;
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 import static com.theflexproject.thunder.fragments.EpisodeDetailsFragment.REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION;
 
-import com.google.android.ads.nativetemplates.NativeTemplateStyle;
-import com.google.android.ads.nativetemplates.TemplateView;
-import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MediaAspectRatio;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.OnUserEarnedRewardListener;
-import com.google.android.gms.ads.interstitial.InterstitialAd;
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import com.google.android.gms.ads.nativead.NativeAd;
-import com.google.android.gms.ads.nativead.NativeAdOptions;
-import com.google.android.gms.ads.rewarded.RewardItem;
-import com.google.android.gms.ads.rewarded.RewardedAd;
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
-import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd;
-import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -91,9 +72,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.AdView;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.adapter.BannerRecyclerAdapter;
 import com.theflexproject.thunder.adapter.FileItemAdapter;
@@ -145,16 +123,12 @@ public class MovieDetailsFragment extends BaseFragment {
     MaterialButton rating;
     RelativeLayout titleLayout;
 
-    // adview
-
     private Button saweria;
 
-    private RewardedAd rewardedAd;
     FirebaseManager manager;
     private DatabaseReference databaseReference;
     View progressOverlay;
     MaterialTextView title;
-    private TemplateView template;
 
     public MovieDetailsFragment() {
 
@@ -193,10 +167,7 @@ public class MovieDetailsFragment extends BaseFragment {
         quality = view.findViewById(R.id.fakebutton);
         moreMovieView = view.findViewById(R.id.recyclerEpisodes2);
         saweria = view.findViewById(R.id.saweria);
-        template = view.findViewById(R.id.my_template);
 
-        MobileAds.initialize(mActivity);
-        loadNative();
         initWidgets(view);
         loadDetails();
 
@@ -206,91 +177,6 @@ public class MovieDetailsFragment extends BaseFragment {
     public void onDestroyView() {
         botnav.setVisibility(View.VISIBLE);
         super.onDestroyView();
-    }
-
-    private void loadReward() {
-        AdRequest adRequest = new AdRequest.Builder().build();
-        RewardedAd.load(mActivity, "ca-app-pub-7142401354409440/7652952632",
-                adRequest, new RewardedAdLoadCallback() {
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        // Handle the error.
-                        Log.d(TAG, loadAdError.toString());
-                        rewardedAd = null;
-                    }
-
-                    @Override
-                    public void onAdLoaded(@NonNull RewardedAd ad) {
-                        rewardedAd = ad;
-                        Log.d(TAG, "Ad was loaded.");
-                        rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                            @Override
-                            public void onAdClicked() {
-                                // Called when a click is recorded for an ad.
-                                Log.d(TAG, "Ad was clicked.");
-                            }
-
-                            @Override
-                            public void onAdDismissedFullScreenContent() {
-                                // Called when ad is dismissed.
-                                // Set the ad reference to null so you don't show the ad a second time.
-                                Log.d(TAG, "Ad dismissed fullscreen content.");
-                                rewardedAd = null;
-                            }
-
-                            @Override
-                            public void onAdFailedToShowFullScreenContent(AdError adError) {
-                                // Called when ad fails to show.
-                                Log.e(TAG, "Ad failed to show fullscreen content.");
-                                rewardedAd = null;
-                            }
-
-                            @Override
-                            public void onAdImpression() {
-                                // Called when an impression is recorded for an ad.
-                                Log.d(TAG, "Ad recorded an impression.");
-                            }
-
-                            @Override
-                            public void onAdShowedFullScreenContent() {
-                                // Called when ad is shown.
-                                Log.d(TAG, "Ad showed fullscreen content.");
-                            }
-                        });
-                        if (rewardedAd != null) {
-                            rewardedAd.show(mActivity, new OnUserEarnedRewardListener() {
-                                @Override
-                                public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
-                                    // Handle the reward.
-                                    Log.d(TAG, "The user earned the reward.");
-                                    int rewardAmount = rewardItem.getAmount();
-                                    String rewardType = rewardItem.getType();
-                                    Toast.makeText(getContext(), rewardType + movieDetails.getTitle(),
-                                            Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }
-                    }
-
-                });
-
-    }
-
-    private void loadNative() {
-
-        AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
-                .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
-                    @Override
-                    public void onNativeAdLoaded(NativeAd nativeAd) {
-                        NativeTemplateStyle styles = new NativeTemplateStyle.Builder().build();
-                        template.setStyles(styles);
-                        template.setNativeAd(nativeAd);
-                    }
-                })
-                .build();
-        template.setVisibility(View.VISIBLE);
-        adLoader.loadAd(new AdRequest.Builder().build());
-
     }
 
     private void initWidgets(View view) {
@@ -576,7 +462,7 @@ public class MovieDetailsFragment extends BaseFragment {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(largestFile.getUrlString()));
                     intent.setDataAndType(Uri.parse(largestFile.getUrlString()), "video/*");
                     startActivity(intent);
-                    loadReward();
+
                 }
             });
         } else {

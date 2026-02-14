@@ -105,7 +105,6 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
     int uiOptions;
     View decorView;
     private String TAG = "PlayerActivity";
-    private RewardedAd rewardedAd;
     FirebaseManager manager;
     private PlayerHelper playerHelper;
 
@@ -161,79 +160,36 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
 
     private void loadReward(){
-        AdRequest adRequest = new AdRequest.Builder().build();
-        RewardedAd.load(VideoPlayer.this, "ca-app-pub-7142401354409440/7652952632",
-                adRequest, new RewardedAdLoadCallback() {
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                        // Handle the error.
-                        Log.d(TAG, loadAdError.toString());
-                        rewardedAd = null;
-                    }
+        // Using Unity Ads instead of AdMob
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.loadRewardedAd(VideoPlayer.this);
 
-                    @Override
-                    public void onAdLoaded(@NonNull RewardedAd ad) {
-                        rewardedAd = ad;
-                        Log.d(TAG, "Ad was loaded.");
-                        rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                            @Override
-                            public void onAdClicked() {
-                                // Called when a click is recorded for an ad.
-                                Log.d(TAG, "Ad was clicked.");
-                            }
+        if (playerHelper != null) {
+            playerHelper.setPlayWhenReady(false);
+        }
 
-                            @Override
-                            public void onAdDismissedFullScreenContent() {
-                                // Called when ad is dismissed.
-                                // Set the ad reference to null so you don't show the ad a second time.
-                                Log.d(TAG, "Ad dismissed fullscreen content.");
-                                rewardedAd = null;
-                                if (playerHelper != null) {
-                                    playerHelper.setPlayWhenReady(true);
-                                }
-                            }
+        com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.showRewardedAd(VideoPlayer.this, new com.theflexproject.thunder.utils.UnityAdHelper.AdCallback() {
+            @Override
+            public void onAdComplete() {
+                Log.d(TAG, "Reward ad completed successfully");
+                if (playerHelper != null) {
+                    playerHelper.setPlayWhenReady(true);
+                }
+                if (playerView != null) {
+                    playerView.onResume();
+                }
+            }
 
-                            @Override
-                            public void onAdFailedToShowFullScreenContent(AdError adError) {
-                                // Called when ad fails to show.
-                                Log.e(TAG, "Ad failed to show fullscreen content.");
-                                rewardedAd = null;
-                            }
-
-                            @Override
-                            public void onAdImpression() {
-                                // Called when an impression is recorded for an ad.
-                                Log.d(TAG, "Ad recorded an impression.");
-                            }
-
-                            @Override
-                            public void onAdShowedFullScreenContent() {
-                                // Called when ad is shown.
-                                Log.d(TAG, "Ad showed fullscreen content.");
-                                if (playerHelper != null) {
-                                    playerHelper.setPlayWhenReady(false);
-                                }
-                            }
-                        });
-                        if (rewardedAd != null) {
-                            if (playerView != null){
-                                playerView.onPause();
-                            }
-                            rewardedAd.show(VideoPlayer.this, new OnUserEarnedRewardListener() {
-                                @Override
-                                public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
-                                    // Handle the reward.
-                                    Log.d(TAG, "The user earned the reward.");
-                                    int rewardAmount = rewardItem.getAmount();
-                                    String rewardType = rewardItem.getType();
-
-                                }
-                            });
-                        }
-                    }
-
-                });
-
+            @Override
+            public void onAdFailed() {
+                Log.e(TAG, "Reward ad failed");
+                if (playerHelper != null) {
+                    playerHelper.setPlayWhenReady(true);
+                }
+                if (playerView != null) {
+                    playerView.onResume();
+                }
+            }
+        });
     }
     private void loadTitle(){
         String titleString = intent.getStringExtra("title");
@@ -508,3 +464,4 @@ public class VideoPlayer extends AppCompatActivity implements View.OnClickListen
 
     }
 }
+

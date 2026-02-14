@@ -18,6 +18,7 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -44,14 +45,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.ads.nativetemplates.NativeTemplateStyle;
-import com.google.android.ads.nativetemplates.TemplateView;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
@@ -70,10 +63,10 @@ import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 import com.theflexproject.thunder.player.PlayerUtils;
-import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.StringUtils;
 import com.theflexproject.thunder.utils.Translate;
+import com.theflexproject.thunder.utils.UnityAdHelper;
 import com.theflexproject.thunder.utils.pembayaran.BillingManager;
 import com.theflexproject.thunder.utils.tmdbTrending;
 
@@ -94,7 +87,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private MaterialButton rating, donasi, watchlist, download, share, subscribe;
     private RecyclerView moreItem;
     RelativeLayout frameDeskripsi;
-    private TemplateView template, templateBesar;
+    private FrameLayout bannerContainerKecil, bannerContainerBesar;
     private RecyclerView similarView, castView;
     private CreditsAdapter creditsAdapter;
     private SimilarAdapter.OnItemClickListener similarListener;
@@ -103,7 +96,7 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
     private TVShow tvShowDetails; private TVShowSeasonDetails season; private Episode episode;
     private List<SkuDetails> skuDetailsList = new ArrayList<>();
     private List<SkuDetails> skuSubList = new ArrayList<>();
-    private AdRequest adRequest;
+
     private List<MyMedia> sources;
     private List<MyMedia> mediaList, castList;
     private boolean isSubscribed;
@@ -271,8 +264,8 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
 
     @SuppressLint("SetTextI18n")
     private void initWidget(View view) {
-        template = view.findViewById(R.id.iklan_kecil);
-        templateBesar = view.findViewById(R.id.iklan_besar);
+        bannerContainerKecil = view.findViewById(R.id.iklan_kecil);
+        bannerContainerBesar = view.findViewById(R.id.iklan_besar);
         deskripsi = view.findViewById(R.id.deskJudul);
         judul = view.findViewById(R.id.judulNama);
         poster = view.findViewById(R.id.gambarPoster);
@@ -298,13 +291,17 @@ public class DetailFragment extends BaseFragment implements BillingManager.Billi
             subscribe.setText("Subscribed");
             subscribe.setEnabled(false);
             // Jika berlangganan, sembunyikan AdView
-            template.setVisibility(View.GONE);
-            templateBesar.setVisibility(View.GONE);
+            bannerContainerKecil.setVisibility(View.GONE);
+            bannerContainerBesar.setVisibility(View.GONE);
 
         } else {
-            adRequest = AdHelper.getAdRequest(mActivity);
-            AdHelper.loadNative(mActivity, adRequest, template);
-            AdHelper.loadNative(mActivity, adRequest, templateBesar);
+            // Gunakan Unity Ads Banner untuk kedua container
+            try {
+                UnityAdHelper.INSTANCE.loadBanner(mActivity, bannerContainerKecil);
+                UnityAdHelper.INSTANCE.loadBanner(mActivity, bannerContainerBesar);
+            } catch (Exception e) {
+                android.util.Log.e("DetailFragment", "Error loading Unity Ads banner: " + e.getMessage());
+            }
         }
         similarView = view.findViewById(R.id.similarAndEpisode);
 
