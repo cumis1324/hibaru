@@ -16,7 +16,6 @@ import static com.theflexproject.thunder.player.PlayerUtils.saveResume;
 import static com.theflexproject.thunder.player.PlayerUtils.subOn;
 import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
 
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
@@ -79,13 +78,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
-import com.google.ads.interactivemedia.v3.api.AdDisplayContainer;
-import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
-import com.google.ads.interactivemedia.v3.api.AdPodInfo;
-import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
-import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo;
-import com.google.ads.interactivemedia.v3.api.player.ContentProgressProvider;
-import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
+import com.theflexproject.thunder.utils.AdHelper;
+
+import com.theflexproject.thunder.utils.UnityAdHelper;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigationrail.NavigationRailView;
@@ -112,20 +107,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.ads.interactivemedia.v3.api.AdEvent;
-import com.google.ads.interactivemedia.v3.api.AdsLoader;
-import com.google.ads.interactivemedia.v3.api.AdsManager;
-import com.google.ads.interactivemedia.v3.api.AdsRequest;
-import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
-import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer;
-
 @UnstableApi
-public class PlayerFragment extends BaseFragment implements PlayerControlView.VisibilityListener, MainActivity.OnUserLeaveHintListener {
+public class PlayerFragment extends BaseFragment
+        implements PlayerControlView.VisibilityListener, MainActivity.OnUserLeaveHintListener {
 
     private static final String TAG = "PlayerFragment", OFFLINE = "offline",
             HISTORY_PATH = "History/", LAST_POSITION = "lastPosition",
             KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters", KEY_ITEM_INDEX = "item_index",
-            KEY_POSITION = "position", KEY_AUTO_PLAY = "auto_play", PREFER_EXTENSION_DECODERS_EXTRA = "prefer_extension_decoders";
+            KEY_POSITION = "position", KEY_AUTO_PLAY = "auto_play",
+            PREFER_EXTENSION_DECODERS_EXTRA = "prefer_extension_decoders";
 
     private int itemId;
     private boolean isMovie;
@@ -153,6 +143,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private ImageView imageView;
     private RelativeLayout customBufferingIndicator;
     private NavigationRailView navigationRailView;
+    private ViewGroup rootView;
     private Spinner spinnerAudioTrack, spinnerSource;
     private List<MyMedia> sourceList, similarOrEpisode;
     private GestureDetector gestureDetector;
@@ -169,9 +160,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private Episode episode;
     private AdRequest adRequest;
     private boolean isSubscribed;
-    private AdsLoader adsLoader;
-    private AdsManager adsManager;
-    private ViewGroup rootView;
+
     private View decorView;
     private Intent intent;
     private RandomIndex loadBalancer = new RandomIndex();
@@ -179,34 +168,37 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     private static final String ADMIN_USER_UID = "M20Oxpp64gZ480Lqus4afv6x2n63";
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
-
     public PlayerFragment() {
         // Default constructor
     }
+
     public PlayerFragment(int itemId, boolean isMovie) {
         this.itemId = itemId;
         this.isMovie = isMovie;
     }
+
     public void updateMovie(int itemId, boolean isMovie) {
         this.itemId = itemId;
         this.isMovie = isMovie;
-        if (player != null){
-        newSource();
+        if (player != null) {
+            newSource();
         }
         loadMovieDetails(itemId);
     }
+
     public PlayerFragment(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, int episodeId) {
         this.isMovie = false;
         this.tvShowDetails = tvShowDetails;
         this.season = seasonDetails;
         this.episodeId = episodeId;
     }
+
     public void updateEpisode(TVShow tvShowDetails, TVShowSeasonDetails seasonDetails, int episodeId) {
         this.isMovie = false;
         this.tvShowDetails = tvShowDetails;
         this.season = seasonDetails;
         this.episodeId = episodeId;
-        if (player != null){
+        if (player != null) {
             newSource();
         }
         episode = DetailsUtils.getNextEpisode(mActivity, episodeId);
@@ -216,6 +208,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            itemId = getArguments().getInt("videoId");
+            isMovie = getArguments().getBoolean("isMovie");
+        }
         SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
         isSubscribed = prefs.getBoolean("isSubscribed", false);
     }
@@ -241,27 +237,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             loadSeriesDetails(episode);
         }
         setControlListeners();
-        // Initialize IMA SDK
-        // Initialize IMA SDK
-        ImaSdkFactory sdkFactory = ImaSdkFactory.getInstance();
-        ImaSdkSettings imaSdkSettings = sdkFactory.createImaSdkSettings();
-        imaSdkSettings.setDebugMode(true); // Enable debug mode if needed
-        imaSdkSettings.setLanguage("en"); // Set language for ads
-        AdDisplayContainer adDisplayContainer = sdkFactory.createAdDisplayContainer();
-        adDisplayContainer.setAdContainer(playerView.getOverlayFrameLayout());  // Set the parent ViewGroup here
-
-        adsLoader = sdkFactory.createAdsLoader(requireContext(), imaSdkSettings, adDisplayContainer);
-        adsLoader.addAdsLoadedListener(adsManagerLoadedEvent -> {
-            adsManager = adsManagerLoadedEvent.getAdsManager();
-            adsManager.addAdEventListener(this::onAdEvent);
-            adsManager.addAdErrorListener(this::onAdError);
-            adsManager.init();
-        });
-
-        adsLoader.addAdErrorListener(this::onAdError);
-
-        // Request ads
-
 
         return view;
     }
@@ -309,11 +284,11 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         Rational aspectRatio = new Rational(16, 9);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             pipParams = new PictureInPictureParams.Builder()
-                        .setAspectRatio(aspectRatio)
-                        .build();
+                    .setAspectRatio(aspectRatio)
+                    .build();
         }
         similarView = view.findViewById(R.id.similarAndEpisode);
-        if (isTVDevice(mActivity)){
+        if (isTVDevice(mActivity)) {
             navigationRailView = mActivity.findViewById(R.id.side_navigation);
             navigationRailView.setVisibility(View.GONE);
             fullscreen.setVisibility(View.GONE);
@@ -344,28 +319,26 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
         gestureDetector = new GestureDetector(mActivity, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
-                Log.d("GestureDetector", "Single Tap detected");
                 return true; // Menangani tap tunggal (opsional)
             }
 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                Log.d("GestureDetector", "Double Tap detected");
                 // Tentukan area tap: kiri untuk rewind, kanan untuk fast forward
                 float screenWidth = playerView.getWidth();
                 if (e.getX() < screenWidth / 2) {
-                    Log.d("GestureDetector", "Double Tap Left - Rewind");
                     rewind(player, bw);
                 } else {
-                    Log.d("GestureDetector", "Double Tap Right - Fast Forward");
                     fastForward(player, ff);
                 }
                 return true; // Menandakan double-tap berhasil diproses
@@ -381,7 +354,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     }
 
     private void initPlayerState(Bundle savedInstanceState) {
-
 
         if (savedInstanceState != null) {
             trackSelectionParameters = TrackSelectionParameters.fromBundle(
@@ -400,25 +372,21 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         startItemIndex = C.INDEX_UNSET;
         startPosition = C.TIME_UNSET;
     }
+
     private void initializePlayer(String urlString) {
         if (player == null) {
             if (urlString == null || urlString.isEmpty()) {
-
-                Log.e(TAG, "Invalid URL string");
                 return;
             }
-            Log.d("Link", urlString);
             Uri uri = Uri.parse(urlString);
             MediaItem mediaItem = MediaItem.fromUri(uri);
             trackSelector = new DefaultTrackSelector(mActivity);
             trackSelector.setParameters(
                     new DefaultTrackSelector.ParametersBuilder(mActivity)
                             .setExceedRendererCapabilitiesIfNecessary(false)
-                            .build()
-            );
-            ExoPlayer.Builder playerBuilder =
-                    new ExoPlayer.Builder(/* context= */ mActivity)
-                            .setMediaSourceFactory(createMediaSourceFactory(mActivity));
+                            .build());
+            ExoPlayer.Builder playerBuilder = new ExoPlayer.Builder(/* context= */ mActivity)
+                    .setMediaSourceFactory(createMediaSourceFactory(mActivity));
             setRenderersFactory(playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
             player = playerBuilder.setTrackSelector(trackSelector).build();
 
@@ -437,14 +405,36 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 player.seekTo(startItemIndex, startPosition);
             }
             player.addListener(new PlayerEventListener());
-
+            loadReward();
         }
     }
+
+    private void loadReward() {
+        UnityAdHelper.INSTANCE.showRewardedAd(mActivity, new UnityAdHelper.AdCallback() {
+            @Override
+            public void onAdComplete() {
+                if (player != null) {
+                    player.setPlayWhenReady(true);
+                }
+            }
+
+            @Override
+            public void onAdFailed() {
+                if (player != null) {
+                    player.setPlayWhenReady(true);
+                }
+            }
+        });
+        if (player != null) {
+            player.setPlayWhenReady(false);
+        }
+    }
+
     @OptIn(markerClass = UnstableApi.class)
     private void setRenderersFactory(
             ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
-        RenderersFactory renderersFactory =
-                DemoUtil.buildRenderersFactory(/* context= */ mActivity, preferExtensionDecoders);
+        RenderersFactory renderersFactory = DemoUtil.buildRenderersFactory(/* context= */ mActivity,
+                preferExtensionDecoders);
         playerBuilder.setRenderersFactory(renderersFactory);
     }
 
@@ -458,6 +448,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     public void onVisibilityChange(int visibility) {
         // Handle UI visibility change
     }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -476,6 +467,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
 
     }
+
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable updateSeekBar = new Runnable() {
         @Override
@@ -484,10 +476,12 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 seekBar.setProgress((int) player.getCurrentPosition());
                 seekBar.setMax((int) player.getDuration());
                 updateTimer(timer, player.getCurrentPosition(), player.getDuration());
-                handler.postDelayed(this, 1000); // Update setiap detik
-                if (!isSubscribed){
-                    //requestAds();
-                    //AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
+                handler.postDelayed(this, 1000); // Update
+                                                 // setiap
+                                                 // detik
+                if (!isSubscribed) {
+                    // requestAds();
+                    // AdHelper.loadReward(mActivity, mActivity, player, playerView, adRequest);
                     adRequest = AdHelper.getAdRequest(mActivity);
                     PlayerUtils.load3ads(mActivity, mActivity, player, playerView, adRequest);
                 }
@@ -505,9 +499,10 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
     @Override
     public void onUserLeaveHint() {
-           // handleUserLeaveHint();
+        // handleUserLeaveHint();
 
     }
+
     private void handleUserLeaveHint() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mActivity.enterPictureInPictureMode(pipParams);
@@ -519,7 +514,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
         if (isInPictureInPictureMode && player != null) {
             customControls.setVisibility(View.GONE);
-        }else {
+        } else {
             if (!isTVDevice(mActivity)) {
                 // Terapkan logika orientasi untuk perangkat non-TV
                 mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -532,6 +527,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
 
     }
+
     private void setAdsState() {
         SharedPreferences prefs = mActivity.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -551,6 +547,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             setting.setOnClickListener(v -> loadSetting());
             Player.Listener.super.onTracksChanged(tracks);
         }
+
         @Override
         public void onIsPlayingChanged(boolean isPlaying) {
             playPauseButton.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
@@ -562,7 +559,6 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             }
         }
 
-
         @Override
         public void onPlaybackStateChanged(@Player.State int playbackState) {
             if (playbackState == Player.STATE_READY) {
@@ -573,7 +569,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 customBufferingIndicator.setVisibility(View.GONE);
                 ff.setOnClickListener(v -> fastForward(player, ff));
                 bw.setOnClickListener(v -> rewind(player, bw));
-                if (isTVDevice(mActivity)){
+                if (isTVDevice(mActivity)) {
                     movietitle.setVisibility(View.VISIBLE);
                 }
 
@@ -610,7 +606,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
     }
 
     private void loadSetting() {
-        showSettingsDialog(mActivity, spinnerAudioTrack, spinnerSource, dialogView, trackSelector, mappedTrackInfo, player);
+        showSettingsDialog(mActivity, spinnerAudioTrack, spinnerSource, dialogView, trackSelector, mappedTrackInfo,
+                player);
     }
 
     @Override
@@ -624,6 +621,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             isFullscreen = false;
         }
     }
+
     private void showSources() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle("Select Source");
@@ -639,7 +637,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
             }
         }
-        final int[] selectedIndex = {0};
+        final int[] selectedIndex = { 0 };
         builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
             selectedIndex[0] = which; // Simpan indeks pilihan terbaru
         });
@@ -649,8 +647,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 String selectedUrl2 = ((Movie) selectedSource).getUrlString();
                 String newUrl = selectedUrl2.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        randomUrl
-                );
+                        randomUrl);
                 if (!Objects.equals(selectedUrl2, urlString)) {
                     newSource();
                     new Handler(Looper.getMainLooper()).post(() -> initializePlayer(newUrl));
@@ -659,8 +656,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                 String selectedUrl2 = ((Episode) selectedSource).getUrlString();
                 String newUrl = selectedUrl2.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        randomUrl
-                );
+                        randomUrl);
                 if (!Objects.equals(selectedUrl2, urlString)) {
                     newSource();
                     new Handler(Looper.getMainLooper()).post(() -> initializePlayer(newUrl));
@@ -670,6 +666,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         builder.create().show();
 
     }
+
     protected void newSource() {
         if (player != null) {
             setAdsState();
@@ -682,6 +679,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             imageView.setVisibility(View.VISIBLE);
         }
     }
+
     private void releasePlayer() {
         if (player != null) {
             saveResume(player, tmdbId);
@@ -692,6 +690,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             destroyAll();
         }
     }
+
     private void destroyAll() {
         setAdsState();
         decorView = mActivity.getWindow().getDecorView();
@@ -712,6 +711,7 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
 
         }
     }
+
     @SuppressLint("SetTextI18n")
     private void loadMovieDetails(final int movieId) {
         Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
@@ -721,15 +721,14 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
             urlString = movieDetails.getUrlString();
             String newUrl = urlString.replaceAll(
                     "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                    randomUrl
-            );
-            String yearCrop = year.substring(0,year.indexOf('-'));
+                    randomUrl);
+            String yearCrop = year.substring(0, year.indexOf('-'));
             tmdbId = String.valueOf(movieDetails.getId());
-            movietitle.setText(titleText + " ("+yearCrop+")");
+            movietitle.setText(titleText + " (" + yearCrop + ")");
             mActivity.getSupportFragmentManager().beginTransaction()
                     .replace(R.id.detail_container, new DetailFragment(movieId, true))
                     .commit();
-            if(movieDetails.getBackdropPath()!=null) {
+            if (movieDetails.getBackdropPath() != null) {
                 Glide.with(mActivity)
                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdropPath())
                         .apply(new RequestOptions()
@@ -738,8 +737,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         .placeholder(new ColorDrawable(Color.TRANSPARENT))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .into(imageView);
-            }else {
-                if(movieDetails.getPosterPath()!=null) {
+            } else {
+                if (movieDetails.getPosterPath() != null) {
                     Glide.with(mActivity)
                             .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPosterPath())
                             .apply(new RequestOptions()
@@ -750,41 +749,46 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                             .into(imageView);
                 }
             }
-            if (ADMIN_USER_UID.equals(userId)){
-            initializePlayer(urlString);
-            }else {initializePlayer(newUrl);}
+            if (ADMIN_USER_UID.equals(userId)) {
+                initializePlayer(urlString);
+            } else {
+                initializePlayer(newUrl);
+            }
         }
-        sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getSourceList(mActivity, movieId);
+        sourceList = (List<MyMedia>) (List<?>) DetailsUtils.getSourceList(mActivity, movieId);
     }
 
     @SuppressLint("SetTextI18n")
     private void loadSeriesDetails(Episode episode) {
 
-        if (tvShowDetails!=null){
+        if (tvShowDetails != null) {
             String title = tvShowDetails.getName();
             int seasonId = season.getId();
             TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
             movietitle.setText(title);
 
-            if (episode!=null){
+            if (episode != null) {
                 mActivity.getSupportFragmentManager().beginTransaction()
                         .replace(R.id.detail_container, new DetailFragment(tvShowDetails, seasonDetails, episode))
                         .commit();
-                epstitle.setText("Season: "+seasonDetails.getSeasonNumber()
-                        +" Episode: "+ episode.getName());
+                epstitle.setText("Season: " + seasonDetails.getSeasonNumber()
+                        + " Episode: " + episode.getName());
                 epstitle.setVisibility(View.VISIBLE);
                 tmdbId = String.valueOf(episode.getId());
                 urlString = episode.getUrlString();
                 String newUrl = urlString.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        randomUrl
-                );
-                if (ADMIN_USER_UID.equals(userId)){
+                        randomUrl);
+                if (ADMIN_USER_UID.equals(userId)) {
                     initializePlayer(urlString);
-                }else {initializePlayer(newUrl);}
-                sourceList = (List<MyMedia>)(List<?>)DetailsUtils.getEpisodeSource(mActivity, episode.getId());
-            }else{Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();}
-            if(tvShowDetails.getBackdropPath()!=null) {
+                } else {
+                    initializePlayer(newUrl);
+                }
+                sourceList = (List<MyMedia>) (List<?>) DetailsUtils.getEpisodeSource(mActivity, episode.getId());
+            } else {
+                Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();
+            }
+            if (tvShowDetails.getBackdropPath() != null) {
                 Glide.with(mActivity)
                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdropPath())
                         .apply(new RequestOptions()
@@ -793,8 +797,8 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
                         .placeholder(new ColorDrawable(Color.TRANSPARENT))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .into(imageView);
-            }else {
-                if(tvShowDetails.getPosterPath()!=null) {
+            } else {
+                if (tvShowDetails.getPosterPath() != null) {
                     Glide.with(mActivity)
                             .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
                             .apply(new RequestOptions()
@@ -808,119 +812,4 @@ public class PlayerFragment extends BaseFragment implements PlayerControlView.Vi
         }
     }
 
-
-    private void requestAds() {
-        // Membuat VideoAdPlayer menggunakan ExoPlayer
-        VideoAdPlayer videoAdPlayer = new VideoAdPlayer() {
-            @Override
-            public int getVolume() {
-                return 0;  // Set volume to 0 or as required
-            }
-
-            @NonNull
-            @Override
-            public VideoProgressUpdate getAdProgress() {
-                // Return valid progress update
-                return new VideoProgressUpdate(player.getCurrentPosition(), player.getDuration());
-            }
-
-            @Override
-            public void addCallback(@NonNull VideoAdPlayerCallback videoAdPlayerCallback) {
-                // Add callback if needed
-            }
-
-            @Override
-            public void loadAd(@NonNull AdMediaInfo adMediaInfo, @NonNull AdPodInfo adPodInfo) {
-                // Ensure ad is loaded before playing
-                player.prepare();  // Prepare the player with the ad media
-                player.play();  // Start ad playback
-            }
-
-            @Override
-            public void pauseAd(@NonNull AdMediaInfo adMediaInfo) {
-                // Pause the ad
-                player.setPlayWhenReady(false);
-            }
-
-            @Override
-            public void playAd(@NonNull AdMediaInfo adMediaInfo) {
-                // Play the ad
-                player.setPlayWhenReady(true);
-                player.seekTo(0);  // Start from the beginning of the ad
-            }
-
-            @Override
-            public void release() {
-                // Release the player
-                player.release();
-            }
-
-            @Override
-            public void removeCallback(@NonNull VideoAdPlayerCallback videoAdPlayerCallback) {
-                // Remove callback if needed
-            }
-
-            @Override
-            public void stopAd(@NonNull AdMediaInfo adMediaInfo) {
-                // Stop the ad
-                player.seekTo(0);
-                player.setPlayWhenReady(false);
-            }
-        };
-
-        // Membuat dan menyetel AdDisplayContainer dengan VideoAdPlayer
-        ImaSdkFactory sdkFactory = ImaSdkFactory.getInstance();
-        AdDisplayContainer adDisplayContainer = sdkFactory.createAdDisplayContainer();
-        adDisplayContainer.setAdContainer(playerView.getOverlayFrameLayout());  // Set the parent ViewGroup here
-        adDisplayContainer.setPlayer(videoAdPlayer);  // Set VideoAdPlayer
-
-        // Membuat AdsRequest
-        AdsRequest adsRequest = sdkFactory.createAdsRequest();
-        adsRequest.setAdTagUrl(vastUrl);
-        adsRequest.setContentProgressProvider(new ContentProgressProvider() {
-            @NonNull
-            @Override
-            public VideoProgressUpdate getContentProgress() {
-                return new VideoProgressUpdate(player.getCurrentPosition(), player.getDuration());
-            }
-        });
-
-        // Meminta iklan
-        adsLoader.requestAds(adsRequest);
-    }
-
-
-
-
-    private void playContent() {
-        player.setPlayWhenReady(true);
-    }
-
-    private void onAdEvent(AdEvent adEvent) {
-        switch (adEvent.getType()) {
-            case LOADED:
-                adsManager.start();
-                break;
-
-            case CONTENT_PAUSE_REQUESTED:
-                requireActivity().runOnUiThread(() -> player.setPlayWhenReady(false)); // Pause content
-                break;
-
-            case CONTENT_RESUME_REQUESTED:
-                requireActivity().runOnUiThread(this::playContent); // Resume content playback
-                break;
-
-            default:
-                break;
-        }
-    }
-
-
-    private void onAdError(AdErrorEvent adErrorEvent) {
-        // Handle ad error and proceed to content playback
-        requireActivity().runOnUiThread(this::playContent);
-    }
-
-
 }
-

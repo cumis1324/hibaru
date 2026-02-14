@@ -12,6 +12,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -55,10 +56,30 @@ object NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
     }
+
+    @Provides
+    @Singleton
+    @Named("TmdbRetrofit")
+    fun provideTmdbRetrofit(
+        okHttpClient: OkHttpClient,
+        moshi: Moshi
+    ): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://api.themoviedb.org/3/")
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+    }
     
     @Provides
     @Singleton
     fun provideNFGPlusApi(retrofit: Retrofit): NFGPlusApi {
         return retrofit.create(NFGPlusApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTmdbApi(@Named("TmdbRetrofit") retrofit: Retrofit): com.theflexproject.thunder.network.TmdbApi {
+        return retrofit.create(com.theflexproject.thunder.network.TmdbApi::class.java)
     }
 }

@@ -27,7 +27,7 @@ import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.Cast;
 import com.theflexproject.thunder.model.Credits;
 import com.theflexproject.thunder.model.Crew;
-import com.theflexproject.thunder.model.Genre;
+import com.theflexproject.thunder.model.Genres;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
@@ -55,16 +55,19 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
     private List<MyMedia> castList, crewList;
 
     private boolean isMovie;
-    private TVShowSeasonDetails season; private int episodeId;
+    private TVShowSeasonDetails season;
+    private int episodeId;
 
-    public VideoDetailsBottomSheet (int id, boolean isMovie) {
+    public VideoDetailsBottomSheet(int id, boolean isMovie) {
         this.isMovie = true;
         this.movieId = id;
     }
-    public  VideoDetailsBottomSheet(){
+
+    public VideoDetailsBottomSheet() {
 
     }
-    public  VideoDetailsBottomSheet(TVShow tvShowDetails){
+
+    public VideoDetailsBottomSheet(TVShow tvShowDetails) {
         this.isMovie = false;
         this.tvShow = tvShowDetails;
     }
@@ -72,7 +75,8 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
     @SuppressLint("SetTextI18n")
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.bottom_sheet_layout, container, false);
 
         TextView titleView = view.findViewById(R.id.bottom_sheet_title);
@@ -84,112 +88,115 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
         crewView = view.findViewById(R.id.crewRecycler);
         fragmentManager = getActivity().getSupportFragmentManager();
 
-
-            // Lakukan query database di thread terpisah
-            new Thread(() -> {
-                if (isMovie) {
-                    movieDetails = DatabaseClient
-                            .getInstance(getContext())
-                            .getAppDatabase()
-                            .movieDao()
-                            .byId(movieId);
-                    tmdbTrending credit = new tmdbTrending();
-                    credits = credit.getMovieCredits(movieId);
-                    List<Cast> cast = credits.getCastList();
-                    List<Crew> crew = credits.getCrewList();
-                    castList = new ArrayList<>();
-                    castList.addAll(cast);
-                    crewList = new ArrayList<>();
-                    crewList.addAll(crew);
-                    if (movieDetails != null) {
-                        getActivity().runOnUiThread(() -> {
-                            String year = movieDetails.getReleaseDate();
-                            String yearCrop = year.substring(0, year.indexOf('-'));
-                            titleView.setText(movieDetails.getTitle() + " (" + yearCrop + ") ");
-                            String description = movieDetails.getOverview();
-                            descriptionView.setText(description);
-                            String ratings = String.valueOf((int) (movieDetails.getVoteAverage() * 10));
-                            String result = StringUtils.runtimeIntegerToString(movieDetails.getVoteCount());
-                            rating.setText(ratings + " from " + result + " Votes");
-                            originalTitle.setText(movieDetails.getOriginalTitle());
-                            ArrayList<Genre> genres = movieDetails.getGenres();
-                            StringBuilder sb = new StringBuilder();
-                            for (int i = 0; i < genres.size(); i++) {
-                                Genre genre = genres.get(i);
-                                if (i == genres.size() - 1 && genre != null) {
-                                    sb.append(genre.getName());
-                                } else if (genre != null) {
-                                    sb.append(genre.getName()).append(", ");
-                                }
+        // Lakukan query database di thread terpisah
+        new Thread(() -> {
+            if (isMovie) {
+                movieDetails = DatabaseClient
+                        .getInstance(getContext())
+                        .getAppDatabase()
+                        .movieDao()
+                        .byId(movieId);
+                tmdbTrending credit = new tmdbTrending();
+                credits = credit.getMovieCredits(movieId);
+                List<Cast> cast = credits.getCastList();
+                List<Crew> crew = credits.getCrewList();
+                castList = new ArrayList<>();
+                castList.addAll(cast);
+                crewList = new ArrayList<>();
+                crewList.addAll(crew);
+                if (movieDetails != null) {
+                    getActivity().runOnUiThread(() -> {
+                        String year = movieDetails.getReleaseDate();
+                        String yearCrop = year.substring(0, year.indexOf('-'));
+                        titleView.setText(movieDetails.getTitle() + " (" + yearCrop + ") ");
+                        String description = movieDetails.getOverview();
+                        descriptionView.setText(description);
+                        String ratings = String.valueOf((int) (movieDetails.getVoteAverage() * 10));
+                        String result = StringUtils.runtimeIntegerToString(movieDetails.getVoteCount());
+                        rating.setText(ratings + " from " + result + " Votes");
+                        originalTitle.setText(movieDetails.getOriginalTitle());
+                        ArrayList<Genres> genres = movieDetails.getGenres();
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < genres.size(); i++) {
+                            Genres genre = genres.get(i);
+                            if (i == genres.size() - 1 && genre != null) {
+                                sb.append(genre.getName());
+                            } else if (genre != null) {
+                                sb.append(genre.getName()).append(", ");
                             }
-                            genreSheet.setText(sb.toString());
-                            castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
-                            castView.setHasFixedSize(true);
-                            crewView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
-                            crewView.setHasFixedSize(true);
-                            castAdapter = new CreditsAdapter(getContext(), castList , fragmentManager);
-                            crewAdapter = new CreditsAdapter(getContext(), crewList , fragmentManager);
-                            castView.setAdapter(castAdapter);
-                            castView.setNestedScrollingEnabled(false);
-                            crewView.setAdapter(crewAdapter);
-                            crewView.setNestedScrollingEnabled(false);
+                        }
+                        genreSheet.setText(sb.toString());
+                        castView.setLayoutManager(
+                                new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+                        castView.setHasFixedSize(true);
+                        crewView.setLayoutManager(
+                                new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+                        crewView.setHasFixedSize(true);
+                        castAdapter = new CreditsAdapter(getContext(), castList, fragmentManager);
+                        crewAdapter = new CreditsAdapter(getContext(), crewList, fragmentManager);
+                        castView.setAdapter(castAdapter);
+                        castView.setNestedScrollingEnabled(false);
+                        crewView.setAdapter(crewAdapter);
+                        crewView.setNestedScrollingEnabled(false);
 
-                        });
-                    }
+                    });
                 }
-                else  {
-                    tvShowDetails = DatabaseClient
-                            .getInstance(getContext())
-                            .getAppDatabase()
-                            .tvShowDao()
-                            .find(tvShow.getId());
-                    tmdbTrending credit = new tmdbTrending();
-                    credits = credit.getTvCredits(tvShowDetails.getId());
-                    List<Cast> cast = credits.getCastList();
-                    List<Crew> crew = credits.getCrewList();
-                    castList = new ArrayList<>();
-                    castList.addAll(cast);
-                    crewList = new ArrayList<>();
-                    crewList.addAll(crew);
+            } else {
+                tvShowDetails = DatabaseClient
+                        .getInstance(getContext())
+                        .getAppDatabase()
+                        .tvShowDao()
+                        .find(tvShow.getId());
+                tmdbTrending credit = new tmdbTrending();
+                credits = credit.getTvCredits(tvShowDetails.getId());
+                List<Cast> cast = credits.getCastList();
+                List<Crew> crew = credits.getCrewList();
+                castList = new ArrayList<>();
+                castList.addAll(cast);
+                crewList = new ArrayList<>();
+                crewList.addAll(crew);
 
-                    if (tvShowDetails != null) {
-                        getActivity().runOnUiThread(() -> {
-                            String year = tvShowDetails.getFirstAirDate();
-                            String yearCrop = year.substring(0, year.indexOf('-'));
-                            titleView.setText(tvShowDetails.getName() + " (" + yearCrop + ") ");
-                            descriptionView.setText(tvShowDetails.getOverview());
-                            originalTitle.setText(tvShowDetails.getOriginalName());
-                            String ratings = String.valueOf((int) (tvShowDetails.getVoteAverage() * 10));
-                            String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVoteCount());
-                            rating.setText(ratings + " from " + result + " Votes");
-                            ArrayList<Genre> genres = tvShowDetails.getGenres();
-                            StringBuilder sb = new StringBuilder();
-                            for (int i = 0; i < genres.size(); i++) {
-                                Genre genre = genres.get(i);
-                                if (i == genres.size() - 1 && genre != null) {
-                                    sb.append(genre.getName());
-                                } else if (genre != null) {
-                                    sb.append(genre.getName()).append(", ");
-                                }
+                if (tvShowDetails != null) {
+                    getActivity().runOnUiThread(() -> {
+                        String year = tvShowDetails.getFirstAirDate();
+                        String yearCrop = year.substring(0, year.indexOf('-'));
+                        titleView.setText(tvShowDetails.getName() + " (" + yearCrop + ") ");
+                        descriptionView.setText(tvShowDetails.getOverview());
+                        originalTitle.setText(tvShowDetails.getOriginalName());
+                        String ratings = String.valueOf((int) (tvShowDetails.getVoteAverage() * 10));
+                        String result = StringUtils.runtimeIntegerToString(tvShowDetails.getVoteCount());
+                        rating.setText(ratings + " from " + result + " Votes");
+                        ArrayList<Genres> genres = tvShowDetails.getGenres();
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < genres.size(); i++) {
+                            Genres genre = genres.get(i);
+                            if (i == genres.size() - 1 && genre != null) {
+                                sb.append(genre.getName());
+                            } else if (genre != null) {
+                                sb.append(genre.getName()).append(", ");
                             }
-                            genreSheet.setText(sb.toString());
-                            castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
-                            castView.setHasFixedSize(true);
-                            crewView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
-                            crewView.setHasFixedSize(true);
-                            castAdapter = new CreditsAdapter(getContext(), castList , fragmentManager);
-                            crewAdapter = new CreditsAdapter(getContext(), crewList , fragmentManager);
-                            castView.setAdapter(castAdapter);
-                            castView.setNestedScrollingEnabled(false);
-                            crewView.setAdapter(crewAdapter);
-                            crewView.setNestedScrollingEnabled(false);
-                        });
-                    }
+                        }
+                        genreSheet.setText(sb.toString());
+                        castView.setLayoutManager(
+                                new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+                        castView.setHasFixedSize(true);
+                        crewView.setLayoutManager(
+                                new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+                        crewView.setHasFixedSize(true);
+                        castAdapter = new CreditsAdapter(getContext(), castList, fragmentManager);
+                        crewAdapter = new CreditsAdapter(getContext(), crewList, fragmentManager);
+                        castView.setAdapter(castAdapter);
+                        castView.setNestedScrollingEnabled(false);
+                        crewView.setAdapter(crewAdapter);
+                        crewView.setNestedScrollingEnabled(false);
+                    });
                 }
-            }).start();
+            }
+        }).start();
 
         return view;
     }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -200,9 +207,9 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
             BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
 
             // Mengatur BottomSheet ke state expanded secara otomatis
-            if (PlayerUtils.isTVDevice(requireActivity())){
+            if (PlayerUtils.isTVDevice(requireActivity())) {
                 behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            }else {
+            } else {
                 behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
 
@@ -213,5 +220,3 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 }
-
-

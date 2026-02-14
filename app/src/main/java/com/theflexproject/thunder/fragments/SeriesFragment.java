@@ -45,20 +45,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+public class SeriesFragment extends BaseFragment {
 
-public class SeriesFragment extends BaseFragment{
-
-    MaterialButton drakorTitle,trendingTitle, newSeasonRecyclerViewTitle,
+    MaterialButton drakorTitle, trendingTitle, newSeasonRecyclerViewTitle,
             recommendedText;
     RecyclerView drakorView, trendingView,
             newSeasonRecyclerView, recommendedView;
     MediaAdapter drakorAdapter, newSeasonRecyclerAdapter, recommendedAdapter;
-    MediaAdapter.OnItemClickListener drakorListener,newSeasonListener, recommendedListener;
-
+    MediaAdapter.OnItemClickListener drakorListener, newSeasonListener, recommendedListener;
 
     DrakorBannerAdapter trendingAdapter;
     DrakorBannerAdapter.OnItemClickListener trendingListener;
-    List<TVShow> seriesTrending,drakor,newSeason,topRatedShows,recommendSeries;
+    List<TVShow> seriesTrending, drakor, newSeason, topRatedShows, recommendSeries;
     List<MyMedia> recommended;
     private NestedScrollView nestedScrollView;
     private TextView homeTitle;
@@ -72,7 +70,7 @@ public class SeriesFragment extends BaseFragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_series_home, container, false);
 
     }
@@ -99,8 +97,7 @@ public class SeriesFragment extends BaseFragment{
 
     }
 
-
-    private void  loadTrendingSeries() {
+    private void loadTrendingSeries() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -111,27 +108,28 @@ public class SeriesFragment extends BaseFragment{
                         .getAppDatabase()
                         .tvShowDao()
                         .loadAllByIds(trendingIds);
-                if(seriesTrending!=null && seriesTrending.size()>0){
+                if (seriesTrending != null && seriesTrending.size() > 0) {
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
 
                             trendingTitle.setVisibility(View.VISIBLE);
-                            trendingView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                            trendingView.setLayoutManager(
+                                    new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
                             trendingView.setHasFixedSize(true);
-                            trendingAdapter = new DrakorBannerAdapter(getContext(), seriesTrending , trendingListener);
+                            trendingAdapter = new DrakorBannerAdapter(getContext(), seriesTrending, trendingListener);
                             trendingView.setAdapter(trendingAdapter);
                         }
                     });
                 }
 
-            }});
+            }
+        });
         thread.start();
 
     }
 
-
-    private void loadDrakor()  {
+    private void loadDrakor() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -139,27 +137,30 @@ public class SeriesFragment extends BaseFragment{
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .tvShowDao()
-                        .getDrakor();
+                        .getDrakor(10, 0);
                 List<TVShow> limitedTrending = drakor.size() > 10 ? drakor.subList(0, 10) : drakor;
                 List<MyMedia> all = new ArrayList<>(drakor);
-                if(drakor!=null && drakor.size()>0){
+                if (drakor != null && drakor.size() > 0) {
                     mActivity.runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
+                            ScaleCenterItemLayoutManager linearLayoutManager2 = new ScaleCenterItemLayoutManager(
+                                    getContext(), LinearLayoutManager.HORIZONTAL, false);
 
                             drakorTitle.setVisibility(View.VISIBLE);
                             drakorView.setLayoutManager(linearLayoutManager2);
                             drakorView.setHasFixedSize(true);
-                            drakorAdapter = new MediaAdapter(getContext(), (List<MyMedia>)(List<?>) limitedTrending , fragmentManager);
+                            drakorAdapter = new MediaAdapter(getContext(), (List<MyMedia>) (List<?>) limitedTrending,
+                                    fragmentManager);
                             drakorView.setAdapter(drakorAdapter);
                             drakorTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
-                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager()
+                                            .beginTransaction();
                                     Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
                                     if (oldFragment != null) {
                                         transaction.hide(oldFragment);
@@ -171,14 +172,15 @@ public class SeriesFragment extends BaseFragment{
                             });
                         }
                     });
-                }
-                else {
+                } else {
                     drakorTitle.setVisibility(View.GONE);
                 }
-            }});
+            }
+        });
         thread.start();
     }
-    private void loadNewSeason(){
+
+    private void loadNewSeason() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -186,28 +188,31 @@ public class SeriesFragment extends BaseFragment{
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .tvShowDao()
-                        .getNewShows();
+                        .getNewShows(10, 0);
                 List<TVShow> limitedTrending = newSeason.size() > 10 ? newSeason.subList(0, 10) : newSeason;
                 List<MyMedia> all = new ArrayList<>(newSeason);
-                if(newSeason!=null && newSeason.size()>0){
+                if (newSeason != null && newSeason.size() > 0) {
                     mActivity.runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
+                            ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(
+                                    getContext(), LinearLayoutManager.HORIZONTAL, false);
 
                             newSeasonRecyclerViewTitle.setVisibility(View.VISIBLE);
                             newSeasonRecyclerView.setVisibility(View.VISIBLE);
                             newSeasonRecyclerView.setLayoutManager(linearLayoutManager3);
                             newSeasonRecyclerView.setHasFixedSize(true);
-                            newSeasonRecyclerAdapter = new MediaAdapter(getContext() ,(List<MyMedia>)(List<?>) limitedTrending , fragmentManager);
+                            newSeasonRecyclerAdapter = new MediaAdapter(getContext(),
+                                    (List<MyMedia>) (List<?>) limitedTrending, fragmentManager);
                             newSeasonRecyclerView.setAdapter(newSeasonRecyclerAdapter);
                             newSeasonRecyclerViewTitle.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(all);
                                     // Navigate to a new fragment or activity with all data
-                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager()
+                                            .beginTransaction();
                                     Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
                                     if (oldFragment != null) {
                                         transaction.hide(oldFragment);
@@ -220,10 +225,12 @@ public class SeriesFragment extends BaseFragment{
                         }
                     });
                 }
-            }});
+            }
+        });
         thread.start();
     }
-    private void loadTopRatedShows(){
+
+    private void loadTopRatedShows() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -231,36 +238,38 @@ public class SeriesFragment extends BaseFragment{
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .tvShowDao()
-                        .getTopRated();
+                        .getTopRated(10, 0);
                 recommendSeries = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .tvShowDao()
-                        .getrecomendation();
+                        .getrecomendation(10, 0);
                 recommended = new ArrayList<>();
                 recommended.addAll(recommendSeries);
                 recommended.addAll(topRatedShows);
                 List<MyMedia> limitedTrending = recommended.size() > 10 ? recommended.subList(0, 10) : recommended;
-                if(recommended!=null && recommended.size()>0){
+                if (recommended != null && recommended.size() > 0) {
 
                     mActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.HORIZONTAL , false);
+                            ScaleCenterItemLayoutManager linearLayoutManager3 = new ScaleCenterItemLayoutManager(
+                                    getContext(), LinearLayoutManager.HORIZONTAL, false);
 
                             recommendedText.setVisibility(View.VISIBLE);
                             Collections.shuffle(recommended);
                             Collections.shuffle(limitedTrending);
                             recommendedView.setLayoutManager(linearLayoutManager3);
                             recommendedView.setHasFixedSize(true);
-                            recommendedAdapter = new MediaAdapter(getContext() ,limitedTrending , fragmentManager);
+                            recommendedAdapter = new MediaAdapter(getContext(), limitedTrending, fragmentManager);
                             recommendedView.setAdapter(recommendedAdapter);
                             recommendedText.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     ShowAllFragment showAllFragment = new ShowAllFragment(recommended);
                                     // Navigate to a new fragment or activity with all data
-                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
+                                    FragmentTransaction transaction = mActivity.getSupportFragmentManager()
+                                            .beginTransaction();
                                     Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
                                     if (oldFragment != null) {
                                         transaction.hide(oldFragment);
@@ -273,7 +282,8 @@ public class SeriesFragment extends BaseFragment{
                         }
                     });
                 }
-            }});
+            }
+        });
         thread.start();
     }
 
@@ -306,7 +316,8 @@ public class SeriesFragment extends BaseFragment{
             @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(seriesTrending.get(position).getId());
+                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(
+                        seriesTrending.get(position).getId());
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
 
                 Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);

@@ -41,12 +41,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 
-import com.google.android.ads.nativetemplates.NativeTemplateStyle;
-import com.google.android.ads.nativetemplates.TemplateView;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.nativead.NativeAd;
+import android.widget.FrameLayout;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -61,7 +56,7 @@ import com.theflexproject.thunder.adapter.ExpandableAdapter;
 import com.theflexproject.thunder.adapter.MediaAdapter;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.FirebaseManager;
-import com.theflexproject.thunder.model.Genre;
+import com.theflexproject.thunder.model.Genres;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
@@ -76,14 +71,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import com.google.firebase.database.FirebaseDatabase;
-import com.theflexproject.thunder.utils.AdHelper;
+import com.theflexproject.thunder.utils.UnityAdHelper;
 
 public class TvShowDetailsFragment extends BaseFragment {
 
     int tvShowId;
 
     TextView titleOri, title;
-    ImageButton addToList,share;
+    ImageButton addToList, share;
     ImageView logo;
     RelativeLayout titleLayout;
     MaterialButton rating;
@@ -97,30 +92,37 @@ public class TvShowDetailsFragment extends BaseFragment {
 
     Episode nextEpisode;
     private Button saweria;
-    private TemplateView template;
+    private FrameLayout template;
     FirebaseManager manager;
     DatabaseReference databaseReference;
     BottomNavigationView botnav;
-    private AdRequest adRequest;
-
 
     public TvShowDetailsFragment() {
         // Required empty public constructor
     }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            tvShowId = getArguments().getInt("tvShowId");
+        }
+    }
+
     public TvShowDetailsFragment(int tvShowId) {
         this.tvShowId = tvShowId;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater , ViewGroup container ,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_show_details_new , container , false);
+        return inflater.inflate(R.layout.fragment_show_details_new, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view , savedInstanceState);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         saweria = view.findViewById(R.id.saweria);
         template = view.findViewById(R.id.my_template);
@@ -133,14 +135,13 @@ public class TvShowDetailsFragment extends BaseFragment {
             // Jika berlangganan, sembunyikan AdView
             template.setVisibility(View.GONE);
         } else {
-            adRequest = AdHelper.getAdRequest(mActivity);
-            AdHelper.loadNative(mActivity, adRequest, template);
-
+            UnityAdHelper.INSTANCE.loadBanner(mActivity, template);
         }
 
         initWidgets(view);
         loadDetails();
     }
+
     private boolean isTVDevice() {
         UiModeManager uiModeManager = (UiModeManager) mActivity.getSystemService(Context.UI_MODE_SERVICE);
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
@@ -148,10 +149,9 @@ public class TvShowDetailsFragment extends BaseFragment {
 
     @Override
     public void onDestroyView() {
-        if(isTVDevice()) {
+        if (isTVDevice()) {
             botnav.setVisibility(View.GONE);
-        }
-        else {
+        } else {
             botnav.setVisibility(View.VISIBLE);
         }
         super.onDestroyView();
@@ -162,7 +162,8 @@ public class TvShowDetailsFragment extends BaseFragment {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("https://stream.trakteer.id/running-text-default.html?rt_count=5&rt_speed=fast&rt_1_clr1=rgba%280%2C+0%2C+0%2C+1%29&rt_septype=image&rt_txtshadow=true&rt_showsuppmsg=true&creator_name=nfgplus-official&page_url=trakteer.id/nfgplusofficial&mod=3&key=trstream-hV0jDdrlk82mv3aZnzpA&hash=a6z74q7pkgn3mlqy");
+        webView.loadUrl(
+                "https://stream.trakteer.id/running-text-default.html?rt_count=5&rt_speed=fast&rt_1_clr1=rgba%280%2C+0%2C+0%2C+1%29&rt_septype=image&rt_txtshadow=true&rt_showsuppmsg=true&creator_name=nfgplus-official&page_url=trakteer.id/nfgplusofficial&mod=3&key=trstream-hV0jDdrlk82mv3aZnzpA&hash=a6z74q7pkgn3mlqy");
         titleOri = view.findViewById(R.id.fakebutton2);
         logo = view.findViewById(R.id.tvLogo);
         backdrop = view.findViewById(R.id.tvShowBackdrop);
@@ -174,9 +175,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         rating = view.findViewById(R.id.ratingsShow);
     }
 
-
-
-    private void loadDetails(){
+    private void loadDetails() {
         try {
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -187,42 +186,48 @@ public class TvShowDetailsFragment extends BaseFragment {
                             .tvShowDao()
                             .find(tvShowId);
 
-                    nextEpisode = DatabaseClient
-                            .getInstance(getContext())
-                            .getAppDatabase()
-                            .episodeDao()
-                            .getNextEpisodeInTVShow(tvShowDetails.getId());
-                    if(nextEpisode==null){
-                        nextEpisode = DatabaseClient.getInstance(getContext())
+                    if (tvShowDetails != null) {
+                        nextEpisode = DatabaseClient
+                                .getInstance(getContext())
                                 .getAppDatabase()
                                 .episodeDao()
-                                .getFirstAvailableEpisode(tvShowDetails.getId());
+                                .getNextEpisodeInTVShow(tvShowDetails.getId());
+                        if (nextEpisode == null) {
+                            nextEpisode = DatabaseClient.getInstance(getContext())
+                                    .getAppDatabase()
+                                    .episodeDao()
+                                    .getFirstAvailableEpisode(tvShowDetails.getId());
+                        }
+                    } else {
+                        // Handle case where TV Show is not found
+                        Log.e("TvShowDetailsFragment", "TV Show not found for ID: " + tvShowId);
+                        return;
                     }
 
-                    Log.i("tvShowDetails Object",tvShowDetails.toString());
+                    Log.i("tvShowDetails Object", tvShowDetails.toString());
                     mActivity.runOnUiThread(new Runnable() {
                         @SuppressLint("SetTextI18n")
                         @Override
                         public void run() {
-                            String ratings = String.valueOf((int)(tvShowDetails.getVoteAverage()*10));
+                            String ratings = String.valueOf((int) (tvShowDetails.getVoteAverage() * 10));
                             String year = tvShowDetails.getFirstAirDate();
                             String yearCrop = year.substring(0, year.indexOf('-'));
                             String result = String.valueOf(tvShowDetails.getNumberOfSeasons());
                             String logoLink = tvShowDetails.getLogoPath();
                             title.setText(tvShowDetails.getName() + " (" + yearCrop + ") ");
                             rating.setText(ratings + " - " + result + " Season" + " ... Selengkapnya");
-                            System.out.println("Logo Link"+logoLink);
+                            System.out.println("Logo Link" + logoLink);
                             titleOri.setVisibility(View.VISIBLE);
                             titleOri.setText(tvShowDetails.getOriginalName());
                             titleLayout.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(tvShowDetails);
-                                    bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
+                                    bottomSheet.show(mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
                                 }
                             });
 
-                            if(!logoLink.equals("")){
+                            if (!logoLink.equals("")) {
                                 logo.setVisibility(View.VISIBLE);
                                 Glide.with(mActivity)
                                         .load(logoLink)
@@ -233,25 +238,24 @@ public class TvShowDetailsFragment extends BaseFragment {
                                         .placeholder(new ColorDrawable(Color.TRANSPARENT))
                                         .into(logo);
                             }
-                            if(logoLink.equals("")&&tvShowDetails.getName()!=null){
+                            if (logoLink.equals("") && tvShowDetails.getName() != null) {
                                 logo.setVisibility(View.GONE);
                             }
 
-                            if(tvShowDetails.getBackdropPath()!=null){
+                            if (tvShowDetails.getBackdropPath() != null) {
                                 Glide.with(mActivity)
                                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getBackdropPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
                                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                                         .into(backdrop);
+                            } else if (tvShowDetails.getPosterPath() != null) {
+                                Glide.with(mActivity)
+                                        .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
+                                        .placeholder(new ColorDrawable(Color.BLACK))
+                                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                        .into(backdrop);
                             }
-                            else if(tvShowDetails.getPosterPath()!=null){
-                                    Glide.with(mActivity)
-                                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + tvShowDetails.getPosterPath())
-                                            .placeholder(new ColorDrawable(Color.BLACK))
-                                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                            .into(backdrop);
-                            }
-                            if((nextEpisode!=null && nextEpisode.getStillPath()!=null)) {
+                            if ((nextEpisode != null && nextEpisode.getStillPath() != null)) {
                                 Glide.with(mActivity)
                                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + nextEpisode.getStillPath())
                                         .placeholder(new ColorDrawable(Color.BLACK))
@@ -260,7 +264,8 @@ public class TvShowDetailsFragment extends BaseFragment {
                             }
 
                             if (nextEpisode != null) {
-                                String buttonText = "S" + nextEpisode.getSeasonNumber() + " E" + nextEpisode.getEpisodeNumber();
+                                String buttonText = "S" + nextEpisode.getSeasonNumber() + " E"
+                                        + nextEpisode.getEpisodeNumber();
                                 System.out.println(buttonText);
                             }
 
@@ -269,11 +274,13 @@ public class TvShowDetailsFragment extends BaseFragment {
 
                     loadSeasonRecycler();
 
-                }});
+                }
+            });
             thread.start();
 
-
-        }catch (NullPointerException exception){Log.i("Error",exception.toString());}
+        } catch (NullPointerException exception) {
+            Log.i("Error", exception.toString());
+        }
     }
 
     private void loadSeasonRecycler() {
@@ -294,30 +301,34 @@ public class TvShowDetailsFragment extends BaseFragment {
                     public void run() {
                         Log.i("SeasonList in loadSeas", seasonsList.toString());
                         recyclerViewSeasons = mActivity.findViewById(R.id.recyclerSeasons);
-//                        ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL,false);
-
+                        // ScaleCenterItemLayoutManager linearLayoutManager = new
+                        // ScaleCenterItemLayoutManager(getContext(),
+                        // LinearLayoutManager.HORIZONTAL,false);
 
                         DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
                         float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
 
-                        recyclerViewSeasons.setLayoutManager(new LinearLayoutManager(getContext(),RecyclerView.VERTICAL,false));
-                        ExpandableAdapter mediaAdapter = new ExpandableAdapter(getContext(),tvShowDetails, seasonsList, mActivity.getSupportFragmentManager());
+                        recyclerViewSeasons
+                                .setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
+                        ExpandableAdapter mediaAdapter = new ExpandableAdapter(getContext(), tvShowDetails, seasonsList,
+                                mActivity.getSupportFragmentManager());
                         recyclerViewSeasons.setAdapter(mediaAdapter);
                         recyclerViewSeasons.setNestedScrollingEnabled(false);
-                        Log.d("RecyclerViewSetup", "Adapter attached with item count: " + mediaAdapter.getItemCount());
                         mediaAdapter.notifyDataSetChanged();
                     }
                 });
-            }});
+            }
+        });
         thread.start();
     }
 
     @OptIn(markerClass = UnstableApi.class)
-    private void setOnClickListner(){
-        SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings" , Context.MODE_PRIVATE);
-        boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING" , false);
+    private void setOnClickListner() {
+        SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING", false);
 
-        saweria.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
+        saweria.setOnClickListener(v -> startActivity(
+                new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
 
         addToList.setOnClickListener(new View.OnClickListener() {
 
@@ -325,33 +336,33 @@ public class TvShowDetailsFragment extends BaseFragment {
             public void onClick(View v) {
                 String tmdbId = String.valueOf(tvShowId);
                 String userId = manager.getCurrentUser().getUid();
-                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId)
+                        .child(tmdbId);
                 DatabaseReference value = userReference.child("value");
                 value.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(!snapshot.exists()){
+                        if (!snapshot.exists()) {
 
                             Map<String, Object> userMap = new HashMap<>();
                             userMap.put("value", 1);
                             userReference.setValue(userMap);
 
-                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Added To List", Toast.LENGTH_LONG).show();
 
-                        }else{
+                        } else {
                             userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
+                                    if (task.isSuccessful()) {
                                         System.out.println("Favorit dihapus");
-                                    }
-                                    else {
+                                    } else {
                                         System.out.println("Favorit dihapus");
                                     }
                                 }
                             });
 
-                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Removed From List", Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -360,7 +371,6 @@ public class TvShowDetailsFragment extends BaseFragment {
 
                     }
                 });
-
 
             }
         });
@@ -371,16 +381,13 @@ public class TvShowDetailsFragment extends BaseFragment {
             }
         });
 
-
-
-
-
-       // listenerSeasonItem = (view , position) -> {
-         //   PlayerFragment seasonDetailsFragment = new PlayerFragment(tvShowDetails,seasonsList.get(position));
-           // mActivity.getSupportFragmentManager().beginTransaction()
-             //       .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                  //  .replace(R.id.container,seasonDetailsFragment).addToBackStack(null).commit();
-        //};
+        // listenerSeasonItem = (view , position) -> {
+        // PlayerFragment seasonDetailsFragment = new
+        // PlayerFragment(tvShowDetails,seasonsList.get(position));
+        // mActivity.getSupportFragmentManager().beginTransaction()
+        // .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+        // .replace(R.id.container,seasonDetailsFragment).addToBackStack(null).commit();
+        // };
     }
 
     private void shareIt() {
@@ -397,7 +404,7 @@ public class TvShowDetailsFragment extends BaseFragment {
         String shareText = title + "\n" +
                 "Judul Asli: " + originalTitle + "\n" +
                 "Deskripsi: " + overview + "\n" +
-                deepLink + "\n" ;
+                deepLink + "\n";
 
         // Membuat Intent untuk membagikan konten
         Intent shareIntent = new Intent(Intent.ACTION_SEND);

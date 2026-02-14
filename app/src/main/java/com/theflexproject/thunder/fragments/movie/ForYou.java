@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 public class ForYou extends BaseFragment {
 
     RecyclerView recyclerViewMovies;
@@ -33,21 +32,21 @@ public class ForYou extends BaseFragment {
     MediaAdapter.OnItemClickListener listenerMovie;
     List<Movie> lastPlayedList, fav, played;
     List<MyMedia> forYou;
+
     public ForYou() {
         // Required empty public constructor
     }
 
-
     @Override
-    public View onCreateView(LayoutInflater inflater , ViewGroup container ,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_for_you , container , false);
+        return inflater.inflate(R.layout.fragment_for_you, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view , savedInstanceState);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         showLibraryMovies();
     }
 
@@ -56,12 +55,12 @@ public class ForYou extends BaseFragment {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.i(" " , "in thread");
+                Log.i(" ", "in thread");
                 lastPlayedList = DatabaseClient
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .movieDao()
-                        .getrecomendation();
+                        .getrecomendation(10, 0);
 
                 played = DatabaseClient
                         .getInstance(mActivity)
@@ -80,20 +79,21 @@ public class ForYou extends BaseFragment {
                 forYou.addAll(fav);
                 forYou.addAll(lastPlayedList);
 
-                if(forYou!=null && forYou.size()>0){
+                if (forYou != null && forYou.size() > 0) {
                     mActivity.runOnUiThread(() -> {
                         DisplayMetrics displayMetrics = mActivity.getResources().getDisplayMetrics();
                         float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
                         int noOfItems;
 
-                        noOfItems = (int) (dpWidth/120);
-                        Log.i(" " , forYou.toString());
+                        noOfItems = (int) (dpWidth / 120);
+                        Log.i(" ", forYou.toString());
                         recyclerViewMovies = mActivity.findViewById(R.id.recyclerForYou);
-                        if(recyclerViewMovies!=null){
+                        if (recyclerViewMovies != null) {
                             Collections.shuffle(forYou);
-                            recyclerViewMovies.setLayoutManager(new GridLayoutManager(mActivity , noOfItems));
+                            recyclerViewMovies.setLayoutManager(new GridLayoutManager(mActivity, noOfItems));
                             recyclerViewMovies.setHasFixedSize(true);
-                            mediaAdapter = new MediaAdapter (getContext(), forYou , mActivity.getSupportFragmentManager());
+                            mediaAdapter = new MediaAdapter(getContext(), forYou,
+                                    mActivity.getSupportFragmentManager());
                             recyclerViewMovies.setAdapter(mediaAdapter);
                             mediaAdapter.notifyDataSetChanged();
                         }
@@ -110,12 +110,12 @@ public class ForYou extends BaseFragment {
     }
 
     private void setOnClickListner() {
-        listenerMovie = (view , position) -> {
-            Movie forYouId = ((Movie)forYou.get(position));
+        listenerMovie = (view, position) -> {
+            Movie forYouId = ((Movie) forYou.get(position));
             MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(forYouId.getId());
             mActivity.getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in , R.anim.fade_out)
-                    .add(R.id.container , movieDetailsFragment).addToBackStack(null).commit();
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                    .add(R.id.container, movieDetailsFragment).addToBackStack(null).commit();
         };
     }
 }

@@ -25,8 +25,18 @@ class MyApplication : Application(), Configuration.Provider {
             .build()
     }
 
+    companion object {
+        private lateinit var instance: MyApplication
+
+        @JvmStatic
+        fun getContext(): android.content.Context {
+            return instance.applicationContext
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
+        instance = this
         
         // Initialize MobileAds
         MobileAds.initialize(this)

@@ -1,248 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
-    android:orientation="vertical"
-    android:layout_marginBottom="100dp"
-    tools:context="com.theflexproject.thunder.fragments.HomeFragment">
+    android:background="@color/black">
 
-    <TextView
-        android:id="@+id/verifTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="40dp"
-        android:fontFamily="@font/jost_medium"
-        android:text="Home"
-        android:textColor="@color/white"
-        android:textSize="25sp"
-        android:visibility="gone"/>
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.theflexproject.thunder.fragments.HomeFragment">
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/homeRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="100dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/home_item" />
 
-    <androidx.core.widget.NestedScrollView
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <FrameLayout
+        android:id="@+id/bannerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/nestedMovieHome"
-        android:paddingBottom="85dp"
-        android:clipToPadding="false"
-        android:scrollbars="vertical">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/recentlyAdded"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/jost_medium"
-                android:layout_marginTop="10dp"
-                android:paddingStart="20dp"
-                android:text="@string/on_trending"
-                android:textColor="@color/white"
-                android:textSize="16sp" />
+        android:layout_gravity="bottom"
+        android:minHeight="50dp" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recentlyAddedRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:scrollbars="horizontal"
-                android:focusable="true"
-                android:clickable="true"
-                app:background="@drawable/button_selector"
-                android:nextFocusDown="@id/trendingRecycler"
-                android:layout_marginTop="14dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/movie_item_banner" />
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/trending"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/jost_medium"
-                android:text="Recently Added"
-                android:textColor="@color/white"
-                android:textAlignment="viewStart"
-                app:icon="@drawable/ic_next"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/button_text_color"
-                app:iconGravity="end"
-                app:iconPadding="8dp"
-                android:textSize="14sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/trendingRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:nextFocusUp="@id/recentlyAdded"
-                android:nextFocusDown="@id/recentlyReleasedMoviesRecycler"
-                android:layout_marginTop="14dp"
-                android:scrollbars="horizontal"
-                android:background="@drawable/button_selector"
-                />
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/newReleasesMovies"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/jost_medium"
-                android:text="New Released"
-                android:textColor="@color/white"
-                android:textAlignment="viewStart"
-                app:icon="@drawable/ic_next"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/button_text_color"
-                app:iconGravity="end"
-                app:iconPadding="8dp"
-                android:textSize="14sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recentlyReleasedMoviesRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:nextFocusUp="@id/trendingRecycler"
-                android:nextFocusDown="@id/topRatedMoviesRecycler"
-                android:layout_marginTop="14dp"
-                android:scrollbars="horizontal"
-                android:background="@drawable/button_selector"/>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/topRatedMovies"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/jost_medium"
-                android:text="@string/top_rated_movies"
-                android:textColor="@color/white"
-                android:textAlignment="viewStart"
-                app:icon="@drawable/ic_next"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/button_text_color"
-                app:iconGravity="end"
-                app:iconPadding="8dp"
-                android:textSize="14sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/topRatedMoviesRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:scrollbars="horizontal"
-                android:focusable="true"
-                android:clickable="true"
-                android:nextFocusUp="@id/recentlyReleasedMoviesRecycler"
-                android:nextFocusDown="@id/lastPlayedMoviesRecycler"
-                android:layout_marginTop="14dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/movie_item_banner"
-                android:background="@drawable/button_selector"/>
-
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/lastPlayedMovies2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/jost_medium"
-                android:text="Some Recommendation"
-                android:textColor="@color/white"
-                android:textAlignment="viewStart"
-                app:icon="@drawable/ic_next"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/button_text_color"
-                app:iconGravity="end"
-                app:iconPadding="8dp"
-                android:textSize="14sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/lastPlayedMoviesRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scrollbars="horizontal"
-                android:layout_marginTop="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:nextFocusUp="@id/topRatedMoviesRecycler"
-                android:nextFocusDown="@id/watchListMediaRecycler"
-                android:background="@drawable/button_selector"
-                 />
-
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/watchListMedia1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/jost_medium"
-                android:text="Old Gold Movies"
-                android:textColor="@color/white"
-                android:textAlignment="viewStart"
-                app:icon="@drawable/ic_next"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/button_text_color"
-                app:iconGravity="end"
-                app:iconPadding="8dp"
-                android:textSize="14sp" />
-
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/watchListMediaRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scrollbars="horizontal"
-                android:layout_marginTop="14dp"
-                android:focusable="true"
-                android:clickable="true"
-                android:nextFocusUp="@id/lastPlayedMoviesRecycler"
-                android:nextFocusDown= "@id/filmIndoRecycler"
-                android:background="@drawable/button_selector"
-                 />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/filmIndo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:clickable="true"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/jost_medium"
-                android:text="@string/film_indo"
-                android:textColor="@color/white"
-                android:textAlignment="viewStart"
-                app:icon="@drawable/ic_next"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/button_text_color"
-                app:iconGravity="end"
-                app:iconPadding="8dp"
-                android:textSize="14sp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/filmIndoRecycler"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:nextFocusUp="@id/watchListMediaRecycler"
-                android:scrollbars="horizontal"
-                android:background="@drawable/button_selector"/>
-
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
-</LinearLayout>
+</FrameLayout>

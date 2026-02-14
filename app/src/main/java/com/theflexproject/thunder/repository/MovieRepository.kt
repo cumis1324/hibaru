@@ -55,7 +55,43 @@ class MovieRepository @Inject constructor(
         return movieDao.movieCount
     }
 
-    suspend fun deleteAll() {
+    suspend fun getTrendingMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getTrending(limit, offset)
+    }
+
+    suspend fun getTopRatedMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getTopRated(limit, offset)
+    }
+
+    suspend fun getRecentlyAddedMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getrecentlyadded(limit, offset)
+    }
+
+    suspend fun getRecentReleases(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getrecentreleases(limit, offset)
+    }
+
+    suspend fun getIndonesianMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getFilmIndo(limit, offset)
+    }
+
+    suspend fun getRecommendations(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getrecomendation(limit, offset)
+    }
+
+    suspend fun getWatchlist(): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getWatchlisted()
+    }
+
+    suspend fun updatePlayed(id: Int, dateTime: String) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.updatePlayed(id, dateTime)
+    }
+
+    suspend fun getOldGoldMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getOgMovies(limit, offset)
+    }
+
+    suspend fun deleteAll() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         movieDao.deleteAll()
     }
 }

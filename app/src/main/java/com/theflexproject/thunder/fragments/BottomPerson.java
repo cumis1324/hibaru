@@ -36,7 +36,7 @@ import com.theflexproject.thunder.model.Cast;
 import com.theflexproject.thunder.model.CombinedCredits;
 import com.theflexproject.thunder.model.Credits;
 import com.theflexproject.thunder.model.Crew;
-import com.theflexproject.thunder.model.Genre;
+import com.theflexproject.thunder.model.Genres;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MovieCredit;
 import com.theflexproject.thunder.model.MyMedia;
@@ -67,13 +67,17 @@ public class BottomPerson extends BottomSheetDialogFragment {
     private String tvId;
     private List<String> movieIds = new ArrayList<>();
     private List<String> tvIds = new ArrayList<>();
-    public BottomPerson(){}
-    public BottomPerson(int personId){
-        this.personId=personId;
-    }
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.bottom_person, container, false);
 
+    public BottomPerson() {
+    }
+
+    public BottomPerson(int personId) {
+        this.personId = personId;
+    }
+
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.bottom_person, container, false);
 
         TextView originalTitle = view.findViewById(R.id.originalTitle);
         TextView descriptionView = view.findViewById(R.id.bottom_sheet_description);
@@ -82,12 +86,10 @@ public class BottomPerson extends BottomSheetDialogFragment {
         TextView genreSheet = view.findViewById(R.id.genreSheet);
         castView = view.findViewById(R.id.castRecycler);
         fragmentManager = getActivity().getSupportFragmentManager();
-        NestedScrollView nestedScrollView = view.findViewById(R.id.nested_scroll_view);  // Ganti dengan ID yang sesuai
+        NestedScrollView nestedScrollView = view.findViewById(R.id.nested_scroll_view); // Ganti dengan ID yang sesuai
         if (nestedScrollView != null) {
             nestedScrollView.setNestedScrollingEnabled(true);
         }
-
-
 
         // Lakukan query database di thread terpisah
         new Thread(() -> {
@@ -144,20 +146,20 @@ public class BottomPerson extends BottomSheetDialogFragment {
                         .placeholder(new ColorDrawable(Color.TRANSPARENT))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .into(posterView);
-                castView.setLayoutManager(new ScaleCenterItemLayoutManager(getContext() , RecyclerView.HORIZONTAL , false));
+                castView.setLayoutManager(
+                        new ScaleCenterItemLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
                 castView.setHasFixedSize(true);
-                mediaAdapter = new MediaAdapter(getContext(), castList , fragmentManager);
+                mediaAdapter = new MediaAdapter(getContext(), castList, fragmentManager);
                 castView.setAdapter(mediaAdapter);
                 castView.setNestedScrollingEnabled(false);
 
-
             });
-
 
         }).start();
 
         return view;
     }
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onStart() {
@@ -169,9 +171,9 @@ public class BottomPerson extends BottomSheetDialogFragment {
             BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
 
             // Mengatur BottomSheet ke state expanded secara otomatis
-            if (PlayerUtils.isTVDevice(requireActivity())){
+            if (PlayerUtils.isTVDevice(requireActivity())) {
                 behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            }else {
+            } else {
                 behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             }
             // Mengatur agar hanya dapat scrolling dan tidak menjadi expanded
@@ -185,7 +187,8 @@ public class BottomPerson extends BottomSheetDialogFragment {
             // Optional: Mengatur tinggi Bottom Sheet ke full-screen
             bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
             bottomSheet.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
-            NestedScrollView nestedScrollView = bottomSheet.findViewById(R.id.nested_scroll_view);  // Ganti dengan ID yang sesuai
+            NestedScrollView nestedScrollView = bottomSheet.findViewById(R.id.nested_scroll_view); // Ganti dengan ID
+                                                                                                   // yang sesuai
             if (nestedScrollView != null) {
                 nestedScrollView.setNestedScrollingEnabled(true);
             }

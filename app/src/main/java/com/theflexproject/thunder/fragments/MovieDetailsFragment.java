@@ -102,7 +102,7 @@ import com.theflexproject.thunder.adapter.ScaleCenterItemLayoutManager;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.DownloadItem;
 import com.theflexproject.thunder.model.FirebaseManager;
-import com.theflexproject.thunder.model.Genre;
+import com.theflexproject.thunder.model.Genres;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.player.PlayerActivity;
@@ -122,12 +122,9 @@ import java.util.Objects;
 import eightbitlab.com.blurview.BlurView;
 import eightbitlab.com.blurview.RenderScriptBlur;
 
-
 // Inside your Application class or MainActivity onCreate method
 
-
-public class MovieDetailsFragment extends BaseFragment{
-
+public class MovieDetailsFragment extends BaseFragment {
 
     MoreMoviesAdapterr moreMovieRecycler;
     RecyclerView moreMovieView;
@@ -139,7 +136,7 @@ public class MovieDetailsFragment extends BaseFragment{
     int movieId;
     String movieFileName;
     ImageView logo, backdrop;
-    ImageButton play,changeSource,addToList,download, shareButton;
+    ImageButton play, changeSource, addToList, download, shareButton;
     Movie movieDetails, largestFile, selectedFile;
     TextView quality;
 
@@ -148,10 +145,9 @@ public class MovieDetailsFragment extends BaseFragment{
     MaterialButton rating;
     RelativeLayout titleLayout;
 
-    //adview
+    // adview
 
     private Button saweria;
-
 
     private RewardedAd rewardedAd;
     FirebaseManager manager;
@@ -163,20 +159,18 @@ public class MovieDetailsFragment extends BaseFragment{
     public MovieDetailsFragment() {
 
     }
-    public MovieDetailsFragment(int id){
-        this.movieId =id;
-    }
 
+    public MovieDetailsFragment(int id) {
+        this.movieId = id;
+    }
 
     public MovieDetailsFragment(String fileName) {
         this.movieFileName = fileName;
     }
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_movie_details_new, container, false);
         return view;
@@ -192,7 +186,8 @@ public class MovieDetailsFragment extends BaseFragment{
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("https://stream.trakteer.id/running-text-default.html?rt_count=5&rt_speed=fast&rt_1_clr1=rgba%280%2C+0%2C+0%2C+1%29&rt_septype=image&rt_txtshadow=true&rt_showsuppmsg=true&creator_name=nfgplus-official&page_url=trakteer.id/nfgplusofficial&mod=3&key=trstream-hV0jDdrlk82mv3aZnzpA&hash=a6z74q7pkgn3mlqy");
+        webView.loadUrl(
+                "https://stream.trakteer.id/running-text-default.html?rt_count=5&rt_speed=fast&rt_1_clr1=rgba%280%2C+0%2C+0%2C+1%29&rt_septype=image&rt_txtshadow=true&rt_showsuppmsg=true&creator_name=nfgplus-official&page_url=trakteer.id/nfgplusofficial&mod=3&key=trstream-hV0jDdrlk82mv3aZnzpA&hash=a6z74q7pkgn3mlqy");
         title = view.findViewById(R.id.title3);
         progressOverlay = view.findViewById(R.id.progress_overlay);
         quality = view.findViewById(R.id.fakebutton);
@@ -205,7 +200,6 @@ public class MovieDetailsFragment extends BaseFragment{
         initWidgets(view);
         loadDetails();
 
-
     }
 
     @Override
@@ -214,7 +208,7 @@ public class MovieDetailsFragment extends BaseFragment{
         super.onDestroyView();
     }
 
-    private void loadReward(){
+    private void loadReward() {
         AdRequest adRequest = new AdRequest.Builder().build();
         RewardedAd.load(mActivity, "ca-app-pub-7142401354409440/7652952632",
                 adRequest, new RewardedAdLoadCallback() {
@@ -271,7 +265,8 @@ public class MovieDetailsFragment extends BaseFragment{
                                     Log.d(TAG, "The user earned the reward.");
                                     int rewardAmount = rewardItem.getAmount();
                                     String rewardType = rewardItem.getType();
-                                    Toast.makeText(getContext(), rewardType + movieDetails.getTitle(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getContext(), rewardType + movieDetails.getTitle(),
+                                            Toast.LENGTH_LONG).show();
                                 }
                             });
                         }
@@ -280,14 +275,14 @@ public class MovieDetailsFragment extends BaseFragment{
                 });
 
     }
+
     private void loadNative() {
 
         AdLoader adLoader = new AdLoader.Builder(mActivity, "ca-app-pub-7142401354409440/7261340471")
                 .forNativeAd(new NativeAd.OnNativeAdLoadedListener() {
                     @Override
                     public void onNativeAdLoaded(NativeAd nativeAd) {
-                        NativeTemplateStyle styles = new
-                                NativeTemplateStyle.Builder().build();
+                        NativeTemplateStyle styles = new NativeTemplateStyle.Builder().build();
                         template.setStyles(styles);
                         template.setNativeAd(nativeAd);
                     }
@@ -297,8 +292,6 @@ public class MovieDetailsFragment extends BaseFragment{
         adLoader.loadAd(new AdRequest.Builder().build());
 
     }
-
-
 
     private void initWidgets(View view) {
         logo = view.findViewById(R.id.movieLogo);
@@ -312,182 +305,192 @@ public class MovieDetailsFragment extends BaseFragment{
         changeSource = view.findViewById(R.id.changeSourceButton);
         rating = view.findViewById(R.id.ratingsSheet1);
         titleLayout = view.findViewById(R.id.titleLayout);
-//        changeTMDB = view.findViewById(R.id.changeTMDBId);
-
+        // changeTMDB = view.findViewById(R.id.changeTMDBId);
 
     }
 
-    private void loadDetails(){
-       try {
-           Thread thread = new Thread(new Runnable() {
-               @Override
-               public void run() {
-                   Log.i(" " , "in thread");
+    private void loadDetails() {
+        try {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i(" ", "in thread");
 
-                       movieFileList = DatabaseClient
-                               .getInstance(mActivity)
-                               .getAppDatabase()
-                               .movieDao()
-                               .getAllById(movieId);
+                    movieFileList = DatabaseClient
+                            .getInstance(mActivity)
+                            .getAppDatabase()
+                            .movieDao()
+                            .getAllById(movieId);
 
-                   Log.i("movieId",movieId+"");
+                    Log.i("movieId", movieId + "");
 
-                   movieDetails = DatabaseClient
-                           .getInstance(mActivity)
-                           .getAppDatabase()
-                           .movieDao()
-                           .byId(movieId);
-                   if(movieDetails==null){
-                       movieDetails = DatabaseClient
-                               .getInstance(mActivity)
-                               .getAppDatabase()
-                               .movieDao()
-                               .getByFileName(movieFileName);
-                   }
+                    movieDetails = DatabaseClient
+                            .getInstance(mActivity)
+                            .getAppDatabase()
+                            .movieDao()
+                            .byId(movieId);
+                    if (movieDetails == null) {
+                        movieDetails = DatabaseClient
+                                .getInstance(mActivity)
+                                .getAppDatabase()
+                                .movieDao()
+                                .getByFileName(movieFileName);
+                    }
 
-                   if(movieDetails!=null){
-                       loadMoreMovies();
-                       Log.i("insideLoadDetails",movieDetails.toString());
-                       mActivity.runOnUiThread(new Runnable() {
-                           @SuppressLint("SetTextI18n")
-                           @Override
-                           public void run() {
-                               String titleText = movieDetails.getTitle();
-                               String year = movieDetails.getReleaseDate();
-                               String yearCrop = year.substring(0,year.indexOf('-'));
-                               String deskripsi = movieDetails.getOverview();
-                               String ratings = (int)(movieDetails.getVoteAverage()*10)+"%";
-                               String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
-                               rating.setText(ratings + " - " + result + " ...Selengkapnya");
-                               title.setText(titleText + " ("+yearCrop+")");
-                               rating.setOnClickListener(new View.OnClickListener() {
-                                   @Override
-                                   public void onClick(View view) {
-                                       VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(movieDetails.getId(), true);
-                                       bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
-                                   }
-                               });
-                               titleLayout.setOnClickListener(new View.OnClickListener() {
-                                   @Override
-                                   public void onClick(View view) {
-                                       VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(movieDetails.getId(), true);
-                                       bottomSheet.show( mActivity.getSupportFragmentManager(), "VideoDetailsBottomSheet");
-                                   }
-                               });
+                    if (movieDetails != null) {
+                        loadMoreMovies();
+                        Log.i("insideLoadDetails", movieDetails.toString());
+                        mActivity.runOnUiThread(new Runnable() {
+                            @SuppressLint("SetTextI18n")
+                            @Override
+                            public void run() {
+                                String titleText = movieDetails.getTitle();
+                                String year = movieDetails.getReleaseDate();
+                                String yearCrop = year.substring(0, year.indexOf('-'));
+                                String deskripsi = movieDetails.getOverview();
+                                String ratings = (int) (movieDetails.getVoteAverage() * 10) + "%";
+                                String result = StringUtils.runtimeIntegerToString(movieDetails.getRuntime());
+                                rating.setText(ratings + " - " + result + " ...Selengkapnya");
+                                title.setText(titleText + " (" + yearCrop + ")");
+                                rating.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(
+                                                movieDetails.getId(), true);
+                                        bottomSheet.show(mActivity.getSupportFragmentManager(),
+                                                "VideoDetailsBottomSheet");
+                                    }
+                                });
+                                titleLayout.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        VideoDetailsBottomSheet bottomSheet = new VideoDetailsBottomSheet(
+                                                movieDetails.getId(), true);
+                                        bottomSheet.show(mActivity.getSupportFragmentManager(),
+                                                "VideoDetailsBottomSheet");
+                                    }
+                                });
 
-                               String tmdbId = String.valueOf(movieDetails.getId());
-                               databaseReference = FirebaseDatabase.getInstance().getReference("History/");
-                               String userId = manager.getCurrentUser().getUid();
-                               DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
-                               DatabaseReference lastP = databaseReference.child(userId).child(tmdbId).child("lastPlayed");
-                               userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                                   @Override
-                                   public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                       if (dataSnapshot.exists()) {
-                                           Long lastPosition = dataSnapshot.getValue(Long.class);
-                                           if (lastPosition != null) {
-                                               long runtime = (long) movieDetails.getRuntime() * 60 * 1000;
-                                               double progress = (double) lastPosition / runtime;
-                                               int progressWidth = (int) (backdrop.getWidth() * progress);
-                                               progressOverlay.getLayoutParams().width = progressWidth;
-                                               progressOverlay.requestLayout();
-                                           }
-                                       }
-                                   }
+                                String tmdbId = String.valueOf(movieDetails.getId());
+                                databaseReference = FirebaseDatabase.getInstance().getReference("History/");
+                                String userId = manager.getCurrentUser().getUid();
+                                DatabaseReference userReference = databaseReference.child(userId).child(tmdbId)
+                                        .child("lastPosition");
+                                DatabaseReference lastP = databaseReference.child(userId).child(tmdbId)
+                                        .child("lastPlayed");
+                                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.exists()) {
+                                            Long lastPosition = dataSnapshot.getValue(Long.class);
+                                            if (lastPosition != null) {
+                                                long runtime = (long) movieDetails.getRuntime() * 60 * 1000;
+                                                double progress = (double) lastPosition / runtime;
+                                                int progressWidth = (int) (backdrop.getWidth() * progress);
+                                                progressOverlay.getLayoutParams().width = progressWidth;
+                                                progressOverlay.requestLayout();
+                                            }
+                                        }
+                                    }
 
-                                   @Override
-                                   public void onCancelled(@NonNull DatabaseError databaseError) {
-                                       // Handle onCancelled event
-                                   }
-                               });
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                        // Handle onCancelled event
+                                    }
+                                });
 
-// Listener for lastPlayed
-                               lastP.addListenerForSingleValueEvent(new ValueEventListener() {
-                                   @Override
-                                   public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                       if (dataSnapshot.exists()) {
-                                           String lastPlayed = dataSnapshot.getValue(String.class);
-                                           if (lastPlayed != null) {
-                                               DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-                                               String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-                                               // Update the played field in your local database asynchronously
-                                               AsyncTask.execute(() -> {
-                                                   DatabaseClient.getInstance(getContext()).getAppDatabase().movieDao().updatePlayed(movieDetails.getId(), lastPlayed+" added");
-                                               });
-                                           }
-                                       }
-                                   }
+                                // Listener for lastPlayed
+                                lastP.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.exists()) {
+                                            String lastPlayed = dataSnapshot.getValue(String.class);
+                                            if (lastPlayed != null) {
+                                                DateTimeFormatter formatter = DateTimeFormatter
+                                                        .ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+                                                String currentDateTime = ZonedDateTime
+                                                        .now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
+                                                // Update the played field in your local database asynchronously
+                                                AsyncTask.execute(() -> {
+                                                    DatabaseClient.getInstance(getContext()).getAppDatabase().movieDao()
+                                                            .updatePlayed(movieDetails.getId(), lastPlayed + " added");
+                                                });
+                                            }
+                                        }
+                                    }
 
-                                   @Override
-                                   public void onCancelled(@NonNull DatabaseError databaseError) {
-                                       // Handle onCancelled event
-                                   }
-                               });
-                               quality.setText(movieDetails.getOriginalTitle());
-                               quality.setVisibility(View.VISIBLE);
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                        // Handle onCancelled event
+                                    }
+                                });
+                                quality.setText(movieDetails.getOriginalTitle());
+                                quality.setVisibility(View.VISIBLE);
 
+                                String logoLink = movieDetails.getLogoPath();
+                                System.out.println("Logo Link" + logoLink);
 
-                               String logoLink = movieDetails.getLogoPath();
-                               System.out.println("Logo Link"+logoLink);
+                                if (logoLink != null && !logoLink.equals("")) {
+                                    logo.setVisibility(View.VISIBLE);
+                                    Glide.with(mActivity)
+                                            .load(logoLink)
+                                            .apply(new RequestOptions()
+                                                    .fitCenter()
+                                                    .override(Target.SIZE_ORIGINAL))
+                                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                                            .into(logo);
+                                }
+                                if (logoLink != null && logoLink.equals("") && movieDetails.getTitle() != null) {
+                                    logo.setVisibility(View.GONE);
+                                }
 
-                               if(logoLink!=null && !logoLink.equals("")){
-                                   logo.setVisibility(View.VISIBLE);
-                                   Glide.with(mActivity)
-                                           .load(logoLink)
-                                           .apply(new RequestOptions()
-                                           .fitCenter()
-                                           .override(Target.SIZE_ORIGINAL))
-                                           .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                           .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                                           .into(logo);
-                               }
-                               if(logoLink!=null && logoLink.equals("") && movieDetails.getTitle()!=null){
-                                   logo.setVisibility(View.GONE);
-                               }
+                                if (movieDetails.getBackdropPath() != null) {
+                                    //
 
-                               if(movieDetails.getBackdropPath()!=null) {
-//
+                                    Glide.with(mActivity)
+                                            .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdropPath())
+                                            .apply(new RequestOptions()
+                                                    .fitCenter()
+                                                    .override(Target.SIZE_ORIGINAL))
+                                            // .apply(bitmapTransform(new BlurTransformation(5, 3)))
+                                            .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                            .into(backdrop);
+                                } else {
+                                    if (movieDetails.getPosterPath() != null) {
+                                        Glide.with(mActivity)
+                                                .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPosterPath())
+                                                .apply(new RequestOptions()
+                                                        .fitCenter()
+                                                        .override(Target.SIZE_ORIGINAL))
+                                                // .apply(bitmapTransform(new BlurTransformation(5, 3)))
+                                                .placeholder(new ColorDrawable(Color.TRANSPARENT))
+                                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                                .into(backdrop);
+                                    }
+                                }
 
-                                           Glide.with(mActivity)
-                                                   .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdropPath())
-                                                   .apply(new RequestOptions()
-                                                           .fitCenter()
-                                                           .override(Target.SIZE_ORIGINAL))
-//                                                   .apply(bitmapTransform(new BlurTransformation(5, 3)))
-                                                   .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                                                   .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                                   .into(backdrop);
-                               }else {
-                                   if(movieDetails.getPosterPath()!=null) {
-                                               Glide.with(mActivity)
-                                                       .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getPosterPath())
-                                                       .apply(new RequestOptions()
-                                                               .fitCenter()
-                                                               .override(Target.SIZE_ORIGINAL))
-//                                                       .apply(bitmapTransform(new BlurTransformation(5, 3)))
-                                                       .placeholder(new ColorDrawable(Color.TRANSPARENT))
-                                                       .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                                       .into(backdrop);
-                                   }
-                               }
+                            }
+                        });
+                    }
 
-                           }
-                       });
-                   }
-
-               }});
-           thread.start();
-       }catch (NullPointerException exception){Log.i("Error",exception.toString());}
+                }
+            });
+            thread.start();
+        } catch (NullPointerException exception) {
+            Log.i("Error", exception.toString());
+        }
         setMyOnClickListeners();
     }
 
-    String urlLogo ;
+    String urlLogo;
 
+    // to blur the backdrop
+    void blurBottom() {
 
-    //to blur the backdrop
-    void blurBottom(){
-
-        ((Activity) mActivity).getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        ((Activity) mActivity).getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         ((Activity) mActivity).getWindow().setStatusBarColor(Color.TRANSPARENT);
         final float radius = 14f;
         final Drawable windowBackground = ((Activity) mActivity).getWindow().getDecorView().getBackground();
@@ -498,7 +501,8 @@ public class MovieDetailsFragment extends BaseFragment{
         blurView.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
         blurView.setClipToOutline(true);
     }
-    private void  loadMoreMovies() {
+
+    private void loadMoreMovies() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -516,35 +520,38 @@ public class MovieDetailsFragment extends BaseFragment{
                         .getInstance(mActivity)
                         .getAppDatabase()
                         .movieDao()
-                        .getrecomendation();
+                        .getrecomendation(10, 0);
                 moreMovieList = new ArrayList<>();
                 moreMovieList.addAll(morebyId);
                 moreMovieList.addAll(moreMovies);
                 moreMovieList.addAll(moreRecom);
-                if(moreMovieList!=null && moreMovieList.size()>0) {
+                if (moreMovieList != null && moreMovieList.size() > 0) {
                     mActivity.runOnUiThread(new Runnable() {
                         @SuppressLint("NotifyDataSetChanged")
                         @Override
                         public void run() {
                             moreMovieView.setVisibility(View.VISIBLE);
-                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(getContext() , LinearLayoutManager.VERTICAL , false);
+                            ScaleCenterItemLayoutManager linearLayoutManager = new ScaleCenterItemLayoutManager(
+                                    getContext(), LinearLayoutManager.VERTICAL, false);
                             moreMovieView.setLayoutManager(linearLayoutManager);
                             moreMovieView.setHasFixedSize(true);
-                            moreMovieRecycler = new MoreMoviesAdapterr(mActivity, (List<MyMedia>)(List<?>) moreMovieList, moreMoviesListener);
+                            moreMovieRecycler = new MoreMoviesAdapterr(mActivity,
+                                    (List<MyMedia>) (List<?>) moreMovieList, moreMoviesListener);
                             moreMovieView.setAdapter(moreMovieRecycler);
                             moreMovieRecycler.notifyDataSetChanged();
                         }
                     });
                 }
-            }});
+            }
+        });
         thread.start();
 
     }
 
+    private void setMyOnClickListeners() {
 
-    private void setMyOnClickListeners(){
-
-        saweria.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
+        saweria.setOnClickListener(v -> startActivity(
+                new Intent(Intent.ACTION_VIEW, Uri.parse("https://trakteer.id/nfgplusofficial/tip"))));
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -560,8 +567,8 @@ public class MovieDetailsFragment extends BaseFragment{
         SharedPreferences sharedPreferences = mActivity.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         boolean savedEXT = sharedPreferences.getBoolean("EXTERNAL_SETTING", false);
 
-        if(savedEXT){
-            //External Player
+        if (savedEXT) {
+            // External Player
             play.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -572,15 +579,14 @@ public class MovieDetailsFragment extends BaseFragment{
                     loadReward();
                 }
             });
-        }else {
-            //Play video
+        } else {
+            // Play video
             play.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     try {
-                        CustomFileListDialogFragment dialog =
-                                new CustomFileListDialogFragment(mActivity,changeSource,
-                                        (List<MyMedia>)(List<?>) movieFileList);
+                        CustomFileListDialogFragment dialog = new CustomFileListDialogFragment(mActivity, changeSource,
+                                (List<MyMedia>) (List<?>) movieFileList);
 
                         dialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
                         dialog.mOnInputListener = new CustomFileListDialogFragment.OnInputListener() {
@@ -588,25 +594,24 @@ public class MovieDetailsFragment extends BaseFragment{
                             public void sendInput(int selection) {
                                 selectedFile = movieFileList.get(selection);
                                 String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
-                                System.out.println("selected file"+selectedFile.getFileName());
+                                System.out.println("selected file" + selectedFile.getFileName());
                                 Intent in = new Intent(getActivity(), PlayerActivity.class);
                                 in.putExtra("url", selectedFile.getUrlString());
                                 in.putExtra("title", selectedFile.getTitle());
                                 String tmdbId = String.valueOf(selectedFile.getId());
                                 in.putExtra("tmdbId", tmdbId);
                                 String inYear = selectedFile.getReleaseDate();
-                                in.putExtra("year", inYear.substring(0,inYear.indexOf('-')));
+                                in.putExtra("year", inYear.substring(0, inYear.indexOf('-')));
                                 startActivity(in);
-                                Toast.makeText(getContext(), "Playing " + movieDetails.getTitle() + " " + huntu, Toast.LENGTH_LONG).show();
-                                Toast.makeText(mActivity , selectedFile.getTitle() + huntu + " Selected" , Toast.LENGTH_LONG).show();
+                                Toast.makeText(getContext(), "Playing " + movieDetails.getTitle() + " " + huntu,
+                                        Toast.LENGTH_LONG).show();
+                                Toast.makeText(mActivity, selectedFile.getTitle() + huntu + " Selected",
+                                        Toast.LENGTH_LONG).show();
 
                             }
                         };
 
-
-
-
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -615,35 +620,32 @@ public class MovieDetailsFragment extends BaseFragment{
 
         // Share button click listener
 
-
-//        Start download
+        // Start download
         download.setOnClickListener(new View.OnClickListener() {
             @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View v) {
                 if (Build.VERSION.SDK_INT < 32) {
                     // Check if the app has the WRITE_EXTERNAL_STORAGE permission
-                    if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                            != PackageManager.PERMISSION_GRANTED) {
+                    if (ContextCompat.checkSelfPermission(requireContext(),
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                         // Request the permission if it is not granted
                         ActivityCompat.requestPermissions(requireActivity(),
-                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
                                 REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION);
-                    }else {
+                    } else {
                         // Permission is already granted, proceed with the download
                         startDownload();
                     }
-                }
-                else {
+                } else {
                     // Permission is already granted, proceed with the download
                     startDownload();
                 }
             }
 
             private void startDownload() {
-                CustomFileListDialogFragment downdialog =
-                        new CustomFileListDialogFragment(mActivity,changeSource,
-                                (List<MyMedia>)(List<?>) movieFileList);
+                CustomFileListDialogFragment downdialog = new CustomFileListDialogFragment(mActivity, changeSource,
+                        (List<MyMedia>) (List<?>) movieFileList);
 
                 downdialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
                 downdialog.mOnInputListener = new CustomFileListDialogFragment.OnInputListener() {
@@ -651,13 +653,14 @@ public class MovieDetailsFragment extends BaseFragment{
                     public void sendInput(int selection) {
                         selectedFile = movieFileList.get(selection);
                         String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
-                        System.out.println("selected file"+selectedFile.getFileName());
+                        System.out.println("selected file" + selectedFile.getFileName());
 
                         String customFolderPath = "/nfgplus/movies/";
                         DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
                         Uri uri = Uri.parse(selectedFile.getUrlString());
                         DownloadManager.Request request = new DownloadManager.Request(uri);
-                        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, customFolderPath + selectedFile.getFileName());
+                        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
+                                customFolderPath + selectedFile.getFileName());
                         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                                 .setTitle(selectedFile.getTitle())
                                 .setVisibleInDownloadsUi(true)
@@ -669,47 +672,45 @@ public class MovieDetailsFragment extends BaseFragment{
                                 downloadId,
                                 selectedFile.getTitle(),
                                 -1,
-                                0
-                        ));
+                                0));
                         Toast.makeText(getContext(), "Download Started", Toast.LENGTH_LONG).show();
                     }
                 };
             }
         });
 
-
         addToList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String tmdbId = String.valueOf(movieDetails.getId());
                 String userId = manager.getCurrentUser().getUid();
-                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId).child(tmdbId);
+                DatabaseReference userReference = FirebaseDatabase.getInstance().getReference("Favorit").child(userId)
+                        .child(tmdbId);
                 DatabaseReference value = userReference.child("value");
                 value.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(!snapshot.exists()){
+                        if (!snapshot.exists()) {
 
                             Map<String, Object> userMap = new HashMap<>();
                             userMap.put("value", 1);
                             userReference.setValue(userMap);
 
-                            Toast.makeText(mActivity , "Added To List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Added To List", Toast.LENGTH_LONG).show();
 
-                        }else{
+                        } else {
                             userReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
+                                    if (task.isSuccessful()) {
                                         System.out.println("Favorit dihapus");
-                                    }
-                                    else {
+                                    } else {
                                         System.out.println("Favorit dihapus");
                                     }
                                 }
                             });
 
-                            Toast.makeText(mActivity , "Removed From List" , Toast.LENGTH_LONG).show();
+                            Toast.makeText(mActivity, "Removed From List", Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -719,29 +720,26 @@ public class MovieDetailsFragment extends BaseFragment{
                     }
                 });
 
-
             }
         });
 
-
-
-        final int[] checkedItem = {-1};
+        final int[] checkedItem = { -1 };
         int indexSelected = 0;
         changeSource.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CustomFileListDialogFragment dialog =
-                        new CustomFileListDialogFragment(mActivity,changeSource,
-                                (List<MyMedia>)(List<?>) movieFileList);
+                CustomFileListDialogFragment dialog = new CustomFileListDialogFragment(mActivity, changeSource,
+                        (List<MyMedia>) (List<?>) movieFileList);
 
-               dialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
+                dialog.show(mActivity.getSupportFragmentManager(), "CustomFileListDialogFragment");
                 dialog.mOnInputListener = new CustomFileListDialogFragment.OnInputListener() {
                     @Override
                     public void sendInput(int selection) {
                         selectedFile = movieFileList.get(selection);
                         String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
-                        System.out.println("selected file"+selectedFile.getFileName());
-                        Toast.makeText(mActivity , selectedFile.getTitle() + huntu + " Selected" , Toast.LENGTH_LONG).show();
+                        System.out.println("selected file" + selectedFile.getFileName());
+                        Toast.makeText(mActivity, selectedFile.getTitle() + huntu + " Selected", Toast.LENGTH_LONG)
+                                .show();
 
                     }
                 };
@@ -751,7 +749,7 @@ public class MovieDetailsFragment extends BaseFragment{
             @Override
             public void onClick(View v) {
                 String itemId = String.valueOf(movieDetails.getId()); // Replace with the actual item ID
-              generateAndShareDynamicLink(itemId);
+                generateAndShareDynamicLink(itemId);
 
             }
         });
@@ -762,9 +760,9 @@ public class MovieDetailsFragment extends BaseFragment{
                 MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment(more.getId());
                 mActivity.getSupportFragmentManager()
                         .beginTransaction()
-                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
                         .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                        .add(R.id.container,movieDetailsFragment)
+                        .add(R.id.container, movieDetailsFragment)
                         .addToBackStack(null)
                         .commit();
             }
@@ -794,7 +792,8 @@ public class MovieDetailsFragment extends BaseFragment{
                         // Handle the error
                         Exception e = task.getException();
                         // Log or display an error message
-                        // For now, you can still proceed with the long link if short link creation fails
+                        // For now, you can still proceed with the long link if short link creation
+                        // fails
                         shareDynamicLink(dynamicLink.getUri().toString());
                     }
                 });
@@ -816,7 +815,7 @@ public class MovieDetailsFragment extends BaseFragment{
         String shareText = title + "\n" +
                 "Judul Asli: " + originalTitle + "\n" +
                 "Deskripsi: " + overview + "\n" +
-                 deepLink + "\n" ;
+                deepLink + "\n";
 
         // Membuat Intent untuk membagikan konten
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -829,18 +828,14 @@ public class MovieDetailsFragment extends BaseFragment{
 
     }
 
-
     private void addToLastPlayed() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
 
-
-
             }
         });
         thread.start();
     }
-
 
 }

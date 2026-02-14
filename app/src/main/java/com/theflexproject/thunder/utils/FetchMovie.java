@@ -46,7 +46,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getrecentreleases();
+                .getrecentreleases(10, 0);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -145,7 +145,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getFilmIndo();
+                .getFilmIndo(10, 0);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -170,7 +170,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getOgMovies();
+                .getOgMovies(10, 0);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -219,7 +219,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getTopRated();
+                .getTopRated(10, 0);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -243,7 +243,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getTrending();
+                .getTrending(10, 0);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);
@@ -268,7 +268,7 @@ public class FetchMovie {
                 .getInstance(mActivity)
                 .getAppDatabase()
                 .movieDao()
-                .getrecomendation();
+                .getrecomendation(10, 0);
 
         // Kirim tugas ke executor
         Future<List<Movie>> future = executor.submit(callable);

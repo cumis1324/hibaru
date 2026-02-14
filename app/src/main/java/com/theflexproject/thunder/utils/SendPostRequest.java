@@ -2,7 +2,7 @@ package com.theflexproject.thunder.utils;
 
 import static com.theflexproject.thunder.Constants.CF_CACHE_TOKEN;
 import static com.theflexproject.thunder.Constants.SIMPLE_PROGRAM_DOWNLOAD_API;
-import static com.theflexproject.thunder.MainActivity.context;
+import com.theflexproject.thunder.MyApplication;
 import static com.theflexproject.thunder.utils.SendGetRequestTMDB.sendGet2;
 import static com.theflexproject.thunder.utils.SendGetRequestTMDB.sendGetTVShow;
 
@@ -171,7 +171,8 @@ public class SendPostRequest {
                     List<String> folders = new ArrayList<>();
                     List<File> files = target.getData().getFiles();
 
-                    DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+                    DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao()
+                            .insert(target);
 
                     if (!isTVShow) {
                         checkFilesAndSendToTMDBMovie(folders, files, urlString, index_id);
@@ -292,7 +293,7 @@ public class SendPostRequest {
                 // }
                 // }
 
-                DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+                DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao().insert(target);
 
                 if (!isTVShow) {
                     checkFilesAndSendToTMDBMovie(folders, files, urlString, index_id);
@@ -411,7 +412,7 @@ public class SendPostRequest {
                 // }
                 // }
 
-                DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+                DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao().insert(target);
 
                 if (!isTVShow) {
                     checkFilesAndSendToTMDBMovie(folders, files, urlString, index_id);
@@ -517,7 +518,7 @@ public class SendPostRequest {
                 List<String> folders = new ArrayList<>();
                 List<File> files = target.getData().getFiles();
 
-                DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+                DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao().insert(target);
 
                 // send files to tmdb and insert them to db
                 if (!isTVShow) {
@@ -628,14 +629,15 @@ public class SendPostRequest {
 
     private static boolean isAlreadyPresent(String id, Date modifiedTime) {
         System.out.println("id to test " + id);
-        Movie movie = DatabaseClient.getInstance(context).getAppDatabase().movieDao().getByGdId(id);
-        Episode episode = DatabaseClient.getInstance(context).getAppDatabase().episodeDao().findByGdId(id);
+        Movie movie = DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().getByGdId(id);
+        Episode episode = DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao()
+                .findByGdId(id);
         if (movie != null && modifiedTime.after(movie.getModifiedTime())) {
-            DatabaseClient.getInstance(context).getAppDatabase().movieDao().deleteByGdId(id);
+            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().deleteByGdId(id);
             return false;
         }
         if (episode != null && modifiedTime.after(episode.getModifiedTime())) {
-            DatabaseClient.getInstance(context).getAppDatabase().episodeDao().deleteByGdId(id);
+            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().deleteByGdId(id);
             return false;
         }
         if (movie == null && episode == null) {
@@ -786,7 +788,7 @@ public class SendPostRequest {
     // Gson gson = new Gson();
     // ResFormat target = gson.fromJson(decodedString, ResFormat.class);
     //
-    // DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+    // DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao().insert(target);
     //
     // List<String> showFolders = new ArrayList<>();
     // List<File> files = target.getData().getFiles();
@@ -856,7 +858,7 @@ public class SendPostRequest {
     // Gson gson = new Gson();
     // ResFormat target = gson.fromJson(String.valueOf(sb), ResFormat.class);
     //
-    // DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+    // DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao().insert(target);
     //
     // List<String> folders = new ArrayList<>();
     // List<File> files = target.getData().getFiles();
@@ -925,7 +927,7 @@ public class SendPostRequest {
     // Gson gson = new Gson();
     // ResFormat target = gson.fromJson(sb.toString(), ResFormat.class);
     //
-    // DatabaseClient.getInstance(context).getAppDatabase().resFormatDao().insert(target);
+    // DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().resFormatDao().insert(target);
     //
     // List<String> folders = new ArrayList<>();
     // List<File> files = target.getData().getFiles();

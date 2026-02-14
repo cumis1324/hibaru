@@ -4,7 +4,7 @@ import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.theflexproject.thunder.model.Genre
+import com.theflexproject.thunder.model.Genres
 import com.theflexproject.thunder.model.MyMedia
 import kotlinx.parcelize.Parcelize
 
@@ -82,5 +82,5 @@ data class TVShow(
     @ColumnInfo(name = "vote_count")
     var vote_count: Int = 0,
     
-    var genres: ArrayList<Genre>? = null
+    var genres: ArrayList<Genres>? = null
 ) : MyMedia, Parcelable

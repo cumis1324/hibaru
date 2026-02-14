@@ -50,7 +50,7 @@ data class Movie(
     @ColumnInfo(name = "backdrop_path")
     var backdrop_path: String? = null,
     var budget: Long = 0,
-    var genres: ArrayList<Genre>? = null,
+    var genres: ArrayList<Genres>? = null,
     var homepage: String? = null,
     var id: Int = 0,
     @get:JvmName("getImdbId") @set:JvmName("setImdbId")

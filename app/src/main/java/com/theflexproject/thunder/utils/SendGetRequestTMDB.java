@@ -5,7 +5,7 @@ import static com.theflexproject.thunder.Constants.TMDB_API_KEY;
 import static com.theflexproject.thunder.Constants.TMDB_BASE_URL;
 import static com.theflexproject.thunder.Constants.TMDB_IMAGE_BASE_URL;
 import static com.theflexproject.thunder.Constants.getFanartApiKey;
-import static com.theflexproject.thunder.MainActivity.context;
+import com.theflexproject.thunder.MyApplication;
 import static com.theflexproject.thunder.utils.PlexMovieExtractor.getTMDBId;
 import static com.theflexproject.thunder.utils.ShowUtils.EPNUM;
 import static com.theflexproject.thunder.utils.ShowUtils.SEASON;
@@ -119,7 +119,7 @@ public class SendGetRequestTMDB {
 
         else if (movie.getTitle() == null) {
             System.out.println("file with no tmdb info" + movie);
-            DatabaseClient.getInstance(context).getAppDatabase().movieDao().insert(movie);
+            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().insert(movie);
         }
     }
 
@@ -157,7 +157,7 @@ public class SendGetRequestTMDB {
         // Get results from tmdb by Name
         Movie movie = (Movie) myMedia;
 
-        DatabaseClient.getInstance(context).getAppDatabase().movieDao().delete(movie);
+        DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().delete(movie);
 
         StringBuilder responseById = new StringBuilder();
         try {
@@ -222,8 +222,9 @@ public class SendGetRequestTMDB {
 
         System.out.println("movie after adding everything" + movie);
 
-        if (DatabaseClient.getInstance(context).getAppDatabase().movieDao().getByFileName(movie.getGdId()) == null) {
-            DatabaseClient.getInstance(context).getAppDatabase().movieDao().insert(movie);
+        if (DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao()
+                .getByFileName(movie.getGdId()) == null) {
+            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().insert(movie);
         }
 
     }
@@ -262,7 +263,8 @@ public class SendGetRequestTMDB {
         }
 
         if (finalShowName != null) {
-            TVShow test = DatabaseClient.getInstance(context).getAppDatabase().tvShowDao().findByName(finalShowName);
+            TVShow test = DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowDao()
+                    .findByName(finalShowName);
             if (test != null && test.getId() != 0) {
                 getTVSeasonById2(test.getId(), finalSeasonNumber, finalEpisodeNumber, episode);
             }
@@ -342,10 +344,12 @@ public class SendGetRequestTMDB {
         TVShow tvShow = (TVShow) myMedia;
 
         long oldTVShowID = tvShow.getId();
-        DatabaseClient.getInstance(context).getAppDatabase().tvShowDao().delete(tvShow);
-        DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().deleteByShowId(oldTVShowID);
+        DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowDao().delete(tvShow);
+        DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao()
+                .deleteByShowId(oldTVShowID);
 
-        TVShow test = DatabaseClient.getInstance(context).getAppDatabase().tvShowDao().find(tvShowId);
+        TVShow test = DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowDao()
+                .find(tvShowId);
 
         if (test == null && tvShowId != 0) {
             String finalurl = TMDB_BASE_URL + "tv/" + tvShowId + "?api_key=" + TMDB_API_KEY + "&language=en-US";
@@ -391,7 +395,7 @@ public class SendGetRequestTMDB {
 
                 Log.i("tvShow", tvShow.toString());
 
-                DatabaseClient.getInstance(context).getAppDatabase().tvShowDao().insert(tvShow);
+                DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowDao().insert(tvShow);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -400,7 +404,7 @@ public class SendGetRequestTMDB {
         }
 
         // get all the episodes to be update with new info
-        List<Episode> episodeList = DatabaseClient.getInstance(context).getAppDatabase().episodeDao()
+        List<Episode> episodeList = DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao()
                 .getFromThisShow(oldTVShowID);
         for (Episode e : episodeList) {
             System.out.println("Inside for loop");
@@ -425,7 +429,8 @@ public class SendGetRequestTMDB {
         try {
             if (finalSeasonNumber != null) {
                 // TVShowSeasonDetails tvShowSeasonDetails =null;
-                TVShowSeasonDetails tvShowSeasonDetails = DatabaseClient.getInstance(context).getAppDatabase()
+                TVShowSeasonDetails tvShowSeasonDetails = DatabaseClient.getInstance(MyApplication.getContext())
+                        .getAppDatabase()
                         .tvShowSeasonDetailsDao().findByShowIdAndSeasonNumber(tvShowId, finalSeasonNumber);
 
                 if (tvShowSeasonDetails == null) {
@@ -491,13 +496,13 @@ public class SendGetRequestTMDB {
                         Log.i("tvShowSeasonDetails", tvShowSeasonDetails.toString());
                         System.out.println("tvShowSeasonDetails in getTVSeasonById2" + tvShowSeasonDetails);
                         // TVShowSeasonDetails test =
-                        // DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().find(tvShowSeasonDetails.getId());
+                        // DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().find(tvShowSeasonDetails.getId());
                         // if (test == null)
 
                         for (Episode e : tvShowSeasonDetails.getEpisodes()) {
                             e.setModifiedTime(new Date());
                         }
-                        DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao()
+                        DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao()
                                 .insert(tvShowSeasonDetails);
 
                         System.out.println("Episode Number" + finalEpisodeNumber);
@@ -524,15 +529,18 @@ public class SendGetRequestTMDB {
                             e.setSeasonId(tvShowSeasonDetails.getId());
                             e.setShowId(tvShowId);
 
-                            DatabaseClient.getInstance(context).getAppDatabase().episodeDao().deleteByLink(e.getGdId());
+                            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao()
+                                    .deleteByLink(e.getGdId());
 
-                            DatabaseClient.getInstance(context).getAppDatabase().episodeDao().insert(e);
+                            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao()
+                                    .insert(e);
                             System.out.println("Episode after inserting in db" + Integer.parseInt(finalEpisodeNumber)
                                     + " Ep from the season details" + e.getEpisodeNumber());
 
                         } else {
                             episode.setShowId(tvShowId);
-                            DatabaseClient.getInstance(context).getAppDatabase().episodeDao().insert(episode);
+                            DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao()
+                                    .insert(episode);
                         }
 
                     }
@@ -1003,9 +1011,9 @@ public class SendGetRequestTMDB {
 //
 //
 // if
-// (DatabaseClient.getInstance(context).getAppDatabase().movieDao().getByFileName(movie.getFileName())
+// (DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().getByFileName(movie.getFileName())
 // == null) {
-// DatabaseClient.getInstance(context).getAppDatabase().movieDao().insert(movie);
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().movieDao().insert(movie);
 //
 // }
 // }
@@ -1058,9 +1066,9 @@ public class SendGetRequestTMDB {
 //
 //
 // TVShowSeasonDetails test =
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().find(tvShowSeasonDetails.getId());
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().find(tvShowSeasonDetails.getId());
 // if(test== null)
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().insert(tvShowSeasonDetails);
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().insert(tvShowSeasonDetails);
 //
 // System.out.println("Episode Number" +finalEpisodeNumber);
 // for (Episode e :tvShowSeasonDetails.getEpisodes() ) {
@@ -1092,9 +1100,9 @@ public class SendGetRequestTMDB {
 // System.out.println("ep in season in seasondetails after adding
 // everything"+e.toString());
 // Episode testEp =
-// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().findByFileName(e.getFileName());
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().findByFileName(e.getFileName());
 // if(testEp == null){
-// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().insert(e);
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().insert(e);
 // }
 // }
 // }
@@ -1106,7 +1114,7 @@ public class SendGetRequestTMDB {
 // try {
 // if (finalSeasonNumber != null) {
 // TVShowSeasonDetails tvShowSeasonDetails =
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().findByShowIdAndSeasonNumber(tvShowId
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().findByShowIdAndSeasonNumber(tvShowId
 // , finalSeasonNumber);
 // if (tvShowSeasonDetails == null) {
 // System.out.println("Season Number " + finalSeasonNumber);
@@ -1144,9 +1152,9 @@ public class SendGetRequestTMDB {
 //
 // System.out.println("tvShowSeasonDetails " + tvShowSeasonDetails);
 // TVShowSeasonDetails test =
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().find(tvShowSeasonDetails.getId());
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().find(tvShowSeasonDetails.getId());
 // if (test == null)
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().insert(tvShowSeasonDetails);
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().insert(tvShowSeasonDetails);
 //
 // }
 //
@@ -1178,9 +1186,9 @@ public class SendGetRequestTMDB {
 // e.setSeasonId(tvShowSeasonDetails.getId());
 // e.setShowId(tvShowId);
 //
-//// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().deleteByLink(e.getUrlString());
+//// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().deleteByLink(e.getUrlString());
 //
-// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().insert(e);
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().insert(e);
 // System.out.println("Episode after inserting in db" +
 // Integer.parseInt(finalEpisodeNumber) + " Ep from the season details" +
 // e.getEpisodeNumber());
@@ -1208,9 +1216,9 @@ public class SendGetRequestTMDB {
 //// e.setSeasonId(tvShowSeasonDetails.getId());
 //// e.setShowId(tvShowId);
 ////
-////// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().deleteByLink(e.getUrlString());
+////// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().deleteByLink(e.getUrlString());
 ////
-//// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().insert(e);
+//// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().insert(e);
 //// System.out.println("Episode after inserting in db" +
 // Integer.parseInt(finalEpisodeNumber) + " Ep from the season details" +
 // e.getEpisodeNumber());
@@ -1219,9 +1227,9 @@ public class SendGetRequestTMDB {
 //// else {
 //// episode.setShowId(tvShowId);
 //// if
-// (DatabaseClient.getInstance(context).getAppDatabase().episodeDao().findByLink(episode.getIndexId())
+// (DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().findByLink(episode.getIndexId())
 // == null)
-//// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().insert(episode);
+//// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().insert(episode);
 //// }
 //// }
 //// }
@@ -1239,13 +1247,13 @@ public class SendGetRequestTMDB {
 // TVShow oldTV = (TVShow) myMedia;
 //
 // //delete tv show (with older wrong info)
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowDao().deleteById(oldTV.getId());
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowDao().deleteById(oldTV.getId());
 //
 //
 // for (Season tvseason: oldTV.getSeasons()) {
 // int tvSeasonId = tvseason.getId();
 // //delete all the seasons
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowSeasonDetailsDao().deleteById(tvSeasonId);
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowSeasonDetailsDao().deleteById(tvSeasonId);
 // }
 //
 //
@@ -1279,7 +1287,7 @@ public class SendGetRequestTMDB {
 //
 // Log.i("tvShow" , myMedia.toString());
 //
-// DatabaseClient.getInstance(context).getAppDatabase().tvShowDao().insert((TVShow)
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().tvShowDao().insert((TVShow)
 // myMedia);
 //
 // } catch (IOException e) {
@@ -1289,7 +1297,7 @@ public class SendGetRequestTMDB {
 //
 // //get all the episodes to be update with new info
 // List<Episode> episodeList =
-// DatabaseClient.getInstance(context).getAppDatabase().episodeDao().getFromThisShow(oldTV.getId());
+// DatabaseClient.getInstance(MyApplication.getContext()).getAppDatabase().episodeDao().getFromThisShow(oldTV.getId());
 //
 // for (Episode episode: episodeList) {
 //// getSeasonInfo(episode.getSeasonNumber(),episode.getEpisodeNumber());

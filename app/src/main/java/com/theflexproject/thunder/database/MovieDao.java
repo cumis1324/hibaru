@@ -44,8 +44,8 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE file_name LIKE :fileName and disabled=0")
     Movie getByFileName(String fileName);
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 GROUP BY id ORDER BY vote_average DESC LIMIT 10")
-    List<Movie> getTopRated();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 GROUP BY id ORDER BY vote_average DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getTopRated(int limit, int offset);
 
     @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modified_time DESC LIMIT :limit OFFSET :offset")
     List<Movie> getrecentlyadded(int limit, int offset);
@@ -53,23 +53,23 @@ public interface MovieDao {
     @Query("SELECT * from Movie  WHERE backdrop_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY modified_time DESC")
     List<Movie> getallrecentlyadded();
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC lIMIT 10")
-    List<Movie> getrecentreleases();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getrecentreleases(int limit, int offset);
 
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY release_date DESC")
     List<Movie> getallrecentreleases();
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND release_date >= '2023-01-01' GROUP BY id ORDER BY (popularity + release_date) DESC LIMIT 10")
-    List<Movie> getTrending();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND release_date >= '2023-01-01' GROUP BY id ORDER BY (popularity + release_date) DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getTrending(int limit, int offset);
 
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL and disabled=0 GROUP BY id ORDER BY  genres Limit 10")
     List<Movie> getgenres();
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND genres IS NOT NULL GROUP BY id ORDER BY vote_count DESC")
-    List<Movie> getrecomendation();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND genres IS NOT NULL GROUP BY id ORDER BY vote_count DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getrecomendation(int limit, int offset);
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND release_date < '2011-01-01' AND release_date IS NOT NULL GROUP BY id ORDER BY release_date ASC")
-    List<Movie> getOgMovies();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND release_date < '2011-01-01' AND release_date IS NOT NULL GROUP BY id ORDER BY release_date ASC LIMIT :limit OFFSET :offset")
+    List<Movie> getOgMovies(int limit, int offset);
 
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE played = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getMoreMovied();
@@ -80,8 +80,8 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE add_to_list = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getRecombyfav();
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND original_language = 'id' GROUP BY id ORDER BY release_date DESC")
-    List<Movie> getFilmIndo();
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND original_language = 'id' GROUP BY id ORDER BY release_date DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getFilmIndo(int limit, int offset);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Movie... movies);

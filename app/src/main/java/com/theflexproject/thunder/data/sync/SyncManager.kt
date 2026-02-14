@@ -28,7 +28,8 @@ class SyncManager @Inject constructor(
         
         // Demo Admin UIDs
         private val ADMIN_USER_UIDS = listOf(
-            "M20Oxpp64gZ480Lqus4afv6x2n63"
+            "M20Oxpp64gZ480Lqus4afv6x2n63",
+            "k6skp0IByvQ7LF1NrvBRRHprVIg1"
         )
     }
 

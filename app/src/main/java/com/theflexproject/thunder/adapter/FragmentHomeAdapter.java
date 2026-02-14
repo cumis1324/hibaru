@@ -9,11 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.adapter.FragmentViewHolder;
 
-import com.theflexproject.thunder.fragments.FilesLibraryFragment;
 import com.theflexproject.thunder.fragments.HomeFragment;
-import com.theflexproject.thunder.fragments.MovieLibraryFragment;
 import com.theflexproject.thunder.fragments.SeriesFragment;
-import com.theflexproject.thunder.fragments.TvShowsLibraryFragment;
 
 public class FragmentHomeAdapter extends FragmentStateAdapter {
 
@@ -24,16 +21,14 @@ public class FragmentHomeAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        if(position==0){
+        if (position == 0) {
             return new HomeFragment();
-        }else if(position==1){
+        } else if (position == 1) {
             return new SeriesFragment();
-        }else {
+        } else {
             return new HomeFragment();
         }
     }
-
-
 
     @Override
     public int getItemCount() {

@@ -82,4 +82,32 @@ class TVShowRepository @Inject constructor(
     suspend fun deleteAllEpisodes() {
         episodeDao.deleteAll()
     }
+
+    suspend fun getTrendingTVShows(limit: Int = 10, offset: Int = 0): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getTrending(limit, offset)
+    }
+
+    suspend fun getTopRatedTVShows(limit: Int = 10, offset: Int = 0): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getTopRated(limit, offset)
+    }
+
+    suspend fun getNewTVShows(limit: Int = 10, offset: Int = 0): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getNewShows(limit, offset)
+    }
+
+    suspend fun getWatchlist(): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getWatchlisted()
+    }
+
+    suspend fun getKoreanDramas(limit: Int = 10, offset: Int = 0): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getDrakor(limit, offset)
+    }
+
+    suspend fun searchTVShows(query: String): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getSearchQuery(query)
+    }
+
+    suspend fun getFilteredTvShows(query: androidx.sqlite.db.SupportSQLiteQuery): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.getTvSeriesByGenreAndSort(query)
+    }
 }
