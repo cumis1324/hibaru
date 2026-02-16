@@ -112,7 +112,7 @@
         <activity
             android:name=".SyncActivity"
             android:exported="false"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:theme="@style/Theme.MyApplication" />
             
         <activity

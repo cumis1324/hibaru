@@ -106,9 +106,9 @@ public class PlayerUtils {
         decorView = mActivity.getWindow().getDecorView();
         rootView = decorView.findViewById(android.R.id.content);
         rootView.setPadding(0, 0, 0, 0);
-        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) playerFrame.getLayoutParams();
-        params.height = LinearLayout.LayoutParams.MATCH_PARENT;
-        playerFrame.setLayoutParams(params);
+
+        // Don't modify playerFrame height - let it use existing layout
+        // Setting MATCH_PARENT causes Compose to crash with invalid dimensions
 
         uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -127,8 +127,8 @@ public class PlayerUtils {
             ImageButton fullscreen) {
         decorView = mActivity.getWindow().getDecorView();
         rootView = decorView.findViewById(android.R.id.content);
-        int statusBarHeight = getStatusBarHeight(mActivity);
-        rootView.setPadding(0, statusBarHeight, 0, 0);
+        // Remove padding to prevent black bar at top and spacing issues
+        rootView.setPadding(0, 0, 0, 0);
         rootView.setBackgroundColor(Color.BLACK);
         movietitle.setVisibility(View.GONE);
         int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;

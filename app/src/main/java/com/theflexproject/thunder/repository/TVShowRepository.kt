@@ -7,6 +7,8 @@ import com.theflexproject.thunder.model.TVShowInfo.TVShow
 import com.theflexproject.thunder.model.TVShowInfo.Episode
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,11 +21,11 @@ class TVShowRepository @Inject constructor(
     
     // TVShow operations
     fun getAllTVShows(): Flow<List<TVShow>> {
-        return kotlinx.coroutines.flow.flow { emit(tvShowDao.getAll()) }
+        return kotlinx.coroutines.flow.flow { emit(tvShowDao.getAll()) }.flowOn(Dispatchers.IO)
     }
     
     fun getTVShowById(id: Int): Flow<TVShow?> {
-        return kotlinx.coroutines.flow.flow { emit(tvShowDao.find(id.toLong())) }
+        return kotlinx.coroutines.flow.flow { emit(tvShowDao.find(id.toLong())) }.flowOn(Dispatchers.IO)
     }
     
     suspend fun insertTVShow(tvShow: TVShow) {
@@ -40,18 +42,12 @@ class TVShowRepository @Inject constructor(
     
     // Episode operations
     fun getEpisodesByShowId(showId: Long): Flow<List<Episode>> {
-        return kotlinx.coroutines.flow.flow { emit(episodeDao.getFromThisShow(showId)) }
+        return kotlinx.coroutines.flow.flow { emit(episodeDao.getFromThisShow(showId)) }.flowOn(Dispatchers.IO)
     }
     
     fun getEpisodesBySeason(showId: Long, seasonNumber: Int): Flow<List<Episode>> {
-        // EpisodeDao getFromThisSeason takes (show_id, season_id). 
-        // It doesn't seem to have showId + seasonNumber directly?
-        // Wait, Step 1583: getFromThisSeason(int show_id, int season_id).
-        // It does NOT have showId + seasonNumber.
-        // But getFromThisShow returns all.
-        // Maybe I need to filter or usage is wrong?
-        // I'll map to getFromThisShow for now to compile.
-        return kotlinx.coroutines.flow.flow { emit(episodeDao.getFromThisShow(showId)) } 
+        // ... (existing comments)
+        return kotlinx.coroutines.flow.flow { emit(episodeDao.getFromThisShow(showId)) }.flowOn(Dispatchers.IO)
     }
     
     suspend fun insertEpisode(episode: Episode) {
@@ -60,7 +56,7 @@ class TVShowRepository @Inject constructor(
     
     // Season details operations
     fun getSeasonDetails(showId: Long, seasonNumber: Int): Flow<TVShowSeasonDetails?> {
-        return kotlinx.coroutines.flow.flow { emit(tvShowSeasonDetailsDao.findByShowIdAndSeasonNumber(showId, seasonNumber.toString())) }
+        return kotlinx.coroutines.flow.flow { emit(tvShowSeasonDetailsDao.findByShowIdAndSeasonNumber(showId, seasonNumber.toString())) }.flowOn(Dispatchers.IO)
     }
     
     suspend fun insertSeasonDetails(seasonDetails: TVShowSeasonDetails) {

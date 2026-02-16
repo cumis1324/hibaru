@@ -166,4 +166,80 @@ class TmdbRepository @Inject constructor(
         }
         emptyList()
     }
+
+    suspend fun getSimilarMovies(movieId: Int): List<Movie> = withContext(Dispatchers.IO) {
+        try {
+            val response = tmdbApi.getSimilarMovies(movieId, TMDB_API_KEY)
+            if (response.isSuccessful) {
+                val tmdbIds = response.body()?.results?.map { it.id.toString() } ?: emptyList()
+                return@withContext getMoviesOrderedByIds(tmdbIds)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        emptyList()
+    }
+
+    suspend fun getRecommendationMovies(movieId: Int): List<Movie> = withContext(Dispatchers.IO) {
+        try {
+            val response = tmdbApi.getRecommendationMovies(movieId, TMDB_API_KEY)
+            if (response.isSuccessful) {
+                val tmdbIds = response.body()?.results?.map { it.id.toString() } ?: emptyList()
+                return@withContext getMoviesOrderedByIds(tmdbIds)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        emptyList()
+    }
+
+    suspend fun getMovieCredits(movieId: Int): com.theflexproject.thunder.model.Credits? = withContext(Dispatchers.IO) {
+        try {
+            val response = tmdbApi.getMovieCredits(movieId, TMDB_API_KEY)
+            if (response.isSuccessful) {
+                return@withContext response.body()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        null
+    }
+
+    suspend fun getSimilarTVShows(tvId: Int): List<TVShow> = withContext(Dispatchers.IO) {
+        try {
+            val response = tmdbApi.getSimilarTVShows(tvId, TMDB_API_KEY)
+            if (response.isSuccessful) {
+                val tmdbIds = response.body()?.results?.map { it.id.toString() } ?: emptyList()
+                return@withContext getTVShowsOrderedByIds(tmdbIds)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        emptyList()
+    }
+
+    suspend fun getRecommendationTVShows(tvId: Int): List<TVShow> = withContext(Dispatchers.IO) {
+        try {
+            val response = tmdbApi.getRecommendationTVShows(tvId, TMDB_API_KEY)
+            if (response.isSuccessful) {
+                val tmdbIds = response.body()?.results?.map { it.id.toString() } ?: emptyList()
+                return@withContext getTVShowsOrderedByIds(tmdbIds)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        emptyList()
+    }
+
+    suspend fun getTVShowCredits(tvId: Int): com.theflexproject.thunder.model.Credits? = withContext(Dispatchers.IO) {
+        try {
+            val response = tmdbApi.getTVShowCredits(tvId, TMDB_API_KEY)
+            if (response.isSuccessful) {
+                return@withContext response.body()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        null
+    }
 }

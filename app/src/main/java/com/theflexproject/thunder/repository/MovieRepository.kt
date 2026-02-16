@@ -3,6 +3,8 @@ package com.theflexproject.thunder.repository
 import com.theflexproject.thunder.database.MovieDao
 import com.theflexproject.thunder.model.Movie
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,11 +25,11 @@ class MovieRepository @Inject constructor(
         // Let's change Repository to suspend functions for now to match DAO (which returns List).
         // Wait, current DAO signatures are: List<Movie> getAll().
         // So I must change Repository signatures.
-        return kotlinx.coroutines.flow.flow { emit(movieDao.getAll()) }
+        return kotlinx.coroutines.flow.flow { emit(movieDao.getAll()) }.flowOn(Dispatchers.IO)
     }
     
     fun getMovieById(id: Int): Flow<Movie?> {
-        return kotlinx.coroutines.flow.flow { emit(movieDao.byId(id)) }
+        return kotlinx.coroutines.flow.flow { emit(movieDao.byId(id)) }.flowOn(Dispatchers.IO)
     }
     
     suspend fun insertMovie(movie: Movie) {
@@ -43,16 +45,16 @@ class MovieRepository @Inject constructor(
         movieDao.delete(movie)
     }
     
-    suspend fun searchMovies(query: String): List<Movie> {
-        return movieDao.getSearchQuery(query)
+    suspend fun searchMovies(query: String): List<Movie> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        movieDao.getSearchQuery(query)
     }
 
-    suspend fun saveAll(movies: List<Movie>) {
+    suspend fun saveAll(movies: List<Movie>) = kotlinx.coroutines.withContext(Dispatchers.IO) {
         movieDao.insert(*movies.toTypedArray())
     }
 
-    suspend fun getMovieCount(): Int {
-        return movieDao.movieCount
+    suspend fun getMovieCount(): Int = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        movieDao.movieCount
     }
 
     suspend fun getTrendingMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {

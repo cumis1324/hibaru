@@ -316,8 +316,9 @@ public class SeriesFragment extends BaseFragment {
             @OptIn(markerClass = UnstableApi.class)
             @Override
             public void onClick(View view, int position) {
-                TvShowDetailsFragment tvShowDetailsFragment = new TvShowDetailsFragment(
-                        seriesTrending.get(position).getId());
+                com.theflexproject.thunder.ui.detail.DetailFragment tvShowDetailsFragment = com.theflexproject.thunder.ui.detail.DetailFragment.Companion
+                        .newTvInstance(
+                                seriesTrending.get(position).getId());
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
 
                 Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);

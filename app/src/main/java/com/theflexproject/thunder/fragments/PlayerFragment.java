@@ -38,6 +38,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.core.view.WindowCompat;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -209,6 +210,18 @@ public class PlayerFragment extends BaseFragment
         if (getArguments() != null) {
             itemId = getArguments().getInt("videoId");
             isMovie = getArguments().getBoolean("isMovie");
+
+            // For TV episodes, read episodeId, tvShow, and season from arguments
+            if (!isMovie) {
+                episodeId = getArguments().getInt("episodeId", itemId);
+                tvShowDetails = getArguments().getParcelable("tvShow");
+                season = getArguments().getParcelable("season");
+                Log.d(TAG, "onCreate: Episode mode - episodeId=" + episodeId
+                        + ", tvShow=" + (tvShowDetails != null ? tvShowDetails.getName() : "NULL")
+                        + ", season=" + (season != null ? season.getSeasonNumber() : "NULL"));
+            } else {
+                Log.d(TAG, "onCreate: Movie mode - itemId=" + itemId);
+            }
         }
         SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
         isSubscribed = prefs.getBoolean("isSubscribed", false);
@@ -229,9 +242,13 @@ public class PlayerFragment extends BaseFragment
         initViews(view);
         initPlayerState(savedInstanceState);
         if (isMovie) {
+            Log.d(TAG, "onCreateView: Loading movie details for itemId=" + itemId);
             loadMovieDetails(itemId);
         } else {
+            Log.d(TAG, "onCreateView: Loading episode details for episodeId=" + episodeId);
             episode = DetailsUtils.getNextEpisode(mActivity, episodeId);
+            Log.d(TAG, "onCreateView: Episode loaded - "
+                    + (episode != null ? "id=" + episode.getId() + ", name=" + episode.getName() : "NULL"));
             loadSeriesDetails(episode);
         }
         setControlListeners();
@@ -278,7 +295,10 @@ public class PlayerFragment extends BaseFragment
         bw = customControls.findViewById(R.id.btn_bw);
         source = customControls.findViewById(R.id.btn_src);
         bottomNavigationView = mActivity.findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setVisibility(View.GONE);
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setVisibility(View.GONE);
+        }
+
         Rational aspectRatio = new Rational(16, 9);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             pipParams = new PictureInPictureParams.Builder()
@@ -288,7 +308,9 @@ public class PlayerFragment extends BaseFragment
         similarView = view.findViewById(R.id.similarAndEpisode);
         if (isTVDevice(mActivity)) {
             navigationRailView = mActivity.findViewById(R.id.side_navigation);
-            navigationRailView.setVisibility(View.GONE);
+            if (navigationRailView != null) {
+                navigationRailView.setVisibility(View.GONE);
+            }
             fullscreen.setVisibility(View.GONE);
         }
         exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
@@ -460,7 +482,12 @@ public class PlayerFragment extends BaseFragment
         super.onResume();
         if (player != null) {
             player.setPlayWhenReady(true);
-            bottomNavigationView.setVisibility(View.GONE);
+            if (bottomNavigationView != null) {
+                bottomNavigationView.setVisibility(View.GONE);
+            }
+            if (navigationRailView != null) {
+                navigationRailView.setVisibility(View.GONE);
+            }
             startSeekBarUpdate();
         }
 
@@ -698,12 +725,13 @@ public class PlayerFragment extends BaseFragment
         if (isFullscreen) {
             exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
         }
-        bottomNavigationView.setVisibility(View.VISIBLE);
 
-        if (isTVDevice(mActivity)) {
-            navigationRailView.setVisibility(View.VISIBLE);
-            bottomNavigationView.setVisibility(View.GONE);
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setVisibility(isTVDevice(mActivity) ? View.GONE : View.VISIBLE);
+        }
 
+        if (navigationRailView != null) {
+            navigationRailView.setVisibility(isTVDevice(mActivity) ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -721,7 +749,8 @@ public class PlayerFragment extends BaseFragment
             tmdbId = String.valueOf(movieDetails.getId());
             movietitle.setText(titleText + " (" + yearCrop + ")");
             mActivity.getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container, new DetailFragment(movieId, true))
+                    .replace(R.id.detail_container,
+                            com.theflexproject.thunder.ui.detail.DetailFragment.Companion.newInstance(movieId))
                     .commit();
             if (movieDetails.getBackdropPath() != null) {
                 Glide.with(mActivity)
@@ -762,10 +791,15 @@ public class PlayerFragment extends BaseFragment
             TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
             movietitle.setText(title);
 
+            // Load DetailFragment with tvShowId (like movies do)
+            Log.d(TAG, "loadSeriesDetails: Loading DetailFragment with tvShowId=" + tvShowDetails.getId());
+            mActivity.getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_container,
+                            com.theflexproject.thunder.ui.detail.DetailFragment.Companion
+                                    .newTvInstance(tvShowDetails.getId()))
+                    .commit();
+
             if (episode != null) {
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new DetailFragment(tvShowDetails, seasonDetails, episode))
-                        .commit();
                 epstitle.setText("Season: " + seasonDetails.getSeasonNumber()
                         + " Episode: " + episode.getName());
                 epstitle.setVisibility(View.VISIBLE);

@@ -113,7 +113,7 @@ class SearchFragment : Fragment() {
              val bundle = bundleOf("videoId" to media.id, "isMovie" to true)
              findNavController().navigate(R.id.playerFragment, bundle)
         } else if (media is TVShow) {
-            val bundle = bundleOf("tmdbId" to media.id)
+            val bundle = bundleOf("tvShowId" to media.id)
             findNavController().navigate(R.id.tvShowDetailsFragment, bundle)
         }
     }

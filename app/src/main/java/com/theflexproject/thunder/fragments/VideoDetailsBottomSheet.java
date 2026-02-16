@@ -98,8 +98,8 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                         .byId(movieId);
                 tmdbTrending credit = new tmdbTrending();
                 credits = credit.getMovieCredits(movieId);
-                List<Cast> cast = credits.getCastList();
-                List<Crew> crew = credits.getCrewList();
+                List<Cast> cast = credits.getCast();
+                List<Crew> crew = credits.getCrew();
                 castList = new ArrayList<>();
                 castList.addAll(cast);
                 crewList = new ArrayList<>();
@@ -117,12 +117,14 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                         originalTitle.setText(movieDetails.getOriginalTitle());
                         ArrayList<Genres> genres = movieDetails.getGenres();
                         StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < genres.size(); i++) {
-                            Genres genre = genres.get(i);
-                            if (i == genres.size() - 1 && genre != null) {
-                                sb.append(genre.getName());
-                            } else if (genre != null) {
-                                sb.append(genre.getName()).append(", ");
+                        if (genres != null) {
+                            for (int i = 0; i < genres.size(); i++) {
+                                Genres genre = genres.get(i);
+                                if (i == genres.size() - 1 && genre != null) {
+                                    sb.append(genre.getName());
+                                } else if (genre != null) {
+                                    sb.append(genre.getName()).append(", ");
+                                }
                             }
                         }
                         genreSheet.setText(sb.toString());
@@ -149,8 +151,8 @@ public class VideoDetailsBottomSheet extends BottomSheetDialogFragment {
                         .find(tvShow.getId());
                 tmdbTrending credit = new tmdbTrending();
                 credits = credit.getTvCredits(tvShowDetails.getId());
-                List<Cast> cast = credits.getCastList();
-                List<Crew> crew = credits.getCrewList();
+                List<Cast> cast = credits.getCast();
+                List<Crew> crew = credits.getCrew();
                 castList = new ArrayList<>();
                 castList.addAll(cast);
                 crewList = new ArrayList<>();

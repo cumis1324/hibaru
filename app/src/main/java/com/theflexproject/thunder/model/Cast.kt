@@ -1,12 +1,15 @@
 package com.theflexproject.thunder.model
 
 import android.os.Parcelable
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import kotlinx.parcelize.Parcelize
 
+@JsonClass(generateAdapter = true)
 @Parcelize
 data class Cast(
-    val id: Int = 0,
-    val name: String? = null,
-    val character: String? = null,
-    val profilePath: String? = null
+    @Json(name = "id") val id: Int = 0,
+    @Json(name = "name") val name: String? = null,
+    @Json(name = "character") val character: String? = null,
+    @Json(name = "profile_path") val profilePath: String? = null
 ) : MyMedia, Parcelable

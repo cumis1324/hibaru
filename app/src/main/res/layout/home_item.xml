@@ -14,7 +14,7 @@
         android:fontFamily="@font/jost_medium"
         android:paddingStart="20dp"
         android:text="New Releases"
-        android:textColor="@color/white"
+        android:textColor="?android:attr/textColorPrimary"
         android:textSize="16sp" />
 
     <androidx.recyclerview.widget.RecyclerView

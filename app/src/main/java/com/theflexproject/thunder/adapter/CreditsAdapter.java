@@ -36,9 +36,7 @@ import com.theflexproject.thunder.Constants;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.fragments.BottomPerson;
-import com.theflexproject.thunder.fragments.MovieDetailsFragment;
 import com.theflexproject.thunder.fragments.PlayerFragment;
-import com.theflexproject.thunder.fragments.TvShowDetailsFragment;
 import com.theflexproject.thunder.model.Cast;
 import com.theflexproject.thunder.model.Crew;
 import com.theflexproject.thunder.model.FirebaseManager;
@@ -77,15 +75,15 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.CreditsA
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull CreditsAdapterHolder holder, int position) {
-        if(mediaList.get(position) instanceof Cast) {
-            Cast cast = ((Cast)mediaList.get(position));
-            if(cast.getName()!=null){
+        if (mediaList.get(position) instanceof Cast) {
+            Cast cast = ((Cast) mediaList.get(position));
+            if (cast.getName() != null) {
                 holder.name.setText(cast.getName() + " as " + cast.getCharacter());
             }
 
-            if(cast.getProfilePath()!=null){
+            if (cast.getProfilePath() != null) {
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+cast.getProfilePath())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + cast.getProfilePath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
@@ -93,13 +91,13 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.CreditsA
             holder.itemView.setOnClickListener(v -> loadMovie(cast.getId()));
         }
 
-
-        if(mediaList.get(position) instanceof Crew){
-            Crew crew = ((Crew)mediaList.get(position));
-            if(crew.getName()!=null){
-                holder.name.setText(crew.getName() + " as " + (crew.getJob() != null && !crew.getJob().isEmpty() ? crew.getJob() : crew.getDepartment()));
+        if (mediaList.get(position) instanceof Crew) {
+            Crew crew = ((Crew) mediaList.get(position));
+            if (crew.getName() != null) {
+                holder.name.setText(crew.getName() + " as "
+                        + (crew.getJob() != null && !crew.getJob().isEmpty() ? crew.getJob() : crew.getDepartment()));
                 Glide.with(context)
-                        .load(Constants.TMDB_IMAGE_BASE_URL+crew.getProfilePath())
+                        .load(Constants.TMDB_IMAGE_BASE_URL + crew.getProfilePath())
                         .placeholder(new ColorDrawable(Color.BLACK))
                         .apply(RequestOptions.bitmapTransform(new RoundedCorners(14)))
                         .into(holder.poster);
@@ -107,7 +105,7 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.CreditsA
             holder.itemView.setOnClickListener(v -> loadSeries(crew.getId()));
         }
 
-        setAnimation(holder.itemView,position);
+        setAnimation(holder.itemView, position);
 
     }
 
@@ -137,13 +135,11 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.CreditsA
         TextView textStar;
         TextView watched;
 
-
-
         public CreditsAdapterHolder(@NonNull View itemView) {
             super(itemView);
 
             name = itemView.findViewById(R.id.nameInMediaItem);
-            poster= itemView.findViewById(R.id.posterInMediaItem);
+            poster = itemView.findViewById(R.id.posterInMediaItem);
             movieYear = itemView.findViewById(R.id.yearInMediaItem);
             star = itemView.findViewById(R.id.starRate);
             textStar = itemView.findViewById(R.id.textStar);
@@ -153,16 +149,13 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.CreditsA
         }
     }
 
-
     public interface OnItemClickListener {
         public void onClick(View view, int position);
     }
 
-    private void setAnimation(View itemView , int position){
-        Animation popIn = AnimationUtils.loadAnimation(context,R.anim.pop_in);
+    private void setAnimation(View itemView, int position) {
+        Animation popIn = AnimationUtils.loadAnimation(context, R.anim.pop_in);
         itemView.startAnimation(popIn);
     }
 
 }
-
-

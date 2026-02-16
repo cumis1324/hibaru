@@ -45,12 +45,6 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
         setupSwipeRefresh()
         observeViewModel()
-        
-        // Initialize and load Ads
-        activity?.let {
-            com.theflexproject.thunder.utils.UnityAdHelper.init(it)
-            com.theflexproject.thunder.utils.UnityAdHelper.loadBanner(it, binding.bannerContainer)
-        }
     }
 
     private fun setupRecyclerView() {

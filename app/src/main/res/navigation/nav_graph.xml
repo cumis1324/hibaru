@@ -46,22 +46,39 @@
     
     <fragment
         android:id="@+id/tvShowDetailsFragment"
-        android:name="com.theflexproject.thunder.fragments.TvShowDetailsFragment"
-        android:label="TV Show Details"
-        tools:layout="@layout/fragment_tv_show_details">
+        android:name="com.theflexproject.thunder.ui.detail.DetailFragment"
+        android:label="fragment_tv_show_details">
         <argument
             android:name="tvShowId"
-            app:argType="integer" />
+            app:argType="integer"
+            android:defaultValue="-1" />
+        <action
+            android:id="@+id/action_tvShowDetailsFragment_to_playerFragment"
+            app:destination="@id/playerFragment" />
     </fragment>
     
     <fragment
         android:id="@+id/detailFragment"
-        android:name="com.theflexproject.thunder.fragments.DetailFragment"
-        android:label="Movie Details"
-        tools:layout="@layout/fragment_detail" >
+        android:name="com.theflexproject.thunder.ui.detail.DetailFragment"
+        android:label="DetailFragment" >
         <argument
-            android:name="id"
-            app:argType="integer" />
+            android:name="movie_id"
+            app:argType="integer"
+            android:defaultValue="-1" />
+        <argument
+            android:name="tv_show_id"
+            app:argType="integer"
+            android:defaultValue="-1" />
     </fragment>
+
+    <fragment
+        android:id="@+id/downloadFragment"
+        android:name="com.theflexproject.thunder.fragments.DownloadFragment"
+        android:label="Download" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.theflexproject.thunder.fragments.SettingsFragment"
+        android:label="Settings" />
 
 </navigation>
