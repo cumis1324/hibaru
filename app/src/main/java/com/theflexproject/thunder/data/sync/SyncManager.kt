@@ -18,12 +18,12 @@ class SyncManager @Inject constructor(
     private val api: NFGPlusApi,
     private val movieRepository: MovieRepository,
     private val tvShowRepository: TVShowRepository,
+    private val tmdbRepository: com.theflexproject.thunder.repository.TmdbRepository,
     private val syncPrefs: SyncPrefs
 ) {
     companion object {
         private const val TAG = "SyncManager"
-        // Timestamp when nfgplus.db asset was generated
-        // Updated to millisecond precision to match backend Date.now()
+        // ... (pre-populated db time stays)
         private const val PRE_POPULATED_DB_TIME = 1770963377000L
         
         // Demo Admin UIDs
@@ -37,7 +37,6 @@ class SyncManager @Inject constructor(
 
     suspend fun syncAll(): Unit = withContext(Dispatchers.IO) {
         if (!syncPrefs.isSyncEnabled) {
-            Log.d(TAG, "Sync is disabled")
             return@withContext
         }
 
@@ -48,23 +47,71 @@ class SyncManager @Inject constructor(
             val previousMode = syncPrefs.isDemoMode
             
             if (isDemoUser != previousMode) {
-                Log.w(TAG, "[MODE SWITCH] Detected switch between Demo and Normal mode. Reseting DB...")
                 forceResetSync(false) // Reset DB but don't recurse syncAll immediately
                 syncPrefs.isDemoMode = isDemoUser
                 syncPrefs.lastSyncTime = 0L // Ensure fresh sync
             }
 
-            // Check if DB is empty (after migration wipe or mode switch)
-            if (syncPrefs.lastSyncTime == 0L && movieRepository.getMovieCount() == 0) {
-                Log.d(TAG, "[SYNC] DB is empty and no sync history. Fresh install logic.")
-            }
+          
             
             syncMovies(isDemoUser)
             syncTVShows(isDemoUser)
+            
+            // PRE-CALCULATE TRENDING & GENRES
+            syncTrending()
+            syncGenres()
+            
             syncPrefs.lastSyncTime = System.currentTimeMillis()
-            Log.d(TAG, "Sync completed successfully (Demo Mode: $isDemoUser)")
         } catch (e: Exception) {
             Log.e(TAG, "Sync failed", e)
+        }
+    }
+
+    /**
+     * Fetches genres from the API and caches them in SyncPrefs for offline/instant access.
+     */
+    private suspend fun syncGenres() {
+        Log.d(TAG, ">>> Start Genre Synchronization")
+        try {
+            val response = api.getGenres()
+            if (response.isSuccessful) {
+                val genres = response.body()?.genres ?: emptyList()
+                if (genres.isNotEmpty()) {
+                    val gson = com.google.gson.Gson()
+                    val json = gson.toJson(genres)
+                    syncPrefs.cachedGenresJson = json
+                    Log.d(TAG, "<<< Genre Synchronization Finished. Saved ${genres.size} genres.")
+                }
+            } else {
+                Log.e(TAG, "Failed to sync genres: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error syncing genres", e)
+        }
+    }
+
+    /**
+     * Pre-calculates the trending list during sync to avoid heavy computation/API calls on Home.
+     */
+    private suspend fun syncTrending() {
+        Log.d(TAG, ">>> Start Trending Pre-calculation")
+        try {
+            val (trendingMovies, _) = tmdbRepository.getTrendingMoviesDeep(1)
+            val (trendingTV, _) = tmdbRepository.getTrendingTVShowsDeep(1)
+            
+            // Combine and format IDs (e.g., m_123, t_456)
+            val movieIds = trendingMovies.map { "m_${it.id}" }
+            val tvIds = trendingTV.map { "t_${it.id}" }
+            
+            val combinedIds = (movieIds + tvIds).shuffled()
+            
+            // Convert to a simple CSV string to avoid GSON dependency for now
+            val idsString = combinedIds.joinToString(",")
+            syncPrefs.trendingItemsJson = idsString
+            
+            Log.d(TAG, "<<< Trending Pre-calculation Finished. Found ${combinedIds.size} items.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to sync trending items", e)
         }
     }
 

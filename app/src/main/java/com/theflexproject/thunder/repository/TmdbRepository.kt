@@ -242,4 +242,12 @@ class TmdbRepository @Inject constructor(
         }
         null
     }
+
+    suspend fun getMoviesByGenre(genreId: Int): List<Movie> = withContext(Dispatchers.IO) {
+        return@withContext movieDao.getMoviesByGenre(genreId.toString())
+    }
+
+    suspend fun getTvShowsByGenre(genreId: Int): List<TVShow> = withContext(Dispatchers.IO) {
+        return@withContext tvShowDao.getTvSeriesByGenreId(genreId.toString())
+    }
 }

@@ -14,10 +14,6 @@
         android:icon="@drawable/ic_download"
         android:title="Download" />
     <item
-        android:id="@+id/libraryFragment"
-        android:icon="@drawable/ic_library"
-        android:title="Library" />
-    <item
         android:id="@+id/settingsFragment"
         android:icon="@drawable/ic_settings"
         android:title="Settings" />

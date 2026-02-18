@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="0dp"
+    android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:focusable="false"
+    tools:context="com.theflexproject.thunder.fragments.HomeFragment">
+
+    <TextView
+        android:id="@+id/recyclerTitleInHomeItem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/jost_medium"
+        android:paddingStart="20dp"
+        android:text="New Releases"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:shadowColor="#CC000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="4"
+        android:focusable="false" />
+
+    <!-- HorizontalGridView for native snapping on TV carousels -->
+    <androidx.leanback.widget.HorizontalGridView
+        android:id="@+id/recyclerInHomeItem"
+        android:layout_width="match_parent"
+        android:layout_height="210dp"
+        android:layout_marginTop="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:focusable="false"
+        android:descendantFocusability="afterDescendants"
+        app:focusOutFront="true"
+        app:focusOutEnd="true"
+        tools:listitem="@layout/media_item_tv" />
+
+</LinearLayout>

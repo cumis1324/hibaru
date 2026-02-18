@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/movieCard"
+    android:layout_width="120dp"
+    android:layout_height="180dp"
+    android:layout_margin="12dp"
+    android:focusable="true"
+    android:focusableInTouchMode="false"
+    android:clickable="true"
+    app:cardBackgroundColor="@color/media_item_bg_color"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageView
+            android:id="@+id/posterInMediaItem"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@color/light_blue_600" />
+
+        <!-- Jellyfin Focus Overlay / Glow -->
+        <View
+            android:id="@+id/focusOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:background="@drawable/card_focus_glow" />
+
+    </FrameLayout>
+</androidx.cardview.widget.CardView>

@@ -5,6 +5,9 @@
     android:layout_height="wrap_content"
     android:paddingVertical="10dp"
     android:orientation="vertical"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:focusable="false"
     tools:context="com.theflexproject.thunder.fragments.HomeFragment">
 
     <TextView
@@ -15,15 +18,20 @@
         android:paddingStart="20dp"
         android:text="New Releases"
         android:textColor="?android:attr/textColorPrimary"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:focusable="false" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerInHomeItem"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         tools:listitem="@layout/movie_item_recycler"
         android:orientation="horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:focusable="false"
+        android:descendantFocusability="afterDescendants"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
 </LinearLayout>

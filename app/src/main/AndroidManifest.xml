@@ -30,6 +30,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- TV Provider permissions for Home Screen Integration -->
+    <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
+    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
+    <uses-permission android:name="com.android.providers.tv.permission.ACCESS_WATCH_NEXT_PROGRAMS" />
+
 
 
     <application
@@ -56,6 +61,51 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Disable default WorkManagerInitializer for Hilt Worker Injection -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <!-- Ensure WorkManager is not initialized by App Startup -->
+            <meta-data
+                android:name="androidx.work.impl.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+
+        <meta-data
+            android:name="com.google.android.gms.metadata.RECOMMENDATION_SUPPORTED"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.android.gms.metadata.MEDIA_ACCOUNT_SUPPORTED"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.android.gms.metadata.ACTIVE_VIDEO_SUBSCRIPTION"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.android.tv.home.RECOMENDATION_PROVIDER"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.android.tv.home.RECOMMENDATION_PROVIDER"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.android.tv.home.PLAY_NEXT_SUPPORTED"
+            android:value="true" />
+
+        <meta-data
+            android:name="com.google.android.engage.api.DATA_PROVIDER_NAME"
+            android:value="NFG+" />
 
         <meta-data
             android:name="com.google.android.gms.auth.api.signin.default_web_client_id"
@@ -71,6 +121,15 @@
         <service
             android:name=".RefreshJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver android:name=".data.sync.TvChannelInitializer"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.tv.action.INITIALIZE_PROGRAMS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".SplashScreenActivity"
@@ -107,6 +166,23 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="web.nfgplus.my.id" android:pathPrefix="/reviews.html" />
             </intent-filter>
+
+            <!-- Intent Filter for nfgplus://video deep links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="nfgplus" android:host="video" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="com.google.android.gms.actions.VIEW_REMOTE_CONTENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
         </activity>
 
         <activity

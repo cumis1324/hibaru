@@ -1,39 +1,74 @@
-<!-- res/layout/activity_loading_screen.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- res/layout/activity_loading.xml -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/loadingLayout"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:gravity="center"
     android:background="@drawable/bd"
-    tools:context=".LoadingActivity"
-    android:orientation="vertical">
+    tools:context=".SyncActivity">
 
-    <!-- Loading ProgressBar -->
-    <ProgressBar
-        android:id="@+id/progress_datar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:max="100"
-        android:progress="0"
-        android:layout_margin="20dp"/>
-
-    <!-- Loading message -->
-    <TextView
-        android:id="@+id/loading_message"
+    <!-- Center container for all states -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Connecting to server"
-        android:textSize="16sp"
-        android:textColor="@android:color/white" />
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <!-- Launcher Icon -->
+        <ImageView
+            android:id="@+id/img_logo"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:src="@drawable/android192"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Circular Loading ProgressBar -->
+        <ProgressBar
+            android:id="@+id/progress_circular"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:indeterminateTint="@android:color/white"
+            android:visibility="visible" />
+
+        <!-- Error message (Hidden by default, shown on failure) -->
+        <TextView
+            android:id="@+id/loading_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:maxWidth="400dp"
+            android:text="Syncing..."
+            android:textAlignment="center"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:visibility="gone" />
+
+        <!-- Retry Button (Hidden by default) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_retry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Coba Lagi"
+            app:cornerRadius="8dp"
+            android:textColor="@android:color/black"
+            app:backgroundTint="@android:color/white"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/app_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
         android:text=""
-        android:textSize="16sp"
+        android:textSize="14sp"
+        android:alpha="0.5"
         android:textColor="@android:color/white" />
-</LinearLayout>
+
+</RelativeLayout>

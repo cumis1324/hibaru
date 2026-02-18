@@ -68,7 +68,7 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND genres IS NOT NULL GROUP BY id ORDER BY vote_count DESC LIMIT :limit OFFSET :offset")
     List<Movie> getrecomendation(int limit, int offset);
 
-    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE vote_count > 5000)) AND release_date < '2011-01-01' AND release_date IS NOT NULL GROUP BY id ORDER BY release_date ASC LIMIT :limit OFFSET :offset")
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND vote_count > 5000 AND release_date < '2011-01-01' AND release_date IS NOT NULL GROUP BY id ORDER BY release_date ASC LIMIT :limit OFFSET :offset")
     List<Movie> getOgMovies(int limit, int offset);
 
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE played = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")

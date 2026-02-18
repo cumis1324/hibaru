@@ -96,4 +96,8 @@ class MovieRepository @Inject constructor(
     suspend fun deleteAll() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         movieDao.deleteAll()
     }
+
+    suspend fun loadAllByIds(ids: List<String>): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.loadAllByIds(ids)
+    }
 }

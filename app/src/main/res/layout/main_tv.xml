@@ -8,29 +8,52 @@
     android:animateLayoutChanges="true"
     tools:context="com.theflexproject.thunder.MainActivity">
 
+    <!-- Dynamic Background Container -->
+    <FrameLayout
+        android:id="@+id/backgroundContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        
+        <ImageView
+            android:id="@+id/globalDynamicBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:alpha="0.4" />
+            
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/hero_gradient_overlay" />
+    </FrameLayout>
+
+    <!-- Top Navigation -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/top_navigation"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:paddingHorizontal="0dp"
+        app:itemIconTint="@android:color/transparent"
+        app:itemIconSize="0dp"
+        app:itemTextColor="@color/menu_text_selector"
+        app:itemBackground="@drawable/menu_item_pill_selector"
+        app:itemPaddingTop="0dp"
+        app:itemPaddingBottom="0dp"
+        app:itemRippleColor="@null"
+        android:background="@drawable/menu_wrap_bg"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_navigation_menu" />
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/container"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentBottom="true"
-        android:layout_toEndOf="@id/side_navigation"
+        android:layout_below="@id/top_navigation"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph" />
-        
-    <com.google.android.material.navigationrail.NavigationRailView
-        android:id="@+id/side_navigation"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="left|start"
-        app:itemBackground="@drawable/bottom_navigation_item_background"
-        app:itemTextColor="@color/white"
-        android:background="@drawable/bottom_navigation_background"
-        app:itemIconTint="@drawable/bottom_navigation_color_selector"
-        app:labelVisibilityMode="labeled"
-        android:layout_alignParentStart="true"
-        app:menu="@menu/bottom_navigation_menu" />
 
 </RelativeLayout>

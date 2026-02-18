@@ -106,4 +106,8 @@ class TVShowRepository @Inject constructor(
     suspend fun getFilteredTvShows(query: androidx.sqlite.db.SupportSQLiteQuery): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         tvShowDao.getTvSeriesByGenreAndSort(query)
     }
+
+    suspend fun loadAllTVShowsByIds(ids: List<String>): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        tvShowDao.loadAllByIds(ids)
+    }
 }

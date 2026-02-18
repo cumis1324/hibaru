@@ -42,7 +42,22 @@ class DetailFragment : Fragment() {
                         episode = episode,
                         viewModel = viewModel,
                         onBackClick = {
-                            parentFragmentManager.popBackStack()
+                            androidx.navigation.fragment.NavHostFragment.findNavController(this@DetailFragment).popBackStack()
+                        },
+                        onNavigate = { videoId, isMovie, tvShow, season ->
+                            val bundle = android.os.Bundle().apply {
+                                putInt("videoId", videoId)
+                                putBoolean("isMovie", isMovie)
+                                if (!isMovie) {
+                                    putInt("episodeId", videoId)
+                                    putParcelable("tvShow", tvShow)
+                                    putParcelable("season", season)
+                                }
+                            }
+                            androidx.navigation.fragment.NavHostFragment.findNavController(this@DetailFragment).navigate(
+                                com.theflexproject.thunder.R.id.action_tvShowDetailsFragment_to_playerFragment,
+                                bundle
+                            )
                         }
                     )
                 }

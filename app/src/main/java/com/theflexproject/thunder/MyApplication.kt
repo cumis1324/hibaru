@@ -9,6 +9,8 @@ import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.theflexproject.thunder.data.sync.SyncWorker
+import com.theflexproject.thunder.data.sync.TvChannelSyncWorker
+import com.theflexproject.thunder.data.sync.EngageSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -19,6 +21,7 @@ class MyApplication : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
 
     override fun getWorkManagerConfiguration(): Configuration {
+        android.util.Log.d("MyApplication", "getWorkManagerConfiguration() called")
         return Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
@@ -51,5 +54,30 @@ class MyApplication : Application(), Configuration.Provider {
             ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )
+
+        // Initialize TV Channel Sync (periodic)
+        val tvChannelRequest = PeriodicWorkRequestBuilder<TvChannelSyncWorker>(24, TimeUnit.HOURS)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "TvChannelSync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            tvChannelRequest
+        )
+        
+        // Initialize Engage SDK Sync (periodic)
+        val engageRequest = PeriodicWorkRequestBuilder<EngageSyncWorker>(24, TimeUnit.HOURS)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "EngageSync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            engageRequest
+        )
+        
+        // FOR DEBUGGING: Trigger one-time sync immediately
+        val oneTimeSync = androidx.work.OneTimeWorkRequestBuilder<TvChannelSyncWorker>().build()
+        WorkManager.getInstance(this).enqueue(oneTimeSync)
+        
+        val engageOneTimeSync = androidx.work.OneTimeWorkRequestBuilder<EngageSyncWorker>().build()
+        WorkManager.getInstance(this).enqueue(engageOneTimeSync)
     }
 }

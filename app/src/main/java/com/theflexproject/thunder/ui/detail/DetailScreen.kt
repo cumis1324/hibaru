@@ -36,7 +36,8 @@ fun DetailScreen(
     season: com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails? = null,
     episode: com.theflexproject.thunder.model.TVShowInfo.Episode? = null,
     viewModel: DetailViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onNavigate: (videoId: Int, isMovie: Boolean, tvShow: com.theflexproject.thunder.model.TVShowInfo.TVShow?, season: com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails?) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -199,23 +200,9 @@ fun DetailScreen(
                                     episodes = if (uiState.expandedSeasonId == seasonItem.id.toLong()) uiState.expandedEpisodes else emptyList(),
                                     onToggle = { viewModel.toggleSeasonExpansion(seasonItem.id.toLong(), seasonItem.season_number) },
                                     onEpisodeClick = { ep ->
-                                        android.util.Log.d("DetailScreen", "Episode clicked: id=${ep.id}, name=${ep.name}, seasonNumber=${ep.season_number}, episodeNumber=${ep.episode_number}")
-                                        activity?.let {
-                                            val bundle = android.os.Bundle().apply {
-                                                putInt("videoId", ep.id.toInt())
-                                                putBoolean("isMovie", false)
-                                                putInt("episodeId", ep.id.toInt())
-                                                // Pass TVShow and Season objects
-                                                putParcelable("tvShow", uiState.tvShow)
-                                                uiState.seasons.find { it.season_number == ep.season_number }?.let { seasonItem ->
-                                                    putParcelable("season", seasonItem)
-                                                }
-                                            }
-                                            android.util.Log.d("DetailScreen", "Navigating to PlayerFragment with bundle: videoId=${ep.id.toInt()}, isMovie=false, tvShow=${uiState.tvShow?.name}, season=${ep.season_number}")
-                                            androidx.navigation.fragment.NavHostFragment.findNavController(
-                                                it.supportFragmentManager.findFragmentById(com.theflexproject.thunder.R.id.nav_host_fragment)!!
-                                            ).navigate(com.theflexproject.thunder.R.id.action_tvShowDetailsFragment_to_playerFragment, bundle)
-                                        }
+                                        android.util.Log.d("DetailScreen", "Episode clicked: id=${ep.id}, name=${ep.name}")
+                                        val seasonObj = uiState.seasons.find { it.season_number == ep.season_number }
+                                        onNavigate(ep.id.toInt(), false, uiState.tvShow, seasonObj)
                                     }
                                 )
                             }

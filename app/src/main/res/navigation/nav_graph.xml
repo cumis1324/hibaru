@@ -24,11 +24,6 @@
         android:label="Search"
         tools:layout="@layout/fragment_search" />
 
-    <fragment
-        android:id="@+id/libraryFragment"
-        android:name="com.theflexproject.thunder.fragments.LibraryFragment"
-        android:label="Library"
-        tools:layout="@layout/fragment_library" />
 
     <fragment
         android:id="@+id/playerFragment"

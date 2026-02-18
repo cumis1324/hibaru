@@ -24,4 +24,12 @@ class SyncPrefs @Inject constructor(
     var isDemoMode: Boolean
         get() = prefs.getBoolean("is_demo_mode", false)
         set(value) = prefs.edit().putBoolean("is_demo_mode", value).apply()
+
+    var trendingItemsJson: String?
+        get() = prefs.getString("trending_items_json", null)
+        set(value) = prefs.edit().putString("trending_items_json", value).apply()
+
+    var cachedGenresJson: String?
+        get() = prefs.getString("cached_genres_json", null)
+        set(value) = prefs.edit().putString("cached_genres_json", value).apply()
 }

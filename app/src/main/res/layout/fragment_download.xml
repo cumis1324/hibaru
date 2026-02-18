@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:focusable="true"
-    android:clickable="true"
-    android:background="@color/black"
-    android:orientation="vertical">
-
+    android:background="?attr/colorSurface">
 
     <TextView
         android:id="@+id/downloadTitle"
@@ -18,101 +14,53 @@
         android:layout_marginTop="40dp"
         android:fontFamily="@font/jost_medium"
         android:text="Download"
-        android:textColor="@color/white"
-        android:textSize="25sp"/>
-
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="28sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/downloadTitle">
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/downloadTitle">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="80dp">
 
-            <RelativeLayout
+            <!-- Active Downloads -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDownloading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/frame">
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/downloading_item" />
 
-
-                <ImageButton
-                    android:id="@+id/playInSeasonDetails"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_centerInParent="true"
-                    android:background="@drawable/play_shape"
-                    android:backgroundTint="@color/download_button_bg_color"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:fontFamily="@font/jost_regular"
-                    android:orientation="horizontal"
-                    android:src="@drawable/ic_play"
-                    app:cornerRadius="100dp"
-                    android:visibility="gone"/>
-
-
-            </RelativeLayout>
-
-
-            <RelativeLayout
-                android:id="@+id/juduloRI"
+            <TextView
+                android:id="@+id/teksDownload"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                >
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/jost_medium"
+                android:text="Downloaded Files"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp" />
 
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_below="@id/juduloRI"
-                android:id="@+id/relativeContainer"
+            <!-- Completed Downloads -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDownload"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                >
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/download_item" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="20dp"
-                    android:orientation="vertical">
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerDownloading"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:clipToPadding="false"
-                        android:nestedScrollingEnabled="false"
-                        android:scrollbars="vertical"
-                        tools:listitem="@layout/downloading_item"/>
-
-
-                    <TextView
-                        android:id="@+id/teksDownload"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="15dp"
-                        android:fontFamily="@font/jost_medium"
-                        android:text="Downloaded Files"
-                        android:textColor="@color/white"
-                        android:textSize="18sp" />
-
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerDownload"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:clipToPadding="false"
-                        android:nestedScrollingEnabled="false"
-                        android:paddingBottom="80dp"
-                        android:scrollbars="vertical"
-                        tools:listitem="@layout/download_item" />
-
-                </LinearLayout>
-
-            </RelativeLayout>
-
-        </RelativeLayout>
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-</RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

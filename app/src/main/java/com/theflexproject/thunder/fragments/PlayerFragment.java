@@ -142,13 +142,14 @@ public class PlayerFragment extends BaseFragment
     private MappingTrackSelector.MappedTrackInfo mappedTrackInfo;
     private ImageView imageView;
     private RelativeLayout customBufferingIndicator;
-    private NavigationRailView navigationRailView;
+    private View topNavigationView;
     private ViewGroup rootView;
     private Spinner spinnerAudioTrack, spinnerSource;
     private List<MyMedia> sourceList, similarOrEpisode;
     private GestureDetector gestureDetector;
     PictureInPictureParams pipParams;
     View dialogView;
+    private Movie movieDetails;
     private TVShow tvShowDetails;
     private TVShowSeasonDetails season;
     private int episodeId;
@@ -307,9 +308,9 @@ public class PlayerFragment extends BaseFragment
         }
         similarView = view.findViewById(R.id.similarAndEpisode);
         if (isTVDevice(mActivity)) {
-            navigationRailView = mActivity.findViewById(R.id.side_navigation);
-            if (navigationRailView != null) {
-                navigationRailView.setVisibility(View.GONE);
+            topNavigationView = mActivity.findViewById(R.id.top_navigation);
+            if (topNavigationView != null) {
+                topNavigationView.setVisibility(View.GONE);
             }
             fullscreen.setVisibility(View.GONE);
         }
@@ -485,8 +486,10 @@ public class PlayerFragment extends BaseFragment
             if (bottomNavigationView != null) {
                 bottomNavigationView.setVisibility(View.GONE);
             }
-            if (navigationRailView != null) {
-                navigationRailView.setVisibility(View.GONE);
+            if (isTVDevice(mActivity)) {
+                if (topNavigationView != null) {
+                    topNavigationView.setVisibility(View.GONE);
+                }
             }
             startSeekBarUpdate();
         }
@@ -501,6 +504,7 @@ public class PlayerFragment extends BaseFragment
                 seekBar.setProgress((int) player.getCurrentPosition());
                 seekBar.setMax((int) player.getDuration());
                 updateTimer(timer, player.getCurrentPosition(), player.getDuration());
+                updateWatchNext();
                 handler.postDelayed(this, 1000); // Update
                                                  // setiap
                                                  // detik
@@ -730,14 +734,14 @@ public class PlayerFragment extends BaseFragment
             bottomNavigationView.setVisibility(isTVDevice(mActivity) ? View.GONE : View.VISIBLE);
         }
 
-        if (navigationRailView != null) {
-            navigationRailView.setVisibility(isTVDevice(mActivity) ? View.VISIBLE : View.GONE);
+        if (topNavigationView != null) {
+            topNavigationView.setVisibility(isTVDevice(mActivity) ? View.VISIBLE : View.GONE);
         }
     }
 
     @SuppressLint("SetTextI18n")
     private void loadMovieDetails(final int movieId) {
-        Movie movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
+        movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
         if (movieDetails != null) {
             String titleText = movieDetails.getTitle();
             String year = movieDetails.getReleaseDate();
@@ -838,6 +842,17 @@ public class PlayerFragment extends BaseFragment
                             .into(imageView);
                 }
             }
+        }
+    }
+
+    private void updateWatchNext() {
+        if (player != null && (movieDetails != null || episode != null)) {
+            com.theflexproject.thunder.utils.WatchNextHelper.INSTANCE.updateWatchNextProgram(
+                    mActivity,
+                    movieDetails,
+                    episode,
+                    player.getCurrentPosition(),
+                    player.getDuration());
         }
     }
 

@@ -1,6 +1,7 @@
 package com.theflexproject.thunder
 
 import android.app.UiModeManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Bundle
@@ -72,10 +73,10 @@ class MainActivity : AppCompatActivity() {
         }
         
         if (isTVDevice) {
-            // TV layout with NavigationRailView
+            // TV layout with Top Navigation
             setContentView(R.layout.main_tv)
             blurView = findViewById(R.id.blurView)
-            navigationView = findViewById(R.id.side_navigation)
+            navigationView = findViewById(R.id.top_navigation)
         } else {
             // Phone layout with BottomNavigationView
             phoneBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -118,6 +119,46 @@ class MainActivity : AppCompatActivity() {
                     blurView?.visibility = View.VISIBLE
                     navigationView?.visibility = View.VISIBLE
                 }
+            }
+        }
+
+        // Handle incoming deep link
+        handleDeepLink(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme == "nfgplus" && data.host == "video") {
+            val videoIdStr = data.lastPathSegment ?: return
+            val videoId = videoIdStr.toIntOrNull() ?: return
+            val isMovie = data.getQueryParameter("isMovie")?.toBoolean() ?: true
+            
+            navController.navigate(R.id.playerFragment, Bundle().apply {
+                putInt("videoId", videoId)
+                putBoolean("isMovie", isMovie)
+            })
+        } else if (data.scheme == "https" && data.path?.contains("reviews.html") == true) {
+            val itemId = data.getQueryParameter("id")?.toIntOrNull() ?: return
+            val itemType = data.getQueryParameter("type")
+            
+            android.util.Log.d("DeepLink", "Web Link: id=$itemId, type=$itemType")
+            
+            if (itemType == "movie") {
+                navController.navigate(R.id.playerFragment, Bundle().apply {
+                    putInt("videoId", itemId)
+                    putBoolean("isMovie", true)
+                })
+            } else {
+                // Navigate to modern DetailScreen for TV shows or other types
+                navController.navigate(R.id.detailFragment, Bundle().apply {
+                    putInt("tv_show_id", itemId)
+                })
             }
         }
     }
