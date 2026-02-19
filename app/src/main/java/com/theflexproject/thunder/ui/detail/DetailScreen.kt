@@ -390,54 +390,63 @@ fun EpisodeItem(
     onClick: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit,
     onDownload: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    
-    val backgroundColor = if (isFocused) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    } else {
-        androidx.compose.ui.graphics.Color.Transparent
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .clip(MaterialTheme.shapes.small)
-            .background(backgroundColor)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = androidx.compose.foundation.LocalIndication.current
-            ) { 
-                android.util.Log.d("EpisodeItem", "Episode card clicked: id=${episode.id}, name=${episode.name}")
-                onClick(episode) 
-            }
-            .padding(8.dp, 8.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = TMDB_BACKDROP_IMAGE_BASE_URL + episode.still_path,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp, 45.dp).clip(MaterialTheme.shapes.small),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = "E${episode.episode_number}: ${episode.name}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = episode.overview ?: "",
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
+        val clickInteractionSource = remember { MutableInteractionSource() }
+        val isClickFocused by clickInteractionSource.collectIsFocusedAsState()
         
+        val clickBackgroundColor = if (isClickFocused) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        } else {
+            androidx.compose.ui.graphics.Color.Transparent
+        }
+
+        // Playback Focus Area
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(MaterialTheme.shapes.small)
+                .background(clickBackgroundColor)
+                .clickable(
+                    interactionSource = clickInteractionSource,
+                    indication = androidx.compose.foundation.LocalIndication.current
+                ) { 
+                    android.util.Log.d("EpisodeItem", "Episode card clicked for playback: id=${episode.id}")
+                    onClick(episode) 
+                }
+                .padding(8.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = TMDB_BACKDROP_IMAGE_BASE_URL + episode.still_path,
+                contentDescription = null,
+                modifier = Modifier.size(80.dp, 45.dp).clip(MaterialTheme.shapes.small),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "E${episode.episode_number}: ${episode.name}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = episode.overview ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        // Download Focus Area
         val downloadInteractionSource = remember { MutableInteractionSource() }
         val isDownloadFocused by downloadInteractionSource.collectIsFocusedAsState()
         
