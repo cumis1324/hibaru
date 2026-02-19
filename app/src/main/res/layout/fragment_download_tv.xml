@@ -1,56 +1,183 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_top_bottom_bg"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@drawable/gradient_top_bottom_bg">
 
-    <!-- Title -->
-    <TextView
-        android:id="@+id/downloadTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="48dp"
-        android:layout_marginTop="32dp"
-        android:fontFamily="@font/jost_bold"
-        android:text="Downloads"
-        android:textColor="@color/white"
-        android:textSize="32sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- List -->
-    <androidx.leanback.widget.VerticalGridView
-        android:id="@+id/recyclerDownload"
+    <!-- Dynamic Background -->
+    <ImageView
+        android:id="@+id/backgroundImageView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="24dp"
-        android:clipToPadding="false"
-        android:paddingStart="48dp"
-        android:paddingEnd="48dp"
-        android:paddingBottom="48dp"
-        app:focusOutFront="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/downloadTitle"
-        tools:listitem="@layout/download_item_tv" />
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.3"
+        android:src="@drawable/gradient_top_bottom_bg"
+        tools:ignore="ContentDescription" />
 
-    <!-- Empty State -->
-    <TextView
-        android:id="@+id/teksDownload"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/jost_medium"
-        android:text="You Are Not Download Anything"
-        android:textColor="#80FFFFFF"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/downloadTitle" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Dynamic Preview Area (Based on Focus) -->
+        <LinearLayout
+            android:id="@+id/dynamicPreview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="48dp"
+            android:paddingTop="80dp"
+            android:paddingEnd="48dp"
+            android:paddingBottom="20dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/downloadTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/jost_bold"
+                android:text="Downloads"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/previewTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/jost_bold"
+                android:text="Select Item"
+                android:textColor="@color/white"
+                android:textSize="36sp" 
+                tools:text="Avengers: Endgame"/>
+
+            <TextView
+                android:id="@+id/previewMetadata"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="@font/jost_regular"
+                android:text=""
+                android:textColor="#CCCCCC"
+                android:textSize="24sp" 
+                tools:text="2019 | 181 min"/>
+
+            <TextView
+                android:id="@+id/previewDescription"
+                android:layout_width="600dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/jost_regular"
+                android:maxLines="3"
+                android:text=""
+                android:textColor="@color/white"
+                android:textSize="18sp" 
+                tools:text="After the devastating events of Avengers: Infinity War, the universe is in ruins."/>
+        </LinearLayout>
+
+        <!-- Active Downloads Section -->
+        <TextView
+            android:id="@+id/titleActiveDownloads"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="16dp"
+            android:text="Active Downloads"
+            android:fontFamily="@font/jost_bold"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dynamicPreview"
+            tools:visibility="visible"/>
+
+        <androidx.leanback.widget.HorizontalGridView
+            android:id="@+id/recyclerDownloading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingStart="48dp"
+            android:paddingEnd="48dp"
+            android:clipToPadding="false"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/titleActiveDownloads"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:visibility="visible"
+            tools:listitem="@layout/downloading_item_tv"
+            tools:itemCount="1"/>
+
+        <!-- Library / Completed Section -->
+        <TextView
+            android:id="@+id/titleLibraryDownloads"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="16dp"
+            android:text="My Library"
+            android:fontFamily="@font/jost_bold"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/recyclerDownloading" />
+
+        <androidx.leanback.widget.VerticalGridView
+            android:id="@+id/recyclerDownload"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            android:clipToPadding="false"
+            android:paddingStart="48dp"
+            android:paddingEnd="48dp"
+            android:paddingBottom="48dp"
+            app:focusOutFront="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleLibraryDownloads"
+            tools:listitem="@layout/download_item_tv" 
+            tools:itemCount="6"/>
+
+        <!-- Empty State Container -->
+        <LinearLayout
+            android:id="@+id/emptyStateContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dynamicPreview"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:alpha="0.4"
+                android:src="@drawable/ic_download"
+                app:tint="@color/white"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/emptyStateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/jost_medium"
+                android:text="You Are Not Download Anything"
+                android:textColor="#80FFFFFF"
+                android:textSize="22sp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

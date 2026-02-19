@@ -121,11 +121,11 @@ public class PlayerFragment extends BaseFragment
     private boolean isMovie;
     private FirebaseManager manager;
     private DatabaseReference databaseReference;
-    private String tmdbId, userId, urlString;
+    private String tmdbId, userId, urlString, localPath;
 
     private ExoPlayer player;
     private PlayerView playerView;
-    private ImageButton playPauseButton, setting, fullscreen, cc, ff, bw, source;
+    private ImageButton playPauseButton, setting, fullscreen, cc, ff, bw, source, btn_info;
     private SeekBar seekBar;
     private TextView timer, movietitle, epstitle, bufferText;
 
@@ -211,6 +211,7 @@ public class PlayerFragment extends BaseFragment
         if (getArguments() != null) {
             itemId = getArguments().getInt("videoId");
             isMovie = getArguments().getBoolean("isMovie");
+            localPath = getArguments().getString("localPath");
 
             // For TV episodes, read episodeId, tvShow, and season from arguments
             if (!isMovie) {
@@ -289,6 +290,7 @@ public class PlayerFragment extends BaseFragment
         movietitle = customControls.findViewById(R.id.playerTitle);
         epstitle = customControls.findViewById(R.id.playerEpsTitle);
         cc = customControls.findViewById(R.id.btn_cc);
+        btn_info = customControls.findViewById(R.id.btn_info);
         setting = customControls.findViewById(R.id.btn_setting);
         imageView = view.findViewById(R.id.background_image);
         customBufferingIndicator = view.findViewById(R.id.custom_buffering_indicator);
@@ -313,6 +315,24 @@ public class PlayerFragment extends BaseFragment
                 topNavigationView.setVisibility(View.GONE);
             }
             fullscreen.setVisibility(View.GONE);
+            if (btn_info != null) {
+                btn_info.setVisibility(View.VISIBLE);
+            }
+
+            // Remote Info key support
+            playerView.setOnKeyListener((v, keyCode, event) -> {
+                if (keyCode == android.view.KeyEvent.KEYCODE_INFO) {
+                    if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+                        showInfoSideSheet();
+                    }
+                    return true;
+                }
+                return false;
+            });
+        } else {
+            if (btn_info != null) {
+                btn_info.setVisibility(View.GONE);
+            }
         }
         exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
 
@@ -320,6 +340,9 @@ public class PlayerFragment extends BaseFragment
 
     private void setControlListeners() {
         source.setOnClickListener(v -> showSources());
+        if (btn_info != null) {
+            btn_info.setOnClickListener(v -> showInfoSideSheet());
+        }
         playPauseButton.setOnClickListener(v -> togglePlayback(player, playPauseButton));
         fullscreen.setOnClickListener(v -> {
             if (isFullscreen) {
@@ -739,6 +762,22 @@ public class PlayerFragment extends BaseFragment
         }
     }
 
+    private void showInfoSideSheet() {
+        if (isTVDevice(mActivity)) {
+            InfoSideSheetDialogFragment infoSheet;
+            if (isMovie) {
+                infoSheet = InfoSideSheetDialogFragment.Companion.newInstance(itemId);
+            } else {
+                if (tvShowDetails != null) {
+                    infoSheet = InfoSideSheetDialogFragment.Companion.newTvInstance(tvShowDetails.getId());
+                } else {
+                    return; // Nowhere to get info from yet
+                }
+            }
+            infoSheet.show(getChildFragmentManager(), "info_side_sheet");
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     private void loadMovieDetails(final int movieId) {
         movieDetails = DetailsUtils.getMovieSmallest(mActivity, movieId);
@@ -777,7 +816,9 @@ public class PlayerFragment extends BaseFragment
                             .into(imageView);
                 }
             }
-            if (ADMIN_USER_UID.equals(userId)) {
+            if (localPath != null && !localPath.isEmpty()) {
+                initializePlayer(localPath);
+            } else if (ADMIN_USER_UID.equals(userId)) {
                 initializePlayer(urlString);
             } else {
                 initializePlayer(newUrl);
@@ -812,7 +853,9 @@ public class PlayerFragment extends BaseFragment
                 String newUrl = urlString.replaceAll(
                         "drive\\d*\\.nfgplusmirror\\.workers.dev",
                         randomUrl);
-                if (ADMIN_USER_UID.equals(userId)) {
+                if (localPath != null && !localPath.isEmpty()) {
+                    initializePlayer(localPath);
+                } else if (ADMIN_USER_UID.equals(userId)) {
                     initializePlayer(urlString);
                 } else {
                     initializePlayer(newUrl);
@@ -846,7 +889,7 @@ public class PlayerFragment extends BaseFragment
     }
 
     private void updateWatchNext() {
-        if (player != null && (movieDetails != null || episode != null)) {
+        if (isTVDevice(mActivity) && player != null && (movieDetails != null || episode != null)) {
             com.theflexproject.thunder.utils.WatchNextHelper.INSTANCE.updateWatchNextProgram(
                     mActivity,
                     movieDetails,

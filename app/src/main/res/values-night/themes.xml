@@ -1,5 +1,11 @@
 <resources>
 
+    <style name="Theme.MyApplication" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Support for Material 3 attributes used in layouts -->
+        <item name="colorSurfaceVariant">#1C1B1F</item> <!-- Dark variant for cards in Dark Mode -->
+        <item name="colorOnSurface">#FFFFFF</item> <!-- White text for Dark Mode -->
+    </style>
+
     <style name="ThemeOverlay.Thunder.FullscreenContainer" parent="">
         <item name="fullscreenBackgroundColor">@color/light_blue_900</item>
         <item name="fullscreenTextColor">@color/light_blue_A400</item>

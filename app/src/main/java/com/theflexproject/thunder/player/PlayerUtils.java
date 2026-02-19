@@ -19,6 +19,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -107,8 +108,18 @@ public class PlayerUtils {
         rootView = decorView.findViewById(android.R.id.content);
         rootView.setPadding(0, 0, 0, 0);
 
-        // Don't modify playerFrame height - let it use existing layout
-        // Setting MATCH_PARENT causes Compose to crash with invalid dimensions
+        if (!isTVDevice(mActivity)) {
+            // Safe alternative to MATCH_PARENT for mobile
+            // Setting it to screen height ensures it fills the screen in landscape
+            playerFrame.post(() -> {
+                ViewGroup.LayoutParams params = playerFrame.getLayoutParams();
+                // Use display height to avoid 'infinite' constraints in Compose
+                android.util.DisplayMetrics displayMetrics = new android.util.DisplayMetrics();
+                mActivity.getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+                params.height = displayMetrics.heightPixels;
+                playerFrame.setLayoutParams(params);
+            });
+        }
 
         uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -287,58 +298,108 @@ public class PlayerUtils {
                 String qualityStr = MovieQualityExtractor.extractQualtiy(((Episode) source).getFileName());
                 sourcesOptions.add(qualityStr);
             } else {
-                sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
+                sourcesOptions.add("Unknown Source");
             }
         }
         final int[] selectedIndex = { 0 };
         builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
-            selectedIndex[0] = which; // Simpan indeks pilihan terbaru
+            selectedIndex[0] = which;
         });
         builder.setPositiveButton("OK", (dialog, which) -> {
             MyMedia selectedSource = sourceList.get(selectedIndex[0]);
+            String customFolderPath = "nfgplus/downloads";
+            File privateFolder = new File(mActivity.getExternalFilesDir(Environment.DIRECTORY_MOVIES),
+                    customFolderPath);
+            if (!privateFolder.exists())
+                privateFolder.mkdirs();
+
+            DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
+
             if (selectedSource instanceof Movie) {
                 Movie selectedFile = (Movie) selectedSource;
-                String huntu = MovieQualityExtractor.extractQualtiy(((Movie) selectedSource).getFileName());
-                String customFolderPath = "/nfgplus/movies/";
-                DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
-                Uri uri = Uri.parse(selectedFile.getUrlString());
-                DownloadManager.Request request = new DownloadManager.Request(uri);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
-                        customFolderPath + selectedFile.getFileName());
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                        .setTitle(selectedFile.getTitle())
-                        .setVisibleInDownloadsUi(true)
-                        .setDescription("Downloading " + selectedFile.getTitle() + " " + huntu);
-                long downloadId = manager.enqueue(request);
-                downloadItems.add(new DownloadItem(
-                        selectedFile.getFileName(),
-                        downloadId,
-                        selectedFile.getTitle(),
-                        -1,
-                        0));
+                String quality = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
+
+                try {
+                    String finalUrl = selectedFile.getUrlString();
+                    if (finalUrl != null) {
+                        finalUrl = finalUrl.replace(" ", "%20");
+                    }
+                    Uri uri = Uri.parse(finalUrl);
+                    DownloadManager.Request request = new DownloadManager.Request(uri);
+
+                    File publicFolder = new File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+                            customFolderPath);
+                    File destFile = new File(publicFolder, selectedFile.getFileName());
+
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
+                            customFolderPath + "/" + selectedFile.getFileName());
+
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                            .setTitle(selectedFile.getTitle())
+                            .setVisibleInDownloadsUi(true)
+                            .setDescription("Downloading " + selectedFile.getTitle() + " " + quality);
+
+                    long downloadId = manager.enqueue(request);
+
+                    // Save to local database
+                    AsyncTask.execute(() -> {
+                        selectedFile.setDownloadId(downloadId);
+                        selectedFile.setLocalPath(destFile.getAbsolutePath());
+                        com.theflexproject.thunder.database.DatabaseClient.getInstance(mActivity)
+                                .getAppDatabase().movieDao().insert(selectedFile);
+                    });
+
+                    Toast.makeText(mActivity, "Download started: " + selectedFile.getTitle(), Toast.LENGTH_SHORT)
+                            .show();
+                } catch (Exception e) {
+                    Log.e("PlayerUtils", "Enqueue Error (Movie): " + e.getMessage(), e);
+                    Toast.makeText(mActivity, "Error starting download: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+
             } else if (selectedSource instanceof Episode) {
                 Episode selectedFile = (Episode) selectedSource;
-                String huntu = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
-                String customFolderPath = "/nfgplus/series/";
-                DownloadManager manager = (DownloadManager) mActivity.getSystemService(DOWNLOAD_SERVICE);
-                Uri uri = Uri.parse(selectedFile.getUrlString());
-                DownloadManager.Request request = new DownloadManager.Request(uri);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
-                        customFolderPath + selectedFile.getFileName());
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                        .setTitle(tvshow.getName() + " S" + season.getSeasonNumber() + " E"
-                                + selectedFile.getEpisodeNumber() + ": " + selectedFile.getName())
-                        .setVisibleInDownloadsUi(true)
-                        .setDescription("Downloading " + tvshow.getName() + " S" + season.getSeasonNumber() + " E"
-                                + selectedFile.getEpisodeNumber() + ": " + selectedFile.getName() + " " + huntu);
-                long downloadId = manager.enqueue(request);
-                downloadItems.add(new DownloadItem(
-                        selectedFile.getFileName(),
-                        downloadId,
-                        selectedFile.getName(),
-                        -1,
-                        0));
+                String quality = MovieQualityExtractor.extractQualtiy(selectedFile.getFileName());
 
+                try {
+                    String finalUrl = selectedFile.getUrlString();
+                    if (finalUrl != null) {
+                        finalUrl = finalUrl.replace(" ", "%20");
+                    }
+                    Uri uri = Uri.parse(finalUrl);
+                    DownloadManager.Request request = new DownloadManager.Request(uri);
+
+                    File publicFolder = new File(
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+                            customFolderPath);
+                    File destFile = new File(publicFolder, selectedFile.getFileName());
+
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES,
+                            customFolderPath + "/" + selectedFile.getFileName());
+
+                    String title = tvshow.getName() + " S" + season.getSeasonNumber() + " E"
+                            + selectedFile.getEpisodeNumber() + ": " + selectedFile.getName();
+
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                            .setTitle(title)
+                            .setVisibleInDownloadsUi(true)
+                            .setDescription("Downloading " + title + " " + quality);
+
+                    long downloadId = manager.enqueue(request);
+
+                    // Save to local database
+                    AsyncTask.execute(() -> {
+                        selectedFile.setDownloadId(downloadId);
+                        selectedFile.setLocalPath(destFile.getAbsolutePath());
+                        com.theflexproject.thunder.database.DatabaseClient.getInstance(mActivity)
+                                .getAppDatabase().episodeDao().insert(selectedFile);
+                    });
+
+                    Toast.makeText(mActivity, "Download started: " + selectedFile.getName(), Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Log.e("PlayerUtils", "Enqueue Error (Episode): " + e.getMessage(), e);
+                    Toast.makeText(mActivity, "Error starting download: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
         });
         builder.create().show();

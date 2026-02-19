@@ -134,7 +134,21 @@ public interface MovieDao {
     @Query("SELECT COUNT(*) FROM Movie")
     int getMovieCount();
 
+    @Query("SELECT * FROM Movie WHERE download_id = :downloadId LIMIT 1")
+    Movie getMovieByDownloadId(long downloadId);
+
+    @Query("SELECT * FROM Movie WHERE local_path IS NOT NULL AND disabled = 0")
+    List<Movie> getAllMovies();
+
+    @Query("SELECT * FROM Movie WHERE gd_id IN (:gdIds)")
+    List<Movie> getMoviesByGdIds(List<String> gdIds);
+
+    @Query("SELECT * FROM Movie WHERE LOWER(file_name) IN (:fileNames)")
+    List<Movie> getMoviesByFileNames(List<String> fileNames);
+
+    @Query("SELECT * FROM Movie")
+    List<Movie> getAllMoviesSync();
+
     @Query("DELETE FROM Movie")
     void deleteAll();
-
 }

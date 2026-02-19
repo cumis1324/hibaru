@@ -1,6 +1,9 @@
 package com.theflexproject.thunder.ui.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -203,6 +207,11 @@ fun DetailScreen(
                                         android.util.Log.d("DetailScreen", "Episode clicked: id=${ep.id}, name=${ep.name}")
                                         val seasonObj = uiState.seasons.find { it.season_number == ep.season_number }
                                         onNavigate(ep.id.toInt(), false, uiState.tvShow, seasonObj)
+                                    },
+                                    onEpisodeDownload = { ep ->
+                                        activity?.let {
+                                            viewModel.downloadEpisode(it, ep, uiState.tvShow, uiState.seasons.find { s -> s.season_number == ep.season_number })
+                                        }
                                     }
                                 )
                             }
@@ -261,11 +270,13 @@ fun ActionButtons(
                 Text("Share")
             }
         }
-        item {
-            Button(onClick = onDownload) {
-                Icon(Icons.Default.ArrowForward, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Download")
+        if (uiState.isMovie) {
+            item {
+                Button(onClick = onDownload) {
+                    Icon(Icons.Default.ArrowForward, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Download")
+                }
             }
         }
     }
@@ -277,7 +288,15 @@ fun DetailInfo(uiState: DetailUiState, onClick: () -> Unit) {
     val tvShow = uiState.tvShow
     val episode = uiState.episode
     
-    val title = if (uiState.isMovie) movie?.title else "${tvShow?.name} - S${uiState.season?.season_number}E${episode?.episode_number}"
+    val title = if (uiState.isMovie) {
+        movie?.title
+    } else {
+        if (uiState.season != null && uiState.episode != null) {
+            "${tvShow?.name} - S${uiState.season?.season_number}E${uiState.episode?.episode_number}"
+        } else {
+            tvShow?.name
+        }
+    }
     val overview = if (uiState.isMovie) movie?.overview else tvShow?.overview
 
     Column(modifier = Modifier.clickable { onClick() }.padding(16.dp)) {
@@ -314,7 +333,8 @@ fun SeasonItem(
     isExpanded: Boolean,
     episodes: List<com.theflexproject.thunder.model.TVShowInfo.Episode>,
     onToggle: () -> Unit,
-    onEpisodeClick: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit
+    onEpisodeClick: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit,
+    onEpisodeDownload: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Card(
@@ -357,7 +377,7 @@ fun SeasonItem(
         androidx.compose.animation.AnimatedVisibility(visible = isExpanded) {
             Column {
                 episodes.forEach { episode ->
-                    EpisodeItem(episode, onEpisodeClick)
+                    EpisodeItem(episode, onEpisodeClick, onEpisodeDownload)
                 }
             }
         }
@@ -367,16 +387,32 @@ fun SeasonItem(
 @Composable
 fun EpisodeItem(
     episode: com.theflexproject.thunder.model.TVShowInfo.Episode,
-    onClick: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit
+    onClick: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit,
+    onDownload: (com.theflexproject.thunder.model.TVShowInfo.Episode) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    
+    val backgroundColor = if (isFocused) {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    } else {
+        androidx.compose.ui.graphics.Color.Transparent
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { 
+            .padding(horizontal = 8.dp)
+            .clip(MaterialTheme.shapes.small)
+            .background(backgroundColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.foundation.LocalIndication.current
+            ) { 
                 android.util.Log.d("EpisodeItem", "Episode card clicked: id=${episode.id}, name=${episode.name}")
                 onClick(episode) 
             }
-            .padding(16.dp, 8.dp),
+            .padding(8.dp, 8.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -398,6 +434,27 @@ fun EpisodeItem(
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        
+        val downloadInteractionSource = remember { MutableInteractionSource() }
+        val isDownloadFocused by downloadInteractionSource.collectIsFocusedAsState()
+        
+        IconButton(
+            onClick = { onDownload(episode) },
+            interactionSource = downloadInteractionSource,
+            modifier = Modifier.then(
+                if (isDownloadFocused) Modifier.background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    CircleShape
+                ) else Modifier
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown, 
+                contentDescription = "Download",
+                tint = if (isDownloadFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
         }
     }

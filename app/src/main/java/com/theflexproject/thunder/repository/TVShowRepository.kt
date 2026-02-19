@@ -67,7 +67,28 @@ class TVShowRepository @Inject constructor(
         tvShowDao.insert(*tvShows.toTypedArray())
     }
 
-    suspend fun saveAllEpisodes(episodes: List<Episode>) {
+    suspend fun saveAllEpisodes(episodes: List<Episode>) = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val gdIds = episodes.mapNotNull { it.gd_id }
+        if (gdIds.isNotEmpty()) {
+            val existingEpisodes = episodeDao.getEpisodesByGdIds(gdIds)
+            val existingMap = existingEpisodes.associateBy { it.gd_id }
+            
+            episodes.forEach { episode ->
+                val existing = existingMap[episode.gd_id]
+                if (existing != null && !episode.gd_id.isNullOrBlank()) {
+                    // Preserve local metadata during sync
+                    if (episode.localPath.isNullOrEmpty()) {
+                        episode.localPath = existing.localPath
+                    }
+                    if (episode.downloadId == 0L || episode.downloadId == -1L) {
+                        episode.downloadId = existing.downloadId
+                    }
+                    if (episode.file_name.isNullOrEmpty()) {
+                        episode.file_name = existing.file_name
+                    }
+                }
+            }
+        }
         episodeDao.insert(*episodes.toTypedArray())
     }
 

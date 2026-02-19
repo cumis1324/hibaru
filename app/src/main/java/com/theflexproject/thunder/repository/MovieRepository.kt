@@ -50,6 +50,27 @@ class MovieRepository @Inject constructor(
     }
 
     suspend fun saveAll(movies: List<Movie>) = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val gdIds = movies.mapNotNull { it.gd_id }
+        if (gdIds.isNotEmpty()) {
+            val existingMovies = movieDao.getMoviesByGdIds(gdIds)
+            val existingMap = existingMovies.associateBy { it.gd_id }
+            
+            movies.forEach { movie ->
+                val existing = existingMap[movie.gd_id]
+                if (existing != null && !movie.gd_id.isNullOrBlank()) {
+                    // Preserve local metadata during sync
+                    if (movie.localPath.isNullOrEmpty()) {
+                        movie.localPath = existing.localPath
+                    }
+                    if (movie.downloadId == 0L || movie.downloadId == -1L) {
+                        movie.downloadId = existing.downloadId
+                    }
+                    if (movie.file_name.isNullOrEmpty()) {
+                        movie.file_name = existing.file_name
+                    }
+                }
+            }
+        }
         movieDao.insert(*movies.toTypedArray())
     }
 

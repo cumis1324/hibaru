@@ -103,7 +103,7 @@ class SearchFragment : Fragment() {
         } else {
             mobileBinding?.searchInput
         }
-
+        searchInput?.requestFocus()
         searchInput?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {

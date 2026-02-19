@@ -84,6 +84,21 @@ public interface EpisodeDao {
     @Query("DELETE FROM Episode WHERE gd_id =:id")
     void deleteByGdId(String id);
 
+    @Query("SELECT * FROM Episode WHERE download_id = :downloadId LIMIT 1")
+    Episode getEpisodeByDownloadId(long downloadId);
+
+    @Query("SELECT * FROM Episode WHERE local_path IS NOT NULL AND disabled = 0")
+    List<Episode> getAllEpisodes();
+
+    @Query("SELECT * FROM Episode WHERE gd_id IN (:gdIds)")
+    List<Episode> getEpisodesByGdIds(List<String> gdIds);
+
+    @Query("SELECT * FROM Episode WHERE LOWER(file_name) IN (:fileNames)")
+    List<Episode> getEpisodesByFileNames(List<String> fileNames);
+
+    @Query("SELECT * FROM Episode")
+    List<Episode> getAllEpisodesSync();
+
     @Query("DELETE FROM Episode")
     void deleteAll();
 }

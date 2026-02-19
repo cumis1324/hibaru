@@ -156,4 +156,22 @@ class DetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun downloadEpisode(activity: android.app.Activity, episode: Episode, tvShow: TVShow?, season: TVShowSeasonDetails?) {
+        viewModelScope.launch {
+            try {
+                val sources = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    com.theflexproject.thunder.utils.DetailsUtils.getEpisodeSource(context, episode.id.toInt())
+                }
+                com.theflexproject.thunder.player.PlayerUtils.download(
+                    activity,
+                    sources as List<MyMedia>,
+                    tvShow,
+                    season
+                )
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
 }

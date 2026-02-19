@@ -2,87 +2,93 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fileItemCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
-    app:cardBackgroundColor="@color/episode_item_bg_color"
-    app:cardCornerRadius="15dp">
+    android:layout_marginHorizontal="20dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#10FFFFFF">
 
-    <eightbitlab.com.blurview.BlurView
-
-        android:id="@+id/blurView2"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:background="@color/transparent"
-        android:clipChildren="false"
-        android:elevation="8dp">
+        android:layout_height="wrap_content"
+        android:padding="12dp">
 
-        <LinearLayout
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:orientation="vertical">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/thumbnailCard"
+            android:layout_width="100dp"
+            android:layout_height="60dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:id="@+id/ivThumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_download"
+                android:alpha="0.3"
+                android:padding="16dp"
+                app:tint="?attr/colorOnSurface"
+                tools:ignore="ContentDescription" />
+
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:id="@+id/fileNameInDownload"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:fontFamily="@font/jost_medium"
+            android:text="FileName.mp4"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="15sp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            app:layout_constraintStart_toEndOf="@id/thumbnailCard"
+            app:layout_constraintEnd_toStartOf="@id/actionsContainer"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/actionsContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@id/changeTMDBIdInFileItem"
-            android:fontFamily="@font/jost_regular"
-            android:gravity="start"
-            android:padding="10dp"
-            android:text="FileName"
-            android:textColor="@color/white"
-            android:textSize="15sp" />
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/blue"
-            >
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-            <com.google.android.material.button.MaterialButton
+            <ImageButton
                 android:id="@+id/playInDownload"
-                style="@style/Widget.AppCompat.Button.Borderless.Colored"
-                android:layout_width="133dp"
+                android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="11dp"
-                android:layout_marginTop="1dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingHorizontal="5dp"
-                app:icon="@drawable/ic_play"
-                app:iconGravity="textStart"
-                app:iconSize="35sp"
-                app:iconTint="@color/download_button_bg_color" />
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_play"
+                app:tint="@color/blue"
+                tools:ignore="ContentDescription" />
 
-            <com.google.android.material.button.MaterialButton
+            <ImageButton
                 android:id="@+id/hapusDownload"
-                style="@style/Widget.AppCompat.Button.Borderless.Colored"
-                android:layout_width="133dp"
+                android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:clickable="true"
-                android:focusable="true"
-                app:iconTint="@color/download_button_bg_color"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingHorizontal="5dp"
-                app:icon="@drawable/ic_delete"
-                app:iconGravity="textStart"
-                app:iconSize="35sp" />
+                android:layout_marginStart="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                app:tint="#FF5252"
+                tools:ignore="ContentDescription" />
 
-
-
-        </RelativeLayout>
         </LinearLayout>
 
-    </eightbitlab.com.blurview.BlurView>
-
-
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

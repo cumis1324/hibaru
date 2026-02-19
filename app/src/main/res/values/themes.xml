@@ -10,6 +10,11 @@
         <item name="colorOnSecondary">@color/white</item>
         <item name="colorAccent">#00A3FF</item>
         <item name="android:statusBarColor">@color/transparent</item>
+        
+        <!-- Support for Material 3 attributes used in layouts -->
+        <item name="colorSurfaceVariant">#F5F5F5</item> <!-- Light grey for cards in Light Mode -->
+        <item name="colorOnSurface">#1C1B1F</item> <!-- Dark text for Light Mode -->
+        
         <!-- Customize your theme here. -->
     </style>
 

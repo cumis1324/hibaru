@@ -83,5 +83,11 @@ data class Episode(
     
     @get:JvmName("getVoteCount") @set:JvmName("setVoteCount")
     @ColumnInfo(name = "vote_count")
-    var vote_count: Int = 0
+    var vote_count: Int = 0,
+
+    // Download Support
+    @ColumnInfo(name = "local_path", defaultValue = "")
+    var localPath: String? = null,
+    @ColumnInfo(name = "download_id", defaultValue = "-1")
+    var downloadId: Long = -1L
 ) : MyMedia, Parcelable

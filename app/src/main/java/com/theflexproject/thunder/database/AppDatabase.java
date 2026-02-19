@@ -13,10 +13,11 @@ import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
 
 @Database(entities = { ResFormat.class, Movie.class, IndexLink.class, TVShow.class, TVShowSeasonDetails.class,
-        Episode.class }, version = 32, autoMigrations = { @AutoMigration(from = 23, to = 24),
+        Episode.class }, version = 34, autoMigrations = { @AutoMigration(from = 23, to = 24),
                 @AutoMigration(from = 24, to = 25), @AutoMigration(from = 25, to = 26),
                 @AutoMigration(from = 26, to = 27), @AutoMigration(from = 27, to = 28),
-                @AutoMigration(from = 28, to = 29), @AutoMigration(from = 29, to = 30) })
+                @AutoMigration(from = 28, to = 29), @AutoMigration(from = 29, to = 30),
+                @AutoMigration(from = 32, to = 33), @AutoMigration(from = 33, to = 34) })
 @TypeConverters({ Converters.class })
 
 public abstract class AppDatabase extends RoomDatabase {

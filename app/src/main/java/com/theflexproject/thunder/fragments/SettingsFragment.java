@@ -34,8 +34,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.theflexproject.thunder.ManageDatabaseFragment;
-import com.theflexproject.thunder.ManageIndexesFragment;
+
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.model.FirebaseManager;
 import com.theflexproject.thunder.utils.SettingsManager;
@@ -101,13 +100,16 @@ public class SettingsFragment extends BaseFragment {
 
     private void initWidgets(View view) {
         addIndex = view.findViewById(R.id.addIndexButton);
-        viewIndexes = view.findViewById(R.id.viewIndexes);
+        // viewIndexes = view.findViewById(R.id.viewIndexes);
         importExportDatabase = view.findViewById(R.id.importExportDatabase);
+        importExportDatabase.setVisibility(View.GONE);
         checkForUpdate = view.findViewById(R.id.checkforUpdates);
         telegram = view.findViewById(R.id.telegroup);
 
         externalPlayerToggle = view.findViewById(R.id.externalPlayerToggle);
-        refreshPeriodicallyToggle = view.findViewById(R.id.refreshPeriodicallyToggle);
+        externalPlayerToggle.setVisibility(View.GONE); // Hide the external player toggle
+        // refreshPeriodicallyToggle =
+        // view.findViewById(R.id.refreshPeriodicallyToggle);
 
         settingsManager = new SettingsManager(mActivity);
         d = new Dialog(mActivity);
@@ -159,19 +161,23 @@ public class SettingsFragment extends BaseFragment {
 
         if (viewIndexes != null) {
             viewIndexes.setOnClickListener(v -> {
-                ManageIndexesFragment manageIndexesFragment = new ManageIndexesFragment();
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
-                        .replace(R.id.container, manageIndexesFragment).addToBackStack(null).commit();
+                // ManageIndexesFragment manageIndexesFragment = new ManageIndexesFragment();
+                // mActivity.getSupportFragmentManager().beginTransaction()
+                // .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left,
+                // R.anim.to_right)
+                // .replace(R.id.container,
+                // manageIndexesFragment).addToBackStack(null).commit();
             });
         }
 
         if (importExportDatabase != null) {
             importExportDatabase.setOnClickListener(v -> {
-                ManageDatabaseFragment manageDatabaseFragment = new ManageDatabaseFragment();
-                mActivity.getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left, R.anim.to_right)
-                        .replace(R.id.container, manageDatabaseFragment).addToBackStack(null).commit();
+                // ManageDatabaseFragment manageDatabaseFragment = new ManageDatabaseFragment();
+                // mActivity.getSupportFragmentManager().beginTransaction()
+                // .setCustomAnimations(R.anim.from_right, R.anim.to_left, R.anim.from_left,
+                // R.anim.to_right)
+                // .replace(R.id.container,
+                // manageDatabaseFragment).addToBackStack(null).commit();
             });
         }
 
@@ -243,7 +249,7 @@ public class SettingsFragment extends BaseFragment {
     }
 
     private void loadProfileImage(String imageUrl) {
-        if (profilePicture != null) {
+        if (isAdded() && mActivity != null && profilePicture != null) {
             Glide.with(this)
                     .load(imageUrl)
                     .into(profilePicture);
@@ -252,9 +258,10 @@ public class SettingsFragment extends BaseFragment {
 
     private void updateUI() {
         if (currentUser != null) {
-            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            databaseReference.child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (!isAdded() || mActivity == null) return;
                     if (dataSnapshot.hasChild("profileImage")) {
                         String imageUrl = dataSnapshot.child("profileImage").getValue(String.class);
                         loadProfileImage(imageUrl);

@@ -2,51 +2,86 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fileItemCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
-    app:cardBackgroundColor="@color/episode_item_bg_color"
-    app:cardCornerRadius="15dp">
+    android:layout_marginHorizontal="20dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#20FFFFFF">
 
-    <eightbitlab.com.blurview.BlurView
-
-        android:id="@+id/blurView2"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:background="@color/transparent"
-        android:clipChildren="false"
-        android:elevation="8dp">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
-        <LinearLayout
-            android:layout_height="match_parent"
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/jost_medium"
+            android:text="FileName.mp4"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/progressDownload"
+            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="match_parent"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/tvFileName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@id/changeTMDBIdInFileItem"
-                android:fontFamily="@font/jost_regular"
-                android:gravity="start"
-                android:padding="10dp"
-                android:text="FileName"
-                android:textColor="@color/white"
-                android:textSize="15sp" />
-            <ProgressBar
-                android:id="@+id/progressDownload"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progress="0"
-                android:max="100"
-                style="?android:attr/progressBarStyleHorizontal" />
-        </LinearLayout>
+            android:layout_height="4dp"
+            android:layout_marginTop="12dp"
+            android:max="100"
+            android:progress="45"
+            android:progressDrawable="@drawable/custom_progress_bar"
+            app:layout_constraintTop_toBottomOf="@id/tvFileName" />
 
-    </eightbitlab.com.blurview.BlurView>
+        <TextView
+            android:id="@+id/tvDownloadStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/jost_regular"
+            android:text="Downloading..."
+            android:textColor="?attr/colorOnSurface"
+            android:alpha="0.7"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/progressDownload" />
 
+        <TextView
+            android:id="@+id/tvDownloadPercent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/jost_medium"
+            android:text="45%"
+            android:textColor="@color/blue"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/btnCancelDownload"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintTop_toBottomOf="@id/progressDownload" />
 
+        <ImageButton
+            android:id="@+id/btnCancelDownload"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            app:tint="#FF5252"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/progressDownload"
+            tools:ignore="ContentDescription" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

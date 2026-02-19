@@ -29,14 +29,22 @@ public class Converters {
 
     @TypeConverter
     public static String fromData(Data data) {
-        return data.toString();
+        if (data == null)
+            return null;
+        return new Gson().toJson(data);
     }
 
     @TypeConverter
     public static Data fromStringToData(String string) {
-        Gson gson = new Gson();
-        Data data = gson.fromJson(string, Data.class);
-        return data;
+        if (string == null || string.trim().isEmpty())
+            return null;
+        try {
+            Gson gson = new Gson();
+            return gson.fromJson(string, Data.class);
+        } catch (Throwable t) {
+            Log.e("Converters", "Failed to parse Data JSON: " + string, t);
+            return null;
+        }
     }
 
     // @TypeConverter
@@ -56,20 +64,20 @@ public class Converters {
         if (episodes == null) {
             return null;
         }
+        Gson gson = new Gson();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < episodes.size(); i++) {
             Episode e = episodes.get(i);
-            sb.append(e.toString());
+            sb.append(gson.toJson(e));
             sb.append("\t");
         }
-        System.out.println("StringBuilder op" + sb.toString());
         return sb.toString();
     }
 
     @TypeConverter
     public static ArrayList<Episode> fromStringToEpisodes(String episodesString) {
-        if (episodesString == null) {
-            return (null);
+        if (episodesString == null || episodesString.trim().isEmpty()) {
+            return new ArrayList<>();
         }
         // Gson gson = new Gson();
         // "Mon Oct 10 22:07:31 GMT+05:30 2022"
@@ -87,16 +95,19 @@ public class Converters {
 
         String[] arr = episodesString.split("\t");
         ArrayList<Episode> episodes = new ArrayList<>();
-        try {
-            for (String s : arr) {
-
+        for (String s : arr) {
+            if (s.trim().isEmpty())
+                continue;
+            try {
                 Episode episode = gson.fromJson(s, Episode.class);
                 // Episode episode = gson.readValue(s , Episode.class);
                 // System.out.println("Episode inside For Loop" + episode);
-                episodes.add(episode);
+                if (episode != null) {
+                    episodes.add(episode);
+                }
+            } catch (Throwable t) {
+                Log.e("Converters", "Failed to parse episode: " + s, t);
             }
-        } catch (Exception e) {
-            System.out.println("episodesArr exception" + e);
         }
         // System.out.println("episodesString in Converter" + episodesString);
         // System.out.println("episodesList in Converter" + episodes);
@@ -108,38 +119,37 @@ public class Converters {
         if (seasons == null) {
             return null;
         }
+        Gson gson = new Gson();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < seasons.size(); i++) {
             Season s = seasons.get(i);
-            sb.append(s.toString());
+            sb.append(gson.toJson(s));
             sb.append("\t");
         }
-
-        System.out.println("StringBuilder op" + sb.toString());
 
         return sb.toString();
     }
 
     @TypeConverter
     public static ArrayList<Season> fromStringToSeasons(String seasonsString) {
-        if (seasonsString == null) {
-            return (null);
+        if (seasonsString == null || seasonsString.trim().isEmpty()) {
+            return new ArrayList<>();
         }
         Gson gson = new Gson();
         String[] arr = seasonsString.split("\t");
         ArrayList<Season> seasons = new ArrayList<>();
-        try {
-            for (String s : arr) {
-                // System.out.println("arr element inside For Loop" + s);
+        for (String s : arr) {
+            if (s.trim().isEmpty())
+                continue;
+            try {
                 Season season = gson.fromJson(s, Season.class);
-                // System.out.println("Season inside For Loop" + season);
-                seasons.add(season);
+                if (season != null) {
+                    seasons.add(season);
+                }
+            } catch (Throwable t) {
+                Log.e("Converters", "Failed to parse season: " + s, t);
             }
-        } catch (Exception e) {
-            Log.i("SeasonJson", Arrays.toString(arr));
         }
-        System.out.println(seasons);
-        // System.out.println("seasonString in Converter" + seasonsString);
         return seasons;
     }
 
@@ -148,10 +158,11 @@ public class Converters {
         if (genres == null) {
             return null;
         }
+        Gson gson = new Gson();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < genres.size(); i++) {
             Genres s = genres.get(i);
-            sb.append(s.toString());
+            sb.append(gson.toJson(s));
             sb.append("\t");
         }
 
@@ -160,18 +171,26 @@ public class Converters {
 
     @TypeConverter
     public static ArrayList<Genres> fromStringToGenres(String genresString) {
-        if (genresString == null) {
-            return (null);
+        if (genresString == null || genresString.trim().isEmpty()) {
+            return new ArrayList<>();
         }
         Gson gson = new Gson();
         String[] arr = genresString.split("\t");
         ArrayList<Genres> genres = new ArrayList<>();
 
         for (String s : arr) {
-            Genres genre = gson.fromJson(s, Genres.class);
-            genres.add(genre);
+            if (s.trim().isEmpty())
+                continue;
+            try {
+                Genres genre = gson.fromJson(s, Genres.class);
+                if (genre != null) {
+                    genres.add(genre);
+                }
+            } catch (Throwable t) {
+                Log.e("Converters", "CRITICAL: Failed to parse genre string. Offending value: [" + s + "]", t);
+                // Return empty object instead of crashing
+            }
         }
-        System.out.println(genres);
         return genres;
     }
 }

@@ -1,35 +1,37 @@
 package com.theflexproject.thunder.adapter;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.app.AlertDialog;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.theflexproject.thunder.R;
-import com.theflexproject.thunder.model.MediaItem;
-import com.theflexproject.thunder.player.PlayerActivity;
+import com.theflexproject.thunder.model.Movie;
+import com.theflexproject.thunder.model.MyMedia;
+import com.theflexproject.thunder.model.TVShowInfo.Episode;
 
 import java.util.List;
 
 public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapter.MediaViewHolder> {
 
-    private List<MediaItem> mediaList;
+    private List<MyMedia> mediaList;
     private Context context;
     private OnItemDeleteListener onItemDeleteListener;
     private boolean isTV;
 
     public interface OnItemDeleteListener {
-        void onItemDelete(MediaItem mediaItem);
+        void onItemDelete(MyMedia mediaItem);
     }
 
-    public DownloadRecyAdapter(List<MediaItem> mediaList, Context context, OnItemDeleteListener onItemDeleteListener,
+    public DownloadRecyAdapter(List<MyMedia> mediaList, Context context, OnItemDeleteListener onItemDeleteListener,
             boolean isTV) {
         this.mediaList = mediaList;
         this.context = context;
@@ -37,8 +39,7 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
         this.isTV = isTV;
     }
 
-    // Constructor for backward compatibility if needed, defaults to false
-    public DownloadRecyAdapter(List<MediaItem> mediaList, Context context, OnItemDeleteListener onItemDeleteListener) {
+    public DownloadRecyAdapter(List<MyMedia> mediaList, Context context, OnItemDeleteListener onItemDeleteListener) {
         this(mediaList, context, onItemDeleteListener, false);
     }
 
@@ -52,20 +53,81 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
 
     @Override
     public void onBindViewHolder(@NonNull MediaViewHolder holder, int position) {
-        MediaItem mediaItem = mediaList.get(position);
-        holder.fileNameTextView.setText(mediaItem.getFName());
+        MyMedia mediaItem = mediaList.get(position);
+        String title = "";
+        String posterPath = "";
+        String localPath = "";
+
+        if (mediaItem instanceof Movie) {
+            Movie movie = (Movie) mediaItem;
+            title = movie.getTitle();
+            posterPath = "https://image.tmdb.org/t/p/w500" + movie.getPosterPath();
+            localPath = movie.getLocalPath();
+        } else if (mediaItem instanceof Episode) {
+            Episode episode = (Episode) mediaItem;
+            title = episode.getName();
+            posterPath = "https://image.tmdb.org/t/p/w500" + episode.getStillPath();
+            localPath = episode.getLocalPath();
+        }
+
+        holder.fileNameTextView.setText(title);
+
+        if (holder.ivThumbnail != null && !posterPath.isEmpty()) {
+            Glide.with(context)
+                    .load(posterPath)
+                    .placeholder(R.drawable.ic_download)
+                    .into(holder.ivThumbnail);
+        } else if (isTV && holder.ivPosterTV != null && !posterPath.isEmpty()) {
+            Glide.with(context)
+                    .load(posterPath)
+                    .placeholder(R.color.card_bg)
+                    .into(holder.ivPosterTV);
+        }
+
+        final String finalLocalPath = localPath;
+        final int finalVideoId = (mediaItem instanceof Movie) ? ((Movie) mediaItem).getId()
+                : ((Episode) mediaItem).getId();
+        final boolean finalIsMovie = (mediaItem instanceof Movie);
 
         if (isTV) {
-            // TV: Click whole item to play, long click to delete
-            holder.itemView.setOnClickListener(v -> playMedia(mediaItem));
+            holder.itemView.setOnClickListener(v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie));
             holder.itemView.setOnLongClickListener(v -> {
                 if (onItemDeleteListener != null) {
                     onItemDeleteListener.onItemDelete(mediaItem);
                 }
                 return true;
             });
+
+            holder.itemView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
+                    if (holder.focusOverlay != null)
+                        holder.focusOverlay.setVisibility(View.VISIBLE);
+                    v.setZ(10f);
+                } else {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                    if (holder.focusOverlay != null)
+                        holder.focusOverlay.setVisibility(View.GONE);
+                    v.setZ(0f);
+                }
+            });
+
+            // Recycling fix: ensure visual state is correct if bound while focused
+            if (holder.itemView.hasFocus()) {
+                holder.itemView.setScaleX(1.1f);
+                holder.itemView.setScaleY(1.1f);
+                holder.itemView.setZ(10f);
+                if (holder.focusOverlay != null)
+                    holder.focusOverlay.setVisibility(View.VISIBLE);
+            } else {
+                holder.itemView.setScaleX(1.0f);
+                holder.itemView.setScaleY(1.0f);
+                holder.itemView.setZ(0f);
+                if (holder.focusOverlay != null)
+                    holder.focusOverlay.setVisibility(View.GONE);
+            }
+
         } else {
-            // Mobile: Click specific buttons
             if (holder.hapus != null) {
                 holder.hapus.setOnClickListener(view -> {
                     if (onItemDeleteListener != null) {
@@ -74,19 +136,17 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
                 });
             }
             if (holder.play != null) {
-                holder.play.setOnClickListener(view -> playMedia(mediaItem));
+                holder.play.setOnClickListener(v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie));
             }
         }
     }
 
-    private void playMedia(MediaItem mediaItem) {
-        String offline = "offline";
-        Intent intent = new Intent(context, PlayerActivity.class);
-        intent.putExtra("url", mediaItem.getFilePath());
-        intent.putExtra("tmdbId", offline);
-        intent.putExtra("year", offline);
-        intent.putExtra("title", mediaItem.getFName());
-        context.startActivity(intent);
+    private void playMedia(View view, String localPath, int videoId, boolean isMovie) {
+        Bundle bundle = new Bundle();
+        bundle.putString("localPath", localPath);
+        bundle.putInt("videoId", videoId);
+        bundle.putBoolean("isMovie", isMovie);
+        Navigation.findNavController(view).navigate(R.id.playerFragment, bundle);
     }
 
     @Override
@@ -94,15 +154,26 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
         return mediaList.size();
     }
 
+    public void setMediaList(List<MyMedia> mediaList) {
+        this.mediaList = mediaList;
+    }
+
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
         TextView fileNameTextView;
-        Button play; // Mobile only
-        Button hapus; // Mobile only
+        ImageView ivThumbnail; // Mobile
+        ImageView ivPosterTV; // TV
+        View play;
+        View hapus;
+        View focusOverlay;
 
         public MediaViewHolder(@NonNull View itemView, boolean isTV) {
             super(itemView);
             fileNameTextView = itemView.findViewById(R.id.fileNameInDownload);
-            if (!isTV) {
+            if (isTV) {
+                ivPosterTV = itemView.findViewById(R.id.posterInMediaItem);
+                focusOverlay = itemView.findViewById(R.id.focusOverlay);
+            } else {
+                ivThumbnail = itemView.findViewById(R.id.ivThumbnail);
                 play = itemView.findViewById(R.id.playInDownload);
                 hapus = itemView.findViewById(R.id.hapusDownload);
             }
