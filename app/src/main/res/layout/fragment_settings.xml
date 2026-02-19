@@ -196,6 +196,28 @@
                     app:drawableTint="?attr/colorOnSurface"
                     android:background="?attr/selectableItemBackground"/>
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/colorOnSurface"
+                    android:alpha="0.1"
+                    android:layout_marginStart="56dp"/>
+
+                <!-- Trakteer -->
+                <TextView
+                    android:id="@+id/trakteer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Trakteer"
+                    android:padding="20dp"
+                    android:fontFamily="@font/jost_medium"
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:drawableStart="@drawable/ic_coffee"
+                    android:drawablePadding="16dp"
+                    app:drawableTint="?attr/colorOnSurface"
+                    android:background="?attr/selectableItemBackground"/>
+
             </LinearLayout>
 
         </LinearLayout>

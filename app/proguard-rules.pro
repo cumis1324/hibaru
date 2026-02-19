@@ -2,14 +2,14 @@
 # ATURAN DASAR ANDROID & JAVA
 # =================================================================================
 
-# Aturan ini menjaga anotasi tetap ada saat runtime, penting untuk banyak library.
+# Menjaga anotasi penting
 -keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes InnerClasses
+-keepattributes EnclosingMethod
+-keepattributes SourceFile,LineNumberTable
 
-# Menjaga semua kelas yang merupakan turunan dari android.app.Application.
--keep class com.theflexproject.thunder.MyApplication
-
-# Menjaga semua kelas Activity, Service, dll., yang dideklarasikan di AndroidManifest.
-# Ini penting agar sistem Android dapat menginisialisasi komponen-komponen ini.
+# Kelas dasar Android
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
 -keep public class * extends android.app.Service
@@ -19,115 +19,35 @@
 -keep public class * extends android.preference.Preference
 -keep public class com.android.vending.licensing.ILicensingService
 
-# Menjaga view kustom dan konstruktornya.
--keep public class * extends android.view.View {
-    public <init>(android.content.Context);
+# View Kustom
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+-keepclasseswithmembers class * {
     public <init>(android.content.Context, android.util.AttributeSet);
+}
+
+-keepclasseswithmembers class * {
     public <init>(android.content.Context, android.util.AttributeSet, int);
-    public void set*(...);
 }
 
-# Menjaga semua kelas Parcelable dan creator-nya.
--keep class * implements android.os.Parcelable {
-  public static final android.os.Parcelable$Creator *;
+-keepclassmembers class * extends android.app.Activity {
+   public void *(android.view.View);
 }
 
-# Menjaga nama enum (misalnya untuk Enum.valueOf()).
+# Enum
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
 
-# =================================================================================
-# FIREBASE & GOOGLE PLAY SERVICES
-# =================================================================================
-
-# Aturan umum untuk Firebase.
--keep class com.google.firebase.** { *; }
--keep class org.json.** { *; }
--keepattributes Signature
--keepattributes *Annotation*
--keep class com.google.android.gms.ads.** { *; }
-
-# Aturan untuk Firebase Auth, Database, Storage, dll.
-# Diperlukan untuk menjaga kelas-kelas model yang digunakan dengan Firebase.
-# Ganti 'com.theflexproject.thunder.model.**' jika model Anda ada di paket lain.
--keepnames class com.theflexproject.thunder.model.** { *; }
--keep class com.google.android.gms.auth.api.signin.internal.* { *; }
-
-
-# =================================================================================
-# GSON / JSON-SIMPLE / JACKSON (Sangat Penting!)
-# =================================================================================
-
-# Aturan ini menjaga SEMUA kelas di dalam paket 'model'.
-# Ini mencegah R8 mengubah nama field di kelas POJO/Data Class Anda,
-# yang akan merusak proses parsing JSON dari library seperti Gson dan Jackson.
--keep class com.theflexproject.thunder.model.** { *; }
--keep class com.theflexproject.thunder.model.TVShowInfo.** { *; }
--keep class com.theflexproject.thunder.model.tmdbImages.** { *; }
--keep class com.theflexproject.thunder.model.FanArt.** { *; }
-
-# Menjaga anotasi yang digunakan oleh Gson.
--keep @com.google.gson.annotations.SerializedName class *
-
-# Aturan spesifik untuk Jackson Databind
--keep class com.fasterxml.jackson.databind.** { *; }
--dontwarn com.fasterxml.jackson.databind.**
-
-
-# =================================================================================
-# ANDROIDX ROOM (Database)
-# =================================================================================
-
-# Menjaga semua entitas dan DAO (Data Access Object) Room.
-# Ganti dengan path yang benar jika berbeda.
--keep class com.theflexproject.thunder.database.** { *; }
--keep class androidx.room.** { *; }
-
-
-# =================================================================================
-# GLIDE (Pustaka Gambar)
-# =================================================================================
-
--keep public class * implements com.bumptech.glide.module.GlideModule
--keep public class * extends com.bumptech.glide.module.AppGlideModule
--keep public enum com.bumptech.glide.load.ImageHeaderParser$ImageType
--keepclassmembers class * {
-    @com.bumptech.glide.annotation.GlideModule *;
+# Parcelable
+-keep class * implements android.os.Parcelable {
+  public static final android.os.Parcelable$Creator *;
 }
 
-
-# =================================================================================
-# MEDIA3 / EXOPLAYER (Pemutar Video)
-# =================================================================================
-
--keep class androidx.media3.** { *; }
--dontwarn androidx.media3.**
-
-
-# =================================================================================
-# PUSTAKA PIHAK KETIGA LAINNYA
-# =================================================================================
-
-# Jsoup (HTML Parser)
--dontwarn org.jsoup.**
-
-# FuzzyWuzzy (String Matching)
--keep class me.xdrop.fuzzywuzzy.** { *; }
-
-# BlurView
--keep class eightbitlab.com.blurview.** { *; }
-
-# ModernOnboarding
--keep class com.github.ErrorxCode.ModernOnboarding.** { *; }
-
-
-# =================================================================================
-# ATURAN TAMBAHAN (Pencegahan)
-# =================================================================================
-
-# Jika Anda menggunakan Serializable, aturan ini penting.
+# Serializable
 -keepclassmembers class * implements java.io.Serializable {
     static final long serialVersionUID;
     private static final java.io.ObjectStreamField[] serialPersistentFields;
@@ -139,3 +59,150 @@
     java.lang.Object writeReplace();
     java.lang.Object readResolve();
 }
+
+# =================================================================================
+# HILT / DAGGER (DI - PENTING)
+# =================================================================================
+-keep class com.theflexproject.thunder.Hilt_** { *; }
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keepclasseswithmembers class * {
+    @dagger.hilt.android.EntryPoint <init>(...);
+}
+-keepattributes RuntimeVisibleAnnotations
+-keepattributes *Annotation*
+
+# =================================================================================
+# KOTLIN COROUTINES
+# =================================================================================
+-keep class kotlinx.coroutines.** { *; }
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+
+# =================================================================================
+# FIREBASE & GOOGLE SERVICES
+# =================================================================================
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# =================================================================================
+# NETWORK (OKHTTP, RETROFIT, MOSHI, GSON)
+# =================================================================================
+# OkHttp
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+
+# Retrofit
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+
+# Gson & Models (PENTING UNTUK PARSING)
+-keep class com.theflexproject.thunder.model.** { *; }
+-keep class com.theflexproject.thunder.model.TVShowInfo.** { *; }
+-keep class com.theflexproject.thunder.model.tmdbImages.** { *; }
+-keep class com.theflexproject.thunder.model.FanArt.** { *; }
+# Mencegah R8 menghapus field yang dipakai Gson/Moshi melalui reflection
+-keepclassmembers class com.theflexproject.thunder.model.** { <fields>; }
+
+-keep @com.google.gson.annotations.SerializedName class *
+
+# Moshi
+-keep class com.squareup.moshi.** { *; }
+-keep interface com.squareup.moshi.** { *; }
+
+# Jackson
+-keep class com.fasterxml.jackson.databind.** { *; }
+-dontwarn com.fasterxml.jackson.databind.**
+
+# =================================================================================
+# GAMBAR (GLIDE)
+# =================================================================================
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep public class * extends com.bumptech.glide.module.AppGlideModule
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$ImageType
+-keepclassmembers class * {
+    @com.bumptech.glide.annotation.GlideModule *;
+}
+
+# =================================================================================
+# DATABASE (ROOM)
+# =================================================================================
+-keep class androidx.room.** { *; }
+-keep class com.theflexproject.thunder.database.** { *; }
+-keepnames class com.theflexproject.thunder.database.** { *; }
+-dontwarn androidx.room.paging.**
+
+# =================================================================================
+# MEDIA (EXOPLAYER / MEDIA3)
+# =================================================================================
+-keep class androidx.media3.** { *; }
+-keep interface androidx.media3.** { *; }
+-dontwarn androidx.media3.**
+
+# =================================================================================
+# IKLAN (UNITY ADS) - PENTING SETELAH PERBAIKAN
+# =================================================================================
+-keep class com.unity3d.ads.** { *; }
+-keep interface com.unity3d.ads.** { *; }
+-keep class com.unity3d.services.** { *; }
+-keep interface com.unity3d.services.** { *; }
+
+# Unity Ads Connectivity Monitor - Untuk mengatasi error "missing permission"
+-keep class com.unity3d.services.core.connectivity.ConnectivityMonitor { *; }
+-keep class com.unity3d.services.core.connectivity.** { *; }
+-keepclassmembers class com.unity3d.services.core.connectivity.** {
+    *** *(...);
+}
+
+# Unity Ads Banner & Rewarded
+-keep class com.unity3d.services.banners.** { *; }
+-keep class com.unity3d.services.rewarded.** { *; }
+-keepclassmembers class com.unity3d.services.banners.** {
+    *** *(...);
+}
+
+# Unity Ads Listeners & Callbacks
+-keep class com.unity3d.ads.IUnityAdsInitializationListener { *; }
+-keep class com.unity3d.ads.IUnityAdsLoadListener { *; }
+-keep class com.unity3d.ads.IUnityAdsShowListener { *; }
+-keep interface com.unity3d.ads.IUnityAdsInitializationListener { *; }
+-keep interface com.unity3d.ads.IUnityAdsLoadListener { *; }
+-keep interface com.unity3d.ads.IUnityAdsShowListener { *; }
+
+# Jangan obfuscate Unity Ads enums
+-keepclassmembers class com.unity3d.ads.UnityAds {
+    public static ** UnityAdsShowCompletionState;
+    public static ** UnityAdsLoadError;
+    public static ** UnityAdsShowError;
+    public static ** UnityAdsInitializationError;
+}
+-keepclassmembers enum com.unity3d.ads.** {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# =================================================================================
+# LAIN-LAIN
+# =================================================================================
+# Jsoup
+-keep class org.jsoup.** { *; }
+-dontwarn org.jsoup.**
+
+# BlurView
+-keep class eightbitlab.com.blurview.** { *; }
+
+# FuzzyWuzzy
+-keep class me.xdrop.fuzzywuzzy.** { *; }
+
+# ModernOnboarding
+-keep class com.github.ErrorxCode.ModernOnboarding.** { *; }
+
+# Apache Commons
+-dontwarn org.apache.commons.**

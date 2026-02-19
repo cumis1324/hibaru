@@ -89,7 +89,11 @@ class HomeFragment : Fragment() {
                 }
             },
             onSeeAllClick = { section ->
-                // TODO: Implement "See All" navigation if needed
+                val bundle = Bundle().apply {
+                    putString("sectionId", section.id)
+                    putString("sectionTitle", section.title)
+                }
+                findNavController().navigate(R.id.action_homeFragment_to_seeAllFragment, bundle)
             },
             onLoadMore = { sectionId ->
                 viewModel.loadMore(sectionId)

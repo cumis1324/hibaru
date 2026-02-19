@@ -253,18 +253,12 @@ public class PlayerUtils {
     public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView) {
         SharedPreferences prefs = mCtx.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        adStart = prefs.getBoolean("adStart", false);
         ad25 = prefs.getBoolean("ad25", false);
         ad50 = prefs.getBoolean("ad50", false);
         ad75 = prefs.getBoolean("ad75", false);
         if (player != null) {
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
-            if (!adStart && cp <= 5000) {
-                AdHelper.loadReward(mCtx, activity, player, playerView);
-                editor.putBoolean("adStart", true);
-                editor.apply();
-            }
             if (tp > 0) {
                 if (!ad25 && cp >= tp * 0.25 && adStart) {
                     AdHelper.loadReward(mCtx, activity, player, playerView);

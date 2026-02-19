@@ -114,6 +114,10 @@ class MovieRepository @Inject constructor(
         movieDao.getOgMovies(limit, offset)
     }
 
+    suspend fun getKoreanMovies(limit: Int = 10, offset: Int = 0): List<Movie> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        movieDao.getDrakor(limit, offset)
+    }
+
     suspend fun deleteAll() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         movieDao.deleteAll()
     }

@@ -80,6 +80,9 @@ public interface MovieDao {
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND (played IS NOT NULL AND genres IN (SELECT genres FROM Movie WHERE add_to_list = 1)) AND genres IS NOT NULL GROUP BY id ORDER BY popularity DESC")
     List<Movie> getRecombyfav();
 
+    @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND original_language = 'ko' GROUP BY id ORDER BY popularity DESC LIMIT :limit OFFSET :offset")
+    List<Movie> getDrakor(int limit, int offset);
+
     @Query("SELECT * FROM Movie WHERE poster_path IS NOT NULL AND disabled = 0 AND original_language = 'id' GROUP BY id ORDER BY release_date DESC LIMIT :limit OFFSET :offset")
     List<Movie> getFilmIndo(int limit, int offset);
 

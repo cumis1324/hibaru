@@ -16,6 +16,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.theflexproject.thunder.data.sync.SyncManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.google.firebase.messaging.FirebaseMessaging
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -61,6 +62,8 @@ class SyncActivity : AppCompatActivity() {
         progressCircular = findViewById<android.widget.ProgressBar>(R.id.progress_circular)
         statusText = findViewById<android.widget.TextView>(R.id.loading_message)
         btnRetry = findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_retry)
+
+        subscribeToFcmTopic()
         
         val appVersionText = findViewById<android.widget.TextView>(R.id.app_version)
         try {
@@ -73,8 +76,8 @@ class SyncActivity : AppCompatActivity() {
         btnRetry.setOnClickListener {
             performSync()
         }
-
         performSync()
+
     }
 
     private fun performSync() {
@@ -125,5 +128,13 @@ class SyncActivity : AppCompatActivity() {
         }
         startActivity(nextIntent)
         finish()
+    }
+
+    private fun subscribeToFcmTopic() {
+        FirebaseMessaging.getInstance().subscribeToTopic("latest_update")
+            .addOnCompleteListener { task ->
+                val msg = if (task.isSuccessful) "Successfully subscribed to topic" else "Failed to subscribe to topic"
+                android.util.Log.d("SyncActivity", msg)
+            }
     }
 }

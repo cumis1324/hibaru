@@ -182,6 +182,26 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
+            <!-- Trakteer -->
+            <Button
+                android:id="@+id/trakteer"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/button_selector"
+                android:drawableStart="@drawable/ic_coffee"
+                android:drawablePadding="16dp"
+                android:drawableTint="@color/white"
+                android:focusable="true"
+                android:fontFamily="@font/jost_medium"
+                android:gravity="start|center_vertical"
+                android:padding="16dp"
+                android:text="Trakteer"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

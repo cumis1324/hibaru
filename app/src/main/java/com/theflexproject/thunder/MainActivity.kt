@@ -4,9 +4,9 @@ import android.app.UiModeManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -19,6 +19,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigationrail.NavigationRailView
 import com.theflexproject.thunder.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityCompat
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -45,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         var favoritList: MutableList<String> = mutableListOf()
         @JvmField
         var historyAll: MutableList<String> = mutableListOf()
+        private const val REQUEST_MEDIA_PERMISSION = 100
     }
 
     private var phoneBinding: ActivityMainBinding? = null
@@ -67,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         
         // Hide system bars completely for true edge-to-edge
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController?.apply {
+        windowInsetsController!!.apply {
             hide(WindowInsetsCompat.Type.statusBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
@@ -75,7 +78,6 @@ class MainActivity : AppCompatActivity() {
         if (isTVDevice) {
             // TV layout with Top Navigation
             setContentView(R.layout.main_tv)
-            blurView = findViewById(R.id.blurView)
             navigationView = findViewById(R.id.top_navigation)
         } else {
             // Phone layout with BottomNavigationView
@@ -124,6 +126,9 @@ class MainActivity : AppCompatActivity() {
 
         // Handle incoming deep link
         handleDeepLink(intent)
+
+        // Check permissions
+        checkPermissions()
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -166,4 +171,60 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
+
+    private fun checkPermissions() {
+        if (!isNotificationPermissionGranted()) {
+            showNotificationPermissionDialog()
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkAndRequestMediaPermissions()
+        }
+    }
+
+    private fun isNotificationPermissionGranted(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        }
+        return true
+    }
+
+    private fun showNotificationPermissionDialog() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Notification Permission")
+            .setMessage("To receive updates and alerts, please allow notification access in the settings.")
+            .setPositiveButton("Go to Settings") { _, _ ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val intent = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+                    startActivity(intent)
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+            .create()
+            .show()
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun checkAndRequestMediaPermissions() {
+        val permissions = arrayOf(
+            android.Manifest.permission.READ_MEDIA_VIDEO,
+            android.Manifest.permission.READ_MEDIA_AUDIO
+        )
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_MEDIA_PERMISSION)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_MEDIA_PERMISSION) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permissions granted
+            } else {
+                android.widget.Toast.makeText(this, "Media permissions are required for some features.", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 }

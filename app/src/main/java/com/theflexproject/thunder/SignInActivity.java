@@ -39,11 +39,8 @@ public class SignInActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 9001;
 
-    private TextInputEditText emailEditText, passwordEditText;
-    private Button signInButton, signUpButton, googleSignInButton;
-
-    ViewGroup rootView;
-    View decorView;
+    private Button googleSignInButton;
+    private android.widget.ProgressBar progressBar;
 
     private FirebaseAuth firebaseAuth;
     private DatabaseReference databaseReference;
@@ -54,42 +51,22 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signin);
 
-        decorView = getWindow().getDecorView();
-        rootView = decorView.findViewById(android.R.id.content);
-
-        emailEditText = findViewById(R.id.email);
-        emailEditText.requestFocus();
-        passwordEditText = findViewById(R.id.password);
-        signInButton = findViewById(R.id.signinbtn);
-        signUpButton = findViewById(R.id.signuppbtn);
         googleSignInButton = findViewById(R.id.google_signin_button);
+        progressBar = findViewById(R.id.progress_circular);
 
         firebaseAuth = FirebaseAuth.getInstance();
         databaseReference = FirebaseDatabase.getInstance().getReference("Users");
+
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
-                .requestProfile() // Request profile information
+                .requestProfile()
                 .build();
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        blurTop();
-
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signIn();
-            }
-        });
-
-        signUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(SignInActivity.this, SignUpActivity.class));
-            }
-        });
+        setupWindow();
 
         googleSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,38 +76,15 @@ public class SignInActivity extends AppCompatActivity {
         });
     }
 
-    private void blurTop() {
+    private void setupWindow() {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
     }
 
-    private void signIn() {
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Email and password are required", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Firebase authentication
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(SignInActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignInActivity.this, SyncActivity.class));
-                        } else {
-                            Toast.makeText(SignInActivity.this, "Sign in failed " + task.getException().getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-    }
-
     private void signInWithGoogle() {
+        progressBar.setVisibility(View.VISIBLE);
+        googleSignInButton.setEnabled(false);
         Intent signInIntent = googleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -144,10 +98,10 @@ public class SignInActivity extends AppCompatActivity {
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account.getIdToken());
-                // You might want to save this info to your server or display it in the UI
             } catch (ApiException e) {
-                Toast.makeText(this, "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG)
-                        .show();
+                progressBar.setVisibility(View.GONE);
+                googleSignInButton.setEnabled(true);
+                Toast.makeText(this, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -155,29 +109,35 @@ public class SignInActivity extends AppCompatActivity {
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener() {
+                .addOnCompleteListener(this, new OnCompleteListener<com.google.firebase.auth.AuthResult>() {
                     @Override
-                    public void onComplete(@NonNull Task task) {
+                    public void onComplete(@NonNull Task<com.google.firebase.auth.AuthResult> task) {
+                        progressBar.setVisibility(View.GONE);
+                        googleSignInButton.setEnabled(true);
+
                         if (task.isSuccessful()) {
-
-                            String userId = Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
-                            DatabaseReference userReference = databaseReference.child(userId);
                             FirebaseUser user = firebaseAuth.getCurrentUser();
+                            if (user != null) {
+                                String userId = user.getUid();
+                                DatabaseReference userReference = databaseReference.child(userId);
 
-                            Map<String, Object> userMap = new HashMap<>();
-                            userMap.put("username", user.getDisplayName());
-                            // userMap.put("firstName", user.getGivenName());
-                            // userMap.put("lastName", user.getFamilyName());
-                            userMap.put("email", user.getEmail());
-                            assert user.getPhotoUrl() != null;
-                            userMap.put("profileImage", user.getPhotoUrl().toString());
+                                Map<String, Object> userMap = new HashMap<>();
+                                userMap.put("username", user.getDisplayName());
+                                userMap.put("email", user.getEmail());
+                                if (user.getPhotoUrl() != null) {
+                                    userMap.put("profileImage", user.getPhotoUrl().toString());
+                                }
 
-                            userReference.setValue(userMap);
-                            Toast.makeText(SignInActivity.this, "Google sign in successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignInActivity.this, SyncActivity.class));
+                                userReference.setValue(userMap);
+                                Toast.makeText(SignInActivity.this, "Selamat datang, " + user.getDisplayName(),
+                                        Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(SignInActivity.this, SyncActivity.class));
+                                finish();
+                            }
                         } else {
                             Toast.makeText(SignInActivity.this,
-                                    "Google sign in failed " + task.getException().getMessage(), Toast.LENGTH_LONG)
+                                    "Firebase authentication failed: " + task.getException().getMessage(),
+                                    Toast.LENGTH_LONG)
                                     .show();
                         }
                     }

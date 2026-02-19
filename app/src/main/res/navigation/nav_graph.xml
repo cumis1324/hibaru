@@ -16,6 +16,28 @@
         <action
             android:id="@+id/action_homeFragment_to_tvShowDetailsFragment"
             app:destination="@id/tvShowDetailsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_seeAllFragment"
+            app:destination="@id/seeAllFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/seeAllFragment"
+        android:name="com.theflexproject.thunder.fragments.SeeAllFragment"
+        android:label="See All"
+        tools:layout="@layout/fragment_see_all">
+        <argument
+            android:name="sectionId"
+            app:argType="string" />
+        <argument
+            android:name="sectionTitle"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_seeAllFragment_to_playerFragment"
+            app:destination="@id/playerFragment" />
+        <action
+            android:id="@+id/action_seeAllFragment_to_tvShowDetailsFragment"
+            app:destination="@id/tvShowDetailsFragment" />
     </fragment>
 
     <fragment

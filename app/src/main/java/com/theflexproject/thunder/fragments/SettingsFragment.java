@@ -46,6 +46,7 @@ public class SettingsFragment extends BaseFragment {
     private View importExportDatabase; // Can be Button or TextView
     private View checkForUpdate; // Can be Button or TextView
     private View telegram; // Can be Button or TextView
+    private View trakteer; // Can be Button or TextView
 
     SwitchCompat externalPlayerToggle;
     SwitchCompat refreshPeriodicallyToggle;
@@ -105,6 +106,7 @@ public class SettingsFragment extends BaseFragment {
         importExportDatabase.setVisibility(View.GONE);
         checkForUpdate = view.findViewById(R.id.checkforUpdates);
         telegram = view.findViewById(R.id.telegroup);
+        trakteer = view.findViewById(R.id.trakteer);
 
         externalPlayerToggle = view.findViewById(R.id.externalPlayerToggle);
         externalPlayerToggle.setVisibility(View.GONE); // Hide the external player toggle
@@ -206,7 +208,12 @@ public class SettingsFragment extends BaseFragment {
 
         if (telegram != null) {
             telegram.setOnClickListener(
-                    v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/nfgplus1"))));
+                    v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/+PSuTiMjyzEFlYzNl"))));
+        }
+
+        if (trakteer != null) {
+            trakteer.setOnClickListener(
+                    v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://teer.id/nfgplusofficial"))));
         }
 
         if (profilePicture != null) {
@@ -261,7 +268,8 @@ public class SettingsFragment extends BaseFragment {
             databaseReference.child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (!isAdded() || mActivity == null) return;
+                    if (!isAdded() || mActivity == null)
+                        return;
                     if (dataSnapshot.hasChild("profileImage")) {
                         String imageUrl = dataSnapshot.child("profileImage").getValue(String.class);
                         loadProfileImage(imageUrl);

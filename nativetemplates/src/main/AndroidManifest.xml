@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   >
-  <application android:supportsRtl="true">
 
-  </application>
-
+  <!-- Ensure network permissions are present for consumers of this library. This prevents "missing permission" warnings
+       from SDKs (e.g., Unity Ads) that check for ACCESS_NETWORK_STATE at runtime. App-level manifest should also include
+       these, but adding here ensures they are present after manifest merging in all build variants. -->
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
 </manifest>

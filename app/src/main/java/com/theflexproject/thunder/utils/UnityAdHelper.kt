@@ -9,9 +9,9 @@ import com.unity3d.services.banners.UnityBannerSize
 
 object UnityAdHelper {
     private const val UNITY_GAME_ID = "5928984" // Your Unity Game ID
-    private const val TEST_MODE = true
+    private const val TEST_MODE = false
     private const val TAG = "UnityAdHelper"
-    
+
     private const val REWARDED_PLACEMENT = "Iklan_Reward"
     private const val BANNER_PLACEMENT = "Iklan_Banner"
 
@@ -25,7 +25,7 @@ object UnityAdHelper {
             android.util.Log.d(TAG, "Unity Ads SDK is already initialized")
             return
         }
-        
+
         android.util.Log.d(TAG, "Initializing Unity Ads SDK with Activity context...")
         UnityAds.initialize(activity, UNITY_GAME_ID, TEST_MODE, object : IUnityAdsInitializationListener {
             override fun onInitializationComplete() {

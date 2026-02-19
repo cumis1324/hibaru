@@ -17,8 +17,8 @@ android {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 36
-        versionCode 80
-        versionName "Asthadasa"
+        versionCode 81
+        versionName "Ekasthadasa"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -130,7 +130,7 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer:1.4.1"
     implementation "androidx.media3:media3-exoplayer-dash:1.4.1"
     implementation "androidx.media3:media3-ui:1.4.1"
-    implementation fileTree(dir: "libs", include: ["extension-*.aar"])
+//    implementation fileTree(dir: "libs", include: ["extension-*.aar"])
     implementation 'com.github.Dimezis:BlurView:version-2.0.2'
     implementation 'me.xdrop:fuzzywuzzy:1.4.0'
     implementation 'jp.wasabeef:glide-transformations:4.3.0'
@@ -141,7 +141,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
     implementation 'org.apache.commons:commons-text:1.9'
     implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.36.0'
-    implementation files('libs/extension-ffmpeg-release.aar')
+//    implementation files('libs/extension-ffmpeg-release.aar')
 
     // Jetpack Compose
     def composeBom = platform('androidx.compose:compose-bom:2024.02.00')

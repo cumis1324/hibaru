@@ -11,6 +11,7 @@ import static com.theflexproject.thunder.player.PlayerUtils.enterFullscreen;
 import static com.theflexproject.thunder.player.PlayerUtils.exitFullscreen;
 import static com.theflexproject.thunder.player.PlayerUtils.isTVDevice;
 import static com.theflexproject.thunder.player.PlayerUtils.lastPositionListener;
+import static com.theflexproject.thunder.player.PlayerUtils.load3ads;
 import static com.theflexproject.thunder.player.PlayerUtils.resumePlayerState;
 import static com.theflexproject.thunder.player.PlayerUtils.saveResume;
 import static com.theflexproject.thunder.player.PlayerUtils.subOn;
@@ -165,7 +166,6 @@ public class PlayerFragment extends BaseFragment
     private Intent intent;
     private RandomIndex loadBalancer = new RandomIndex();
     private String randomUrl;
-    private static final String ADMIN_USER_UID = "M20Oxpp64gZ480Lqus4afv6x2n63";
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
     public PlayerFragment() {
@@ -531,9 +531,7 @@ public class PlayerFragment extends BaseFragment
                 handler.postDelayed(this, 1000); // Update
                                                  // setiap
                                                  // detik
-                if (!isSubscribed) {
-                    // Unity Ads are handled in loadReward() or elsewhere
-                }
+                load3ads(mActivity, mActivity, player, playerView);
             }
         }
     };
@@ -818,7 +816,7 @@ public class PlayerFragment extends BaseFragment
             }
             if (localPath != null && !localPath.isEmpty()) {
                 initializePlayer(localPath);
-            } else if (ADMIN_USER_UID.equals(userId)) {
+            } else if (com.theflexproject.thunder.Constants.isAdmin(userId)) {
                 initializePlayer(urlString);
             } else {
                 initializePlayer(newUrl);
@@ -855,7 +853,7 @@ public class PlayerFragment extends BaseFragment
                         randomUrl);
                 if (localPath != null && !localPath.isEmpty()) {
                     initializePlayer(localPath);
-                } else if (ADMIN_USER_UID.equals(userId)) {
+                } else if (com.theflexproject.thunder.Constants.isAdmin(userId)) {
                     initializePlayer(urlString);
                 } else {
                     initializePlayer(newUrl);

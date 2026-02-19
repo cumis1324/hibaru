@@ -76,6 +76,7 @@ class HomeSectionAdapter(
 
     inner class SectionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.recyclerTitleInHomeItem)
+        private val seeAllButton: TextView = itemView.findViewById(R.id.seeAllButton)
         private val recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerInHomeItem)
         private var innerAdapter: MediaCarouselAdapter? = null
 
@@ -139,6 +140,7 @@ class HomeSectionAdapter(
         fun bind(section: HomeSection) {
             title.text = section.title
             title.setOnClickListener { onSeeAllClick(section) }
+            seeAllButton.setOnClickListener { onSeeAllClick(section) }
 
             if (innerAdapter == null) {
                 innerAdapter = MediaCarouselAdapter(
@@ -168,16 +170,26 @@ class HomeSectionAdapter(
 
         fun bind() {
             // Load Unity Ads banner
-            itemView.context.let { context ->
+            val activity = getActivity(itemView.context)
+            if (activity != null) {
                 try {
                     UnityAdHelper.loadBanner(
-                        itemView.context as android.app.Activity,
+                        activity,
                         bannerContainer
                     )
                 } catch (e: Exception) {
                     android.util.Log.e("AdBannerViewHolder", "Error loading banner: ${e.message}")
                 }
+            } else {
+                android.util.Log.e("AdBannerViewHolder", "Error loading banner: Context is not an Activity")
             }
+        }
+
+        private fun getActivity(context: android.content.Context?): android.app.Activity? {
+            if (context == null) return null
+            if (context is android.app.Activity) return context
+            if (context is android.content.ContextWrapper) return getActivity(context.baseContext)
+            return null
         }
     }
 

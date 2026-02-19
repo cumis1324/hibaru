@@ -131,4 +131,13 @@ class TVShowRepository @Inject constructor(
     suspend fun loadAllTVShowsByIds(ids: List<String>): List<TVShow> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         tvShowDao.loadAllByIds(ids)
     }
+
+    suspend fun getTVShowByEpisodeId(episodeId: Int): TVShow? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val episode = episodeDao.find(episodeId)
+        if (episode != null) {
+            tvShowDao.find(episode.show_id)
+        } else {
+            null
+        }
+    }
 }

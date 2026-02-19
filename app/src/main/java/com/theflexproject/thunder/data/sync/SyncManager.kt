@@ -25,12 +25,6 @@ class SyncManager @Inject constructor(
         private const val TAG = "SyncManager"
         // ... (pre-populated db time stays)
         private const val PRE_POPULATED_DB_TIME = 1770963377000L
-        
-        // Demo Admin UIDs
-        private val ADMIN_USER_UIDS = listOf(
-            "M20Oxpp64gZ480Lqus4afv6x2n63",
-            "k6skp0IByvQ7LF1NrvBRRHprVIg1"
-        )
     }
 
     private val auth by lazy { com.google.firebase.auth.FirebaseAuth.getInstance() }
@@ -43,7 +37,7 @@ class SyncManager @Inject constructor(
         try {
             // Check Demo Mode
             val currentUser = auth.currentUser
-            val isDemoUser = currentUser != null && ADMIN_USER_UIDS.contains(currentUser.uid)
+            val isDemoUser = currentUser != null && com.theflexproject.thunder.Constants.isAdmin(currentUser.uid)
             val previousMode = syncPrefs.isDemoMode
             
             if (isDemoUser != previousMode) {
