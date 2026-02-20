@@ -43,6 +43,7 @@ jobs:
         GD_PASS: ${{ secrets.GD_PASS }}
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        FCM_KEY: ${{ secrets.FCM_KEY }}
         
         # Inputs (Manual Override)
         INPUT_URL: ${{ github.event.inputs.url }}
@@ -60,6 +61,7 @@ jobs:
             --type "$TARGET_TYPE" \
             --telegram-token "$TELEGRAM_TOKEN" \
             --telegram-chat-id "$TELEGRAM_CHAT_ID" \
+            --fcm-key "$FCM_KEY" \
             $AUTH_ARGS
             
         else
@@ -75,6 +77,7 @@ jobs:
             --type movie \
             --telegram-token "$TELEGRAM_TOKEN" \
             --telegram-chat-id "$TELEGRAM_CHAT_ID" \
+            --fcm-key "$FCM_KEY" \
             $AUTH_ARGS
 
           # 2. TV Series Scan
@@ -86,6 +89,7 @@ jobs:
             --type tv \
             --telegram-token "$TELEGRAM_TOKEN" \
             --telegram-chat-id "$TELEGRAM_CHAT_ID" \
+            --fcm-key "$FCM_KEY" \
             $AUTH_ARGS
             
           echo ">>> Sequential Scan Completed!"

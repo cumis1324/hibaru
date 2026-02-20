@@ -10,13 +10,15 @@ import base64
 import time
 import datetime
 from thefuzz import fuzz, process
+from google.oauth2 import service_account
+import google.auth.transport.requests
 
 # Defaults
 DEFAULT_API_URL = "https://nfgplus-backend.worker1-b8f.workers.dev/api"
 DEFAULT_TMDB_KEY = "75399494372c92bd800f70079dff476b" # From wrangler.toml
 
 class GDIndexImporter:
-    def __init__(self, api_url, admin_key, tmdb_key, gdindex_url, auth=None, telegram_token=None, telegram_chat_id=None):
+    def __init__(self, api_url, admin_key, tmdb_key, gdindex_url, auth=None, telegram_token=None, telegram_chat_id=None, fcm_key=None):
         self.api_url = api_url.rstrip('/')
         self.admin_key = admin_key
         self.tmdb_key = tmdb_key
@@ -24,6 +26,9 @@ class GDIndexImporter:
         self.auth = auth # (user, pass) tuple or "user:pass" string
         self.telegram_token = telegram_token
         self.telegram_chat_id = telegram_chat_id
+        self.fcm_key = fcm_key # Path to service account JSON or raw JSON string
+        self._fcm_token = None
+        self._fcm_token_expiry = 0
         
         self.headers = {
             'X-Admin-Key': self.admin_key,
@@ -83,6 +88,68 @@ class GDIndexImporter:
                     self.send_telegram_notification(message, image_url=None)
         except Exception as e:
             print(f"Error sending Telegram notification: {e}")
+
+    def get_fcm_access_token(self):
+        if not self.fcm_key:
+            return None
+        
+        # Return sticky token if still valid (buffer of 60s)
+        if self._fcm_token and time.time() < self._fcm_token_expiry - 60:
+            return self._fcm_token
+
+        try:
+            scopes = ['https://www.googleapis.com/auth/firebase.messaging']
+            if os.path.exists(self.fcm_key):
+                creds = service_account.Credentials.from_service_account_file(self.fcm_key, scopes=scopes)
+            else:
+                # Try parsing as raw JSON
+                info = json.loads(self.fcm_key)
+                creds = service_account.Credentials.from_service_account_info(info, scopes=scopes)
+            
+            auth_request = google.auth.transport.requests.Request()
+            creds.refresh(auth_request)
+            
+            self._fcm_token = creds.token
+            self._fcm_token_expiry = creds.expiry.timestamp() if hasattr(creds.expiry, 'timestamp') else time.time() + 3600
+            return self._fcm_token
+        except Exception as e:
+            print(f"Error getting FCM access token: {e}")
+            return None
+
+    def send_fcm_notification(self, title, body, poster_path, deep_link, original_title=""):
+        token = self.get_fcm_access_token()
+        if not token:
+            return
+        
+        # Endpoint from Java: nfgview-160c7
+        url = "https://fcm.googleapis.com/v1/projects/nfgview-160c7/messages:send"
+        
+        payload = {
+            "message": {
+                "topic": "latest_update",
+                "data": {
+                    "title": title,
+                    "originalTitle": original_title,
+                    "overview": body,
+                    "posterPath": poster_path if poster_path else "",
+                    "deepLink": deep_link
+                }
+            }
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json; UTF-8"
+        }
+        
+        try:
+            res = requests.post(url, json=payload, headers=headers, timeout=15)
+            if res.status_code == 200:
+                print(f"    -> FCM notification sent: {title}")
+            else:
+                print(f"    -> Warning: FCM notification failed. Status: {res.status_code}, Response: {res.text}")
+        except Exception as e:
+            print(f"Error sending FCM notification: {e}")
 
     def decode_legacy_gdindex_response(self, text):
         """
@@ -356,9 +423,22 @@ class GDIndexImporter:
             if res.status_code == 201:
                 # Notify on new addition
                 poster_url = f"https://image.tmdb.org/t/p/w500{detail.get('poster_path')}" if detail.get('poster_path') else None
-                msg = f"🆕 <b>Movie Added</b>\n\n🎬 <b>{detail['title']}</b>\n📅 {detail.get('release_date', 'N/A')}\n⭐ {detail.get('vote_average', 0.0)}\n\n{detail.get('overview', '')[:200]}..."
+                
+                release_date = detail.get('release_date', '')
+                year = release_date[:4] if release_date and len(release_date) >= 4 else 'N/A'
+                
+                deep_link = f"https://www.nfgplus.my.id/reviews.html?id={detail['id']}&type=movie"
+                msg = f"🆕 <b>Movie Added</b>\n\n🎬 <b>{detail['title']}</b> ({year})\n⭐ {detail.get('vote_average', 0.0)}\n\n{detail.get('overview', '')[:200]}...\n\n🔗 <a href='{deep_link}'> Watch Now</a>"
                 self.send_telegram_notification(msg, image_url=poster_url)
-            
+                
+                # Send FCM Notification
+                self.send_fcm_notification(
+                    title=detail['title'],
+                    body=detail.get('overview', ''),
+                    poster_path=poster_url,
+                    deep_link=deep_link,
+                    original_title=detail.get('original_title', '')
+                )
             if gd_id: self.existing_gdids.add(gd_id) # Update cache
         else:
             print(f"    -> Fail: {res.text}")
@@ -484,8 +564,18 @@ class GDIndexImporter:
                 still_path = ep_detail.get('still_path') or tv_detail.get('backdrop_path')
                 image_url = f"https://image.tmdb.org/t/p/w500{still_path}" if still_path else None
                 
-                msg = f"🆕 <b>Episode Added</b>\n\n📺 <b>{show_name}</b>\n🎞️ S{parsed_info['season']}E{parsed_info['episode']} - {ep_detail.get('name', 'N/A')}\n\n{ep_detail.get('overview', '')[:200]}..."
+                deep_link = f"https://www.nfgplus.my.id/reviews.html?id={tv_detail['id']}&type=tv"
+                msg = f"🆕 <b>Episode Added</b>\n\n📺 <b>{show_name}</b>\n🎞️ S{parsed_info['season']}E{parsed_info['episode']} - {ep_detail.get('name', 'N/A')}\n\n{ep_detail.get('overview', '')[:200]}...\n\n🔗 <a href='{deep_link}'>Watch Now</a>"
                 self.send_telegram_notification(msg, image_url=image_url)
+
+                # Send FCM Notification
+                self.send_fcm_notification(
+                    title=f"{show_name} - S{parsed_info['season']}E{parsed_info['episode']}",
+                    body=ep_detail.get('name', 'New Episode Added'),
+                    poster_path=image_url,
+                    deep_link=deep_link,
+                    original_title=show_name
+                )
                 
             if gd_id: self.existing_gdids.add(gd_id) # Update cache
         else:
@@ -635,6 +725,7 @@ if __name__ == "__main__":
     parser.add_argument("--type", choices=['auto', 'movie', 'tv'], default='auto', help="Force folder content type (default: auto)")
     parser.add_argument("--telegram-token", help="Telegram Bot Token")
     parser.add_argument("--telegram-chat-id", help="Telegram Chat ID")
+    parser.add_argument("--fcm-key", help="FCM Service Account Key (Path or JSON string)")
     
     args = parser.parse_args()
     
@@ -650,7 +741,8 @@ if __name__ == "__main__":
         gdindex_url=args.url,
         auth=auth,
         telegram_token=args.telegram_token,
-        telegram_chat_id=args.telegram_chat_id
+        telegram_chat_id=args.telegram_chat_id,
+        fcm_key=args.fcm_key
     )
     
     root_folder_name = urllib.parse.unquote(args.url.rstrip('/').split('/')[-1])
