@@ -218,6 +218,20 @@ public class PlayerFragment extends BaseFragment
                 episodeId = getArguments().getInt("episodeId", itemId);
                 tvShowDetails = getArguments().getParcelable("tvShow");
                 season = getArguments().getParcelable("season");
+
+                if (tvShowDetails == null) {
+                    int showId = getArguments().getInt("showId", -1);
+                    if (showId != -1) {
+                        tvShowDetails = DetailsUtils.getSeriesDetails(mActivity, showId);
+                    }
+                }
+                if (season == null) {
+                    int seasonId = getArguments().getInt("seasonId", -1);
+                    if (seasonId != -1) {
+                        season = DetailsUtils.getSeasonDetails(mActivity, seasonId);
+                    }
+                }
+
                 Log.d(TAG, "onCreate: Episode mode - episodeId=" + episodeId
                         + ", tvShow=" + (tvShowDetails != null ? tvShowDetails.getName() : "NULL")
                         + ", season=" + (season != null ? season.getSeasonNumber() : "NULL"));

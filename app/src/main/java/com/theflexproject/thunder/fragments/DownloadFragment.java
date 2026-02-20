@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -135,8 +136,10 @@ public class DownloadFragment extends BaseFragment
 
         recyclerView = view.findViewById(R.id.recyclerDownload);
 
+
+
         if (!isTVDevice && recyclerView instanceof androidx.recyclerview.widget.RecyclerView) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
         } else if (isTVDevice && recyclerView instanceof androidx.leanback.widget.VerticalGridView) {
             androidx.leanback.widget.VerticalGridView vGridView = (androidx.leanback.widget.VerticalGridView) recyclerView;
             vGridView.addOnChildViewHolderSelectedListener(
@@ -395,15 +398,9 @@ public class DownloadFragment extends BaseFragment
 
     private void checkPermisi() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ (API 33+)
-            boolean hasVideo = ContextCompat.checkSelfPermission(requireContext(),
-                    Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
-            if (!hasVideo) {
-                ActivityCompat.requestPermissions(requireActivity(),
-                        new String[] { Manifest.permission.READ_MEDIA_VIDEO }, STORAGE_PERMISSION_CODE);
-            } else {
-                loadMediaFiles();
-            }
+            // Android 13+ (API 33+): Media permissions removed due to Policy.
+            // Proceed to load files (using app-specific storage and DownloadManager).
+            loadMediaFiles();
         } else {
             // Android 12 and below
             if (ContextCompat.checkSelfPermission(requireContext(),

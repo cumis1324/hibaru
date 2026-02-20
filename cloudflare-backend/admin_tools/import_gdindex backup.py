@@ -16,14 +16,12 @@ DEFAULT_API_URL = "https://nfgplus-backend.worker1-b8f.workers.dev/api"
 DEFAULT_TMDB_KEY = "75399494372c92bd800f70079dff476b" # From wrangler.toml
 
 class GDIndexImporter:
-    def __init__(self, api_url, admin_key, tmdb_key, gdindex_url, auth=None, telegram_token=None, telegram_chat_id=None):
+    def __init__(self, api_url, admin_key, tmdb_key, gdindex_url, auth=None):
         self.api_url = api_url.rstrip('/')
         self.admin_key = admin_key
         self.tmdb_key = tmdb_key
         self.gdindex_url = gdindex_url.rstrip('/')
         self.auth = auth # (user, pass) tuple or "user:pass" string
-        self.telegram_token = telegram_token
-        self.telegram_chat_id = telegram_chat_id
         
         self.headers = {
             'X-Admin-Key': self.admin_key,
@@ -53,36 +51,6 @@ class GDIndexImporter:
                 print("Proceeding with empty cache.")
         except Exception as e:
             print(f"Error fetching existing GDIDs: {e}. Proceeding with empty cache.")
-
-    def send_telegram_notification(self, message, image_url=None):
-        if not self.telegram_token or not self.telegram_chat_id:
-            return
-        
-        if image_url:
-            url = f"https://api.telegram.org/bot{self.telegram_token}/sendPhoto"
-            payload = {
-                "chat_id": self.telegram_chat_id,
-                "photo": image_url,
-                "caption": message,
-                "parse_mode": "HTML"
-            }
-        else:
-            url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
-            payload = {
-                "chat_id": self.telegram_chat_id,
-                "text": message,
-                "parse_mode": "HTML"
-            }
-
-        try:
-            res = requests.post(url, json=payload, timeout=12)
-            if res.status_code != 200:
-                print(f"Warning: Failed to send Telegram notification. Status: {res.status_code}")
-                # Fallback to text only if photo failed
-                if image_url:
-                    self.send_telegram_notification(message, image_url=None)
-        except Exception as e:
-            print(f"Error sending Telegram notification: {e}")
 
     def decode_legacy_gdindex_response(self, text):
         """
@@ -351,14 +319,7 @@ class GDIndexImporter:
         
         res = requests.post(f"{self.api_url}/movies", json=payload, headers=self.headers)
         if res.status_code in [200, 201]:
-            action = "Updated" if res.status_code == 200 else "Added"
-            print(f"    -> {action}: {detail['title']}")
-            if res.status_code == 201:
-                # Notify on new addition
-                poster_url = f"https://image.tmdb.org/t/p/w500{detail.get('poster_path')}" if detail.get('poster_path') else None
-                msg = f"🆕 <b>Movie Added</b>\n\n🎬 <b>{detail['title']}</b>\n📅 {detail.get('release_date', 'N/A')}\n⭐ {detail.get('vote_average', 0.0)}\n\n{detail.get('overview', '')[:200]}..."
-                self.send_telegram_notification(msg, image_url=poster_url)
-            
+            print(f"    -> Synced: {detail['title']}")
             if gd_id: self.existing_gdids.add(gd_id) # Update cache
         else:
             print(f"    -> Fail: {res.text}")
@@ -475,18 +436,7 @@ class GDIndexImporter:
         
         res_ep = requests.post(f"{self.api_url}/episodes", json=ep_payload, headers=self.headers)
         if res_ep.status_code in [200, 201]:
-            action = "Updated" if res_ep.status_code == 200 else "Added"
-            print(f"    -> {action} Episode: S{parsed_info['season']}E{parsed_info['episode']}")
-            
-            if res_ep.status_code == 201:
-                # Notify on new addition
-                show_name = tv_detail['name']
-                still_path = ep_detail.get('still_path') or tv_detail.get('backdrop_path')
-                image_url = f"https://image.tmdb.org/t/p/w500{still_path}" if still_path else None
-                
-                msg = f"🆕 <b>Episode Added</b>\n\n📺 <b>{show_name}</b>\n🎞️ S{parsed_info['season']}E{parsed_info['episode']} - {ep_detail.get('name', 'N/A')}\n\n{ep_detail.get('overview', '')[:200]}..."
-                self.send_telegram_notification(msg, image_url=image_url)
-                
+            print(f"    -> Synced Episode: S{parsed_info['season']}E{parsed_info['episode']}")
             if gd_id: self.existing_gdids.add(gd_id) # Update cache
         else:
             print(f"    -> Episode Sync Fail: {res_ep.text}")
@@ -633,8 +583,6 @@ if __name__ == "__main__":
     parser.add_argument("--tmdb-key", help="TMDB API Key (Optional)")
     parser.add_argument("--no-recursive", action="store_true", help="Disable recursive scanning")
     parser.add_argument("--type", choices=['auto', 'movie', 'tv'], default='auto', help="Force folder content type (default: auto)")
-    parser.add_argument("--telegram-token", help="Telegram Bot Token")
-    parser.add_argument("--telegram-chat-id", help="Telegram Chat ID")
     
     args = parser.parse_args()
     
@@ -648,9 +596,7 @@ if __name__ == "__main__":
         admin_key=args.admin_key,
         tmdb_key=args.tmdb_key or DEFAULT_TMDB_KEY,
         gdindex_url=args.url,
-        auth=auth,
-        telegram_token=args.telegram_token,
-        telegram_chat_id=args.telegram_chat_id
+        auth=auth
     )
     
     root_folder_name = urllib.parse.unquote(args.url.rstrip('/').split('/')[-1])

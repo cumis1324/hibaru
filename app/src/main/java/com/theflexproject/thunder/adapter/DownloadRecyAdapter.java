@@ -46,7 +46,7 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
     @NonNull
     @Override
     public MediaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        int layoutId = isTV ? R.layout.download_item_tv : R.layout.download_item;
+        int layoutId = isTV ? R.layout.download_item_tv : R.layout.media_item;
         View view = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
         return new MediaViewHolder(view, isTV);
     }
@@ -82,6 +82,12 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
                     .load(posterPath)
                     .placeholder(R.color.card_bg)
                     .into(holder.ivPosterTV);
+        } else if (!isTV && holder.ivThumbnail != null && !posterPath.isEmpty()) {
+            // Redundant check but keeps logic clear if ivThumbnail is reused
+            Glide.with(context)
+                    .load(posterPath)
+                    .placeholder(R.drawable.ic_download)
+                    .into(holder.ivThumbnail);
         }
 
         final String finalLocalPath = localPath;
@@ -89,8 +95,12 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
                 : ((Episode) mediaItem).getId();
         final boolean finalIsMovie = (mediaItem instanceof Movie);
 
+        final int finalShowId = (mediaItem instanceof Episode) ? (int) ((Episode) mediaItem).getShowId() : -1;
+        final int finalSeasonId = (mediaItem instanceof Episode) ? ((Episode) mediaItem).getSeasonId() : -1;
+
         if (isTV) {
-            holder.itemView.setOnClickListener(v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie));
+            holder.itemView.setOnClickListener(
+                    v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie, finalShowId, finalSeasonId));
             holder.itemView.setOnLongClickListener(v -> {
                 if (onItemDeleteListener != null) {
                     onItemDeleteListener.onItemDelete(mediaItem);
@@ -128,6 +138,18 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
             }
 
         } else {
+            // Mobile (Now using media_item layout which acts like a button)
+            holder.itemView.setOnClickListener(
+                    v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie, finalShowId, finalSeasonId));
+
+            holder.itemView.setOnLongClickListener(v -> {
+                if (onItemDeleteListener != null) {
+                    onItemDeleteListener.onItemDelete(mediaItem);
+                }
+                return true;
+            });
+
+            // Legacy button handling (if layout still used them, which it doesn't now)
             if (holder.hapus != null) {
                 holder.hapus.setOnClickListener(view -> {
                     if (onItemDeleteListener != null) {
@@ -136,16 +158,22 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
                 });
             }
             if (holder.play != null) {
-                holder.play.setOnClickListener(v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie));
+                holder.play.setOnClickListener(
+                        v -> playMedia(v, finalLocalPath, finalVideoId, finalIsMovie, finalShowId, finalSeasonId));
             }
         }
     }
 
-    private void playMedia(View view, String localPath, int videoId, boolean isMovie) {
+    private void playMedia(View view, String localPath, int videoId, boolean isMovie, int showId, int seasonId) {
         Bundle bundle = new Bundle();
         bundle.putString("localPath", localPath);
         bundle.putInt("videoId", videoId);
         bundle.putBoolean("isMovie", isMovie);
+        if (!isMovie) {
+            bundle.putInt("episodeId", videoId); // Explicitly pass as episodeId too
+            bundle.putInt("showId", showId);
+            bundle.putInt("seasonId", seasonId);
+        }
         Navigation.findNavController(view).navigate(R.id.playerFragment, bundle);
     }
 
@@ -160,22 +188,32 @@ public class DownloadRecyAdapter extends RecyclerView.Adapter<DownloadRecyAdapte
 
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
         TextView fileNameTextView;
-        ImageView ivThumbnail; // Mobile
-        ImageView ivPosterTV; // TV
+        ImageView ivThumbnail; // Mobile & TV (Now shared concept)
+        ImageView ivPosterTV; // Specific for TV layout logic if needed
         View play;
         View hapus;
         View focusOverlay;
 
         public MediaViewHolder(@NonNull View itemView, boolean isTV) {
             super(itemView);
-            fileNameTextView = itemView.findViewById(R.id.fileNameInDownload);
+            // Common logic or split
             if (isTV) {
+                fileNameTextView = itemView.findViewById(R.id.fileNameInDownload); // TV layout ID
                 ivPosterTV = itemView.findViewById(R.id.posterInMediaItem);
                 focusOverlay = itemView.findViewById(R.id.focusOverlay);
             } else {
-                ivThumbnail = itemView.findViewById(R.id.ivThumbnail);
-                play = itemView.findViewById(R.id.playInDownload);
-                hapus = itemView.findViewById(R.id.hapusDownload);
+                // Mobile - now using media_item.xml
+                fileNameTextView = itemView.findViewById(R.id.nameInMediaItem); // Helper to find title
+                ivThumbnail = itemView.findViewById(R.id.posterInMediaItem); // Reuse this field for the poster
+
+                // Old IDs for safety if layout switch fails or old layout used
+                if (fileNameTextView == null)
+                    fileNameTextView = itemView.findViewById(R.id.fileNameInDownload);
+                if (ivThumbnail == null)
+                    ivThumbnail = itemView.findViewById(R.id.ivThumbnail);
+
+                play = itemView.findViewById(R.id.playInDownload); // Will be null in media_item
+                hapus = itemView.findViewById(R.id.hapusDownload); // Will be null in media_item
             }
         }
     }

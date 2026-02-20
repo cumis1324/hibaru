@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         var favoritList: MutableList<String> = mutableListOf()
         @JvmField
         var historyAll: MutableList<String> = mutableListOf()
-        private const val REQUEST_MEDIA_PERMISSION = 100
+        
     }
 
     private var phoneBinding: ActivityMainBinding? = null
@@ -174,10 +174,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkPermissions() {
         if (!isNotificationPermissionGranted()) {
-            showNotificationPermissionDialog()
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            checkAndRequestMediaPermissions()
+            showNotificationPermissionDialog();
         }
     }
 
@@ -204,27 +201,9 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    @androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun checkAndRequestMediaPermissions() {
-        val permissions = arrayOf(
-            android.Manifest.permission.READ_MEDIA_VIDEO,
-            android.Manifest.permission.READ_MEDIA_AUDIO
-        )
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, permissions, REQUEST_MEDIA_PERMISSION)
-        }
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_MEDIA_PERMISSION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permissions granted
-            } else {
-                android.widget.Toast.makeText(this, "Media permissions are required for some features.", android.widget.Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
 }
+
