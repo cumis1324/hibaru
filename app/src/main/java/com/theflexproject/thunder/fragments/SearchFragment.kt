@@ -130,7 +130,7 @@ class SearchFragment : Fragment() {
                     mediaAdapter.submitList(state.searchResults)
                     
                     if (state.error != null) {
-                        Toast.makeText(context, state.error, Toast.LENGTH_SHORT).show()
+
                     }
                 }
             }

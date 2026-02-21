@@ -433,7 +433,7 @@ class HomeViewModel @Inject constructor(
     fun loadMore(sectionId: String) {
         val currentSections = _uiState.value.sections
         val sectionIndex = currentSections.indexOfFirst { it.id == sectionId }
-        if (sectionIndex == -1 || currentSections[sectionIndex].isLoadingMore) return
+        if (sectionIndex == -1 || currentSections[sectionIndex].isLoadingMore || !currentSections[sectionIndex].hasMore) return
 
         val nextPage = (sectionPages[sectionId] ?: 0) + 1
         android.util.Log.d(TAG, "Requesting more items for section: $sectionId, page: $nextPage, offset: ${nextPage * PAGE_SIZE}")
@@ -447,8 +447,12 @@ class HomeViewModel @Inject constructor(
             try {
                 val newItems = when (sectionId) {
                     "trending_hero" -> {
-                        val (mMovies, mMoviePage) = tmdbRepository.getTrendingMoviesDeep((sectionPages["trending_movies"] ?: 1) + 1)
-                        val (mTv, mTvPage) = tmdbRepository.getTrendingTVShowsDeep((sectionPages["trending_tv"] ?: 1) + 1)
+                        val currentMoviePage = (sectionPages["trending_movies"] ?: 1)
+                        val currentTvPage = (sectionPages["trending_tv"] ?: 1)
+                        
+                        val (mMovies, mMoviePage) = tmdbRepository.getTrendingMoviesDeep(currentMoviePage + 1)
+                        val (mTv, mTvPage) = tmdbRepository.getTrendingTVShowsDeep(currentTvPage + 1)
+                        
                         sectionPages["trending_movies"] = mMoviePage
                         sectionPages["trending_tv"] = mTvPage
                         (mMovies + mTv).shuffled()
@@ -456,7 +460,17 @@ class HomeViewModel @Inject constructor(
                     "recent_movies" -> movieRepository.getRecentlyAddedMovies(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
                     "new_tv" -> tvShowRepository.getNewTVShows(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
                     "indo_movies" -> movieRepository.getIndonesianMovies(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
-                    "drakor" -> tvShowRepository.getKoreanDramas(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
+                    "drakor" -> {
+                        val tv = tvShowRepository.getKoreanDramas(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
+                        val movies = movieRepository.getKoreanMovies(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
+                        (tv + movies).sortedByDescending { 
+                            when(it) {
+                                is Movie -> it.popularity
+                                is TVShow -> it.popularity
+                                else -> 0.0
+                            }
+                        }
+                    }
                     "top_movies" -> movieRepository.getTopRatedMovies(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
                     "top_tv" -> tvShowRepository.getTopRatedTVShows(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
                     "recom" -> movieRepository.getRecommendations(limit = PAGE_SIZE, offset = nextPage * PAGE_SIZE)
@@ -466,16 +480,18 @@ class HomeViewModel @Inject constructor(
 
                 android.util.Log.d(TAG, "Received ${newItems.size} new items for section: $sectionId")
 
-                if (newItems.isNotEmpty()) {
-                    // Update page tracking for non-TMDB sections (TMDB handled inside when)
-                    if (sectionId != "trending_movies" && sectionId != "trending_tv") {
-                        sectionPages[sectionId] = nextPage
-                    }
+                val finalSections = _uiState.value.sections.toMutableList()
+                val idx = finalSections.indexOfFirst { it.id == sectionId }
+                
+                if (idx != -1) {
+                    val section = finalSections[idx]
                     
-                    val finalSections = _uiState.value.sections.toMutableList()
-                    val idx = finalSections.indexOfFirst { it.id == sectionId }
-                    if (idx != -1) {
-                        val section = finalSections[idx]
+                    if (newItems.isNotEmpty()) {
+                        // Update page tracking for non-TMDB sections
+                        if (sectionId != "trending_hero") {
+                            sectionPages[sectionId] = nextPage
+                        }
+                        
                         val combinedItems = (section.items + newItems).distinctBy { 
                             when(it) {
                                 is Movie -> "m_${it.id}"
@@ -483,16 +499,27 @@ class HomeViewModel @Inject constructor(
                                 else -> it.toString()
                             }
                         }
+                        
                         android.util.Log.d(TAG, "Section $sectionId now has ${combinedItems.size} total items")
+                        
+                        // If we got fewer items than PAGE_SIZE, assume no more (approximate for combined sections)
+                        // For Drakor, we check against PAGE_SIZE * 2 as a loose threshold since it's combined
+                        val threshold = if (sectionId == "drakor") (PAGE_SIZE / 2) else 5 
+                        val hasMore = newItems.size >= threshold
+
                         finalSections[idx] = section.copy(
                             items = combinedItems,
-                            isLoadingMore = false
+                            isLoadingMore = false,
+                            hasMore = hasMore
                         )
-                        _uiState.update { it.copy(sections = finalSections) }
+                    } else {
+                        android.util.Log.d(TAG, "No more items found for section: $sectionId")
+                        finalSections[idx] = section.copy(
+                            isLoadingMore = false,
+                            hasMore = false
+                        )
                     }
-                } else {
-                    android.util.Log.d(TAG, "No more items found for section: $sectionId")
-                    resetLoadingState(sectionId)
+                    _uiState.update { it.copy(sections = finalSections) }
                 }
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "Error loading more items for $sectionId", e)

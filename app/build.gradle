@@ -17,8 +17,8 @@ android {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 36
-        versionCode 82
-        versionName "Dwasthadasa"
+        versionCode 84
+        versionName "Catrasthadasa"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

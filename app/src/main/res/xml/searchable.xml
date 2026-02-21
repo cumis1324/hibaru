@@ -3,6 +3,6 @@
     android:label="@string/app_name"
     android:hint="@string/search_hint"
     android:includeInGlobalSearch="true"
-    android:searchSettingsDescription="NFG+ movies and shows"
+    android:searchSettingsDescription="nfgplus movies and shows"
     android:queryAfterZeroResults="true"
     android:voiceSearchMode="showVoiceSearchButton|launchRecognizer" />

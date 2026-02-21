@@ -301,6 +301,11 @@ class GDIndexImporter:
 
     def search_tmdb(self, query, year=None, is_tv=False):
         url = f"https://api.themoviedb.org/3/search/{'tv' if is_tv else 'movie'}"
+        # Aggressive cleaning for TMDB query
+        query = query.replace('.', ' ').replace('_', ' ')
+        query = re.sub(r'(?i)1080p|720p|2160p|4k|bluray|web-dl|hdtv|x264|x265|hevc|webrip', '', query)
+        query = re.sub(r'\s+', ' ', query).strip()
+
         params = {
             'api_key': self.tmdb_key,
             'query': query,
@@ -587,19 +592,30 @@ class GDIndexImporter:
         name_no_ext = os.path.splitext(filename)[0]
         
         # Regex setup
-        # Standard S01E01 or 1x01
-        tv_pattern = re.compile(r'(.+?)[ .]?[Ss](\d{1,2})[ .]?[Ee](\d{1,2})', re.IGNORECASE)
+        # Standard S01E01 or 1x01 - Refined to handle dots better
+        # Use [ .]* to eat up dots/spaces between title and S
+        tv_pattern = re.compile(r'(.+?)[ .]*[Ss](\d{1,2})[ .]*[Ee](\d{1,2})', re.IGNORECASE)
         # Pattern for just SxxExx without title (common in subfolders)
-        tv_simple_pattern = re.compile(r'^[ .]?[Ss](\d{1,2})[ .]?[Ee](\d{1,2})', re.IGNORECASE)
+        tv_simple_pattern = re.compile(r'^[ .]*[Ss](\d{1,2})[ .]*[Ee](\d{1,2})', re.IGNORECASE)
         
         tv_match = tv_pattern.search(name_no_ext)
         tv_simple_match = tv_simple_pattern.search(name_no_ext)
         
+        def clean_title(t):
+            if not t: return ""
+            # Aggressive cleaning: replace dots, underscores with spaces
+            t = t.replace('.', ' ').replace('_', ' ')
+            # Remove common technical metadata
+            t = re.sub(r'(?i)1080p|720p|2160p|4k|bluray|web-dl|hdtv|x264|x265|hevc|webrip', '', t)
+            # Final trim and collapse spaces
+            t = re.sub(r'\s+', ' ', t).strip()
+            return t
+
         # Function to return TV result
         def return_tv(title, s, e, year=None):
             return {
                  'type': 'episode',
-                 'title': title,
+                 'title': clean_title(title),
                  'season': int(s),
                  'episode': int(e),
                  'year': year
@@ -609,7 +625,7 @@ class GDIndexImporter:
         def return_movie(title, year):
             return {
                 'type': 'movie',
-                'title': title,
+                'title': clean_title(title),
                 'year': year
             }
 
@@ -623,17 +639,17 @@ class GDIndexImporter:
                 year = year_match.group(1) if year_match else None
                 
                 # Clean title (Remove year and brackets)
-                clean_title = parent_folder_name
+                parent_title = parent_folder_name
                 if year:
-                    clean_title = clean_title.replace(f"({year})", "").replace(f".{year}.", "").strip()
+                    parent_title = parent_title.replace(f"({year})", "").replace(f".{year}.", "").strip()
                 
                 if tv_match:
-                    return return_tv(clean_title, tv_match.group(2), tv_match.group(3), year)
+                    return return_tv(parent_title, tv_match.group(2), tv_match.group(3), year)
                 elif tv_simple_match:
-                    return return_tv(clean_title, tv_simple_match.group(1), tv_simple_match.group(2), year)
+                    return return_tv(parent_title, tv_simple_match.group(1), tv_simple_match.group(2), year)
 
             if tv_match:
-                return return_tv(tv_match.group(1).replace('.', ' ').strip(), tv_match.group(2), tv_match.group(3))
+                return return_tv(tv_match.group(1), tv_match.group(2), tv_match.group(3))
             elif tv_simple_match and parent_folder_name:
                  # Use parent folder name as title
                  print(f"DEBUG: Using parent folder '{parent_folder_name}' for title of {filename}")
@@ -662,9 +678,9 @@ class GDIndexImporter:
         movie_match = movie_pattern.search(name_no_ext)
         
         if movie_match:
-            return return_movie(movie_match.group(1).replace('.', ' ').strip(), movie_match.group(2))
+            return return_movie(movie_match.group(1), movie_match.group(2))
             
-        return return_movie(name_no_ext.replace('.', ' ').strip(), None)
+        return return_movie(name_no_ext, None)
 
     def crawl_folder(self, url, recursive=True, force_type=None, current_folder_name=None):
         page_token = ""

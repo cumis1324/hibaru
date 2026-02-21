@@ -41,7 +41,7 @@ fun SeeAllScreen(
         snapshotFlow { gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleIndex ->
                 if (lastVisibleIndex != null && section != null) {
-                    if (lastVisibleIndex >= section.items.size - 5 && !section.isLoadingMore) {
+                    if (lastVisibleIndex >= section.items.size - 5 && !section.isLoadingMore && section.hasMore) {
                         viewModel.loadMore(sectionId)
                     }
                 }

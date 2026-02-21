@@ -42,7 +42,7 @@
             android:scrollHorizontally="true"
             android:text="TextView"
             android:textAlignment="center"
-            android:textColor="?android:attr/textColorPrimary"
+            android:textColor="@color/black"
             android:textSize="14sp"
             />
 

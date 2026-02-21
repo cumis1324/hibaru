@@ -52,7 +52,7 @@ class EngageSyncWorker @AssistedInject constructor(
         val topShows = tvShowRepository.getTrendingTVShows(limit = 10)
 
         val clusterBuilder = RecommendationCluster.Builder()
-            .setTitle("NFG+ Trending")
+            .setTitle("nfgplus Trending")
 
         var entityCount = 0
 

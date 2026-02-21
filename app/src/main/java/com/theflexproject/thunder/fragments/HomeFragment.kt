@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -28,7 +29,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: HomeViewModel by activityViewModels()
     private lateinit var adapter: HomeSectionAdapter
 
     override fun onCreateView(

@@ -153,7 +153,7 @@ class HomeSectionAdapter(
                 recyclerView.adapter = innerAdapter
             }
 
-            val itemsToShow = if (section.isLoadingMore && isTV) {
+            val itemsToShow = if (section.isLoadingMore) {
                 section.items.toMutableList<MyMedia>().apply {
                     add(LoadingMedia())
                 }
@@ -162,6 +162,10 @@ class HomeSectionAdapter(
             }
             
             innerAdapter?.submitList(itemsToShow)
+            innerAdapter?.updateOnLoadMore { 
+                android.util.Log.d("HomeSectionAdapter", "Triggering loadMore for section: ${section.id}")
+                onLoadMore(section.id) 
+            }
         }
     }
 

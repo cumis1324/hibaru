@@ -137,8 +137,8 @@ class TvChannelSyncWorker @AssistedInject constructor(
             // Create channel
             val channel = Channel.Builder()
                 .setType(TvContractCompat.Channels.TYPE_PREVIEW)
-                .setDisplayName("NFG+ Trending")
-                .setDescription("Popular movies and TV shows on NFG+")
+                .setDisplayName("nfgplus Trending")
+                .setDescription("Popular movies and TV shows on nfgplus")
                 .setInternalProviderId(CHANNEL_INTERNAL_ID)
                 .setAppLinkIntentUri(Uri.parse("nfgplus://home"))
                 .setSearchable(true)

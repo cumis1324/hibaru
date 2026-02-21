@@ -7,7 +7,8 @@ data class HomeSection(
     val title: String,
     val items: List<MyMedia>,
     val type: SectionType = SectionType.CAROUSEL,
-    val isLoadingMore: Boolean = false
+    val isLoadingMore: Boolean = false,
+    val hasMore: Boolean = true
 )
 
 enum class SectionType {

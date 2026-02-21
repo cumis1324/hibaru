@@ -463,31 +463,9 @@ public class PlayerFragment extends BaseFragment
                 player.seekTo(startItemIndex, startPosition);
             }
             player.addListener(new PlayerEventListener());
-            loadReward();
+            AdHelper.loadReward(mActivity, mActivity, player, playerView);
         }
     }
-
-    private void loadReward() {
-        UnityAdHelper.INSTANCE.showRewardedAd(mActivity, new UnityAdHelper.AdCallback() {
-            @Override
-            public void onAdComplete() {
-                if (player != null) {
-                    player.setPlayWhenReady(true);
-                }
-            }
-
-            @Override
-            public void onAdFailed() {
-                if (player != null) {
-                    player.setPlayWhenReady(true);
-                }
-            }
-        });
-        if (player != null) {
-            player.setPlayWhenReady(false);
-        }
-    }
-
     @OptIn(markerClass = UnstableApi.class)
     private void setRenderersFactory(
             ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {

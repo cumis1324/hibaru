@@ -25,9 +25,13 @@ class MediaCarouselAdapter(
     private val isHero: Boolean = false,
     private val isTV: Boolean = false,
     private val onItemClick: (MyMedia) -> Unit,
-    private val onLoadMore: () -> Unit,
+    private var onLoadMore: () -> Unit,
     private val onFocusChange: ((MyMedia) -> Unit)? = null
 ) : ListAdapter<MyMedia, MediaCarouselAdapter.ViewHolder>(MediaDiffCallback()) {
+
+    fun updateOnLoadMore(newOnLoadMore: () -> Unit) {
+        this.onLoadMore = newOnLoadMore
+    }
 
     private val VIEW_TYPE_ITEM = 0
     private val VIEW_TYPE_LOADING = 1
@@ -38,7 +42,7 @@ class MediaCarouselAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layout = if (viewType == VIEW_TYPE_LOADING) {
-            R.layout.media_item_loading_tv
+            if (isTV) R.layout.media_item_loading_tv else R.layout.media_item_loading
         } else if (isHero) {
             if (isTV) R.layout.movie_item_hero_tv else R.layout.movie_item_banner
         } else {
@@ -50,12 +54,15 @@ class MediaCarouselAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
-        if (item !is LoadingMedia) {
-            holder.bind(item)
-        }
-        
-        if (position >= itemCount - 5 && itemCount >= 10 && item !is LoadingMedia) {
+        if (item is LoadingMedia) {
             onLoadMore()
+        } else {
+            holder.bind(item)
+            
+            // Fallback trigger if bumper isn't reached or not yet shown
+            if (position >= itemCount - 3 && itemCount >= 15) {
+                onLoadMore()
+            }
         }
     }
 
@@ -79,6 +86,12 @@ class MediaCarouselAdapter(
                         focusOverlay?.visibility = View.VISIBLE
                         // Bring focused item to front for scale effect
                         view.z = 10f
+                        
+                        // Pagination Trigger for TV (Focus-based)
+                        if (bindingAdapterPosition >= itemCount - 5 && itemCount >= 15) {
+                            android.util.Log.d("MediaCarouselAdapter", "Focus-based trigger for position: $bindingAdapterPosition")
+                            onLoadMore()
+                        }
                     } else {
                         view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
                         focusOverlay?.visibility = View.GONE

@@ -260,7 +260,7 @@ public class PlayerUtils {
             long cp = player.getCurrentPosition();
             long tp = player.getDuration();
             if (tp > 0) {
-                if (!ad25 && cp >= tp * 0.25 && adStart) {
+                if (!ad25 && cp >= tp * 0.25) {
                     AdHelper.loadReward(mCtx, activity, player, playerView);
                     editor.putBoolean("ad25", true);
                     editor.apply();
