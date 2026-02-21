@@ -494,10 +494,28 @@ async function handleGenres(
 async function handleAdminGdIds(request: Request, env: Env, origin: string): Promise<Response> {
     if (!authenticate(request, env)) return errorResponse('Unauthorized', 401, origin);
 
-    // Fetch all GDIDs from Movies and Episodes
-    // This optimization prevents N+1 requests during sync
-    const movies = await env.DB.prepare('SELECT gd_id FROM movies WHERE gd_id IS NOT NULL').all();
-    const episodes = await env.DB.prepare('SELECT gd_id FROM episodes WHERE gd_id IS NOT NULL').all();
+    const url = new URL(request.url);
+    const since = url.searchParams.get('since');
+    let sinceMs = 0;
+
+    if (since) {
+        sinceMs = parseInt(since);
+        if (isNaN(sinceMs)) sinceMs = 0;
+    }
+
+    // Fetch GDIDs from Movies and Episodes with optional delta filter
+    let movieQuery = 'SELECT gd_id FROM movies WHERE gd_id IS NOT NULL';
+    let epQuery = 'SELECT gd_id FROM episodes WHERE gd_id IS NOT NULL';
+    const params: any[] = [];
+
+    if (sinceMs > 0) {
+        movieQuery += ' AND updated_at > ?';
+        epQuery += ' AND updated_at > ?';
+        params.push(sinceMs);
+    }
+
+    const movies = await env.DB.prepare(movieQuery).bind(...params).all();
+    const episodes = await env.DB.prepare(epQuery).bind(...params).all();
 
     // Flatten results
     const movieIds = movies.results.map((r: any) => r.gd_id);
@@ -506,6 +524,7 @@ async function handleAdminGdIds(request: Request, env: Env, origin: string): Pro
     return jsonResponse({
         movies: movieIds,
         episodes: episodeIds,
-        count: movieIds.length + episodeIds.length
+        count: movieIds.length + episodeIds.length,
+        timestamp: Date.now()
     }, 200, origin);
 }

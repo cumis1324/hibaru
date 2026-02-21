@@ -18,7 +18,7 @@ DEFAULT_API_URL = "https://nfgplus-backend.worker1-b8f.workers.dev/api"
 DEFAULT_TMDB_KEY = "75399494372c92bd800f70079dff476b" # From wrangler.toml
 
 class GDIndexImporter:
-    def __init__(self, api_url, admin_key, tmdb_key, gdindex_url, auth=None, telegram_token=None, telegram_chat_id=None, fcm_key=None):
+    def __init__(self, api_url, admin_key, tmdb_key, gdindex_url, auth=None, telegram_token=None, telegram_chat_id=None, fcm_key=None, cache_file=None):
         self.api_url = api_url.rstrip('/')
         self.admin_key = admin_key
         self.tmdb_key = tmdb_key
@@ -29,6 +29,8 @@ class GDIndexImporter:
         self.fcm_key = fcm_key # Path to service account JSON or raw JSON string
         self._fcm_token = None
         self._fcm_token_expiry = 0
+        self.cache_file = cache_file
+        self.last_sync_time = 0
         
         self.headers = {
             'X-Admin-Key': self.admin_key,
@@ -39,25 +41,59 @@ class GDIndexImporter:
         self.fetch_existing_gdids()
 
     def fetch_existing_gdids(self):
-        print("Fetching existing GDIDs from database...")
+        # 1. Load from cache if available
+        if self.cache_file and os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, 'r') as f:
+                    cache_data = json.load(f)
+                    self.existing_gdids.update(cache_data.get('gdids', []))
+                    self.last_sync_time = cache_data.get('last_sync', 0)
+                    print(f"Loaded {len(self.existing_gdids)} items from local cache (Last Sync: {self.last_sync_time})")
+            except Exception as e:
+                print(f"Error reading cache file: {e}")
+
+        # 2. Fetch delta from server
+        print(f"Fetching delta GDIDs from database (since {self.last_sync_time})...")
         try:
-            res = requests.get(f"{self.api_url}/admin/gdids", headers=self.headers)
+            url = f"{self.api_url}/admin/gdids"
+            if self.last_sync_time > 0:
+                url += f"?since={self.last_sync_time}"
+                
+            res = requests.get(url, headers=self.headers)
             if res.status_code == 200:
                 data = res.json()
-                count = data.get('count', 0)
-                movies = data.get('movies', [])
-                episodes = data.get('episodes', [])
+                new_movies = data.get('movies', [])
+                new_episodes = data.get('episodes', [])
+                server_time = data.get('timestamp', int(time.time() * 1000))
                 
-                self.existing_gdids.update(movies)
-                self.existing_gdids.update(episodes)
-                print(f"Loaded {len(self.existing_gdids)} existing items (Movies + Episodes).")
+                self.existing_gdids.update(new_movies)
+                self.existing_gdids.update(new_episodes)
+                self.last_sync_time = server_time
+                
+                print(f"Added {len(new_movies) + len(new_episodes)} new items from server.")
+                print(f"Total items in memory: {len(self.existing_gdids)}")
+                
+                # Save back to cache
+                self.save_cache()
             else:
-                # If 500, maybe table is empty or API error. Just warn and proceed empty.
-                print(f"Warning: Failed to fetch existing GDIDs. Status: {res.status_code}.")
-                print(f"Response: {res.text[:500]}") # DEBUG
-                print("Proceeding with empty cache.")
+                print(f"Warning: Failed to fetch delta GDIDs. Status: {res.status_code}.")
+                if not self.existing_gdids:
+                    print("Proceeding with empty cache.")
         except Exception as e:
-            print(f"Error fetching existing GDIDs: {e}. Proceeding with empty cache.")
+            print(f"Error fetching delta GDIDs: {e}.")
+
+    def save_cache(self):
+        if not self.cache_file:
+            return
+        try:
+            with open(self.cache_file, 'w') as f:
+                json.dump({
+                    'gdids': list(self.existing_gdids),
+                    'last_sync': self.last_sync_time
+                }, f)
+            print(f"Saved {len(self.existing_gdids)} items to cache file.")
+        except Exception as e:
+            print(f"Error saving cache file: {e}")
 
     def send_telegram_notification(self, message, image_url=None):
         if not self.telegram_token or not self.telegram_chat_id:
@@ -444,7 +480,9 @@ class GDIndexImporter:
                     deep_link=deep_link,
                     original_title=detail.get('original_title', '')
                 )
-            if gd_id: self.existing_gdids.add(gd_id) # Update cache
+            if gd_id: 
+                self.existing_gdids.add(gd_id) # Update cache set
+                self.save_cache() # Persist to disk
         else:
             print(f"    -> Fail: {res.text}")
 
@@ -582,7 +620,9 @@ class GDIndexImporter:
                     original_title=show_name
                 )
                 
-            if gd_id: self.existing_gdids.add(gd_id) # Update cache
+            if gd_id: 
+                self.existing_gdids.add(gd_id) # Update cache set
+                self.save_cache() # Persist to disk
         else:
             print(f"    -> Episode Sync Fail: {res_ep.text}")
 
@@ -742,6 +782,7 @@ if __name__ == "__main__":
     parser.add_argument("--telegram-token", help="Telegram Bot Token")
     parser.add_argument("--telegram-chat-id", help="Telegram Chat ID")
     parser.add_argument("--fcm-key", help="FCM Service Account Key (Path or JSON string)")
+    parser.add_argument("--cache-file", help="Path to local GDID cache file (optional)")
     
     args = parser.parse_args()
     
@@ -758,7 +799,8 @@ if __name__ == "__main__":
         auth=auth,
         telegram_token=args.telegram_token,
         telegram_chat_id=args.telegram_chat_id,
-        fcm_key=args.fcm_key
+        fcm_key=args.fcm_key,
+        cache_file=args.cache_file
     )
     
     root_folder_name = urllib.parse.unquote(args.url.rstrip('/').split('/')[-1])

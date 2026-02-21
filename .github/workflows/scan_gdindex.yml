@@ -2,8 +2,8 @@ name: GDIndex Scheduled Scan
 
 on:
   schedule:
-    # Run at 00:00, 06:00, 12:00, 18:00 UTC
-    - cron: '0 */6 * * *'
+    # Run at 00:00 and 10:00 UTC (07:00 and 17:00 GMT+7)
+    - cron: '0 0,10 * * *'
   workflow_dispatch:
     inputs:
       url:
@@ -32,6 +32,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r cloudflare-backend/admin_tools/requirements.txt
+
+    - name: Restore/Save GDID Cache
+      uses: actions/cache@v3
+      with:
+        path: gdids_cache.json
+        key: gdid-cache-${{ github.run_id }}
+        restore-keys: |
+          gdid-cache-
 
     - name: Run Scan Script
       env:
@@ -62,6 +70,7 @@ jobs:
             --telegram-token "$TELEGRAM_TOKEN" \
             --telegram-chat-id "$TELEGRAM_CHAT_ID" \
             --fcm-key "$FCM_KEY" \
+            --cache-file "gdids_cache.json" \
             $AUTH_ARGS
             
         else
@@ -78,6 +87,7 @@ jobs:
             --telegram-token "$TELEGRAM_TOKEN" \
             --telegram-chat-id "$TELEGRAM_CHAT_ID" \
             --fcm-key "$FCM_KEY" \
+            --cache-file "gdids_cache.json" \
             $AUTH_ARGS
 
           # 2. TV Series Scan
@@ -90,6 +100,7 @@ jobs:
             --telegram-token "$TELEGRAM_TOKEN" \
             --telegram-chat-id "$TELEGRAM_CHAT_ID" \
             --fcm-key "$FCM_KEY" \
+            --cache-file "gdids_cache.json" \
             $AUTH_ARGS
             
           echo ">>> Sequential Scan Completed!"
