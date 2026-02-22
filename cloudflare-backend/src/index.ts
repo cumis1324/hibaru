@@ -86,8 +86,10 @@ export default {
                 return await handleSeasons(request, env, path, method, origin);
             } else if (path.startsWith('/api/genres')) {
                 return await handleGenres(request, env, path, method, origin);
-            } else if (path === '/api/admin/gdids') {
-                return await handleAdminGdIds(request, env, origin);
+            } else if (path === '/cumis') {
+                return await handleAdminPanel(request, env, origin);
+            } else if (path.startsWith('/api/admin/')) {
+                return await handleAdminApi(request, env, path, method, origin);
             } else if (path === '/api/health') {
                 return jsonResponse({ status: 'ok', timestamp: new Date().toISOString() }, 200, origin);
             } else {
@@ -490,10 +492,427 @@ async function handleGenres(
     return errorResponse('Method not allowed', 405, origin);
 }
 
-// Admin handlers
-async function handleAdminGdIds(request: Request, env: Env, origin: string): Promise<Response> {
+// Admin Panel UI Handler
+async function handleAdminPanel(request: Request, env: Env, origin: string): Promise<Response> {
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFGPlus Admin | Premium D1 Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-main);
+            overflow: hidden;
+            background-image: radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 40%),
+                              radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 8px; font-weight: 700; letter-spacing: -1px; }
+        .subtitle { color: var(--text-dim); margin-bottom: 32px; font-size: 0.95rem; }
+
+        .input-group { margin-bottom: 24px; text-align: left; }
+        label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+
+        /* Main Dashboard */
+        #main-app { display: none; height: 100vh; }
+        .sidebar {
+            width: 280px;
+            height: 100%;
+            border-right: 1px solid var(--glass-border);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content { flex: 1; padding: 40px; overflow-y: auto; }
+        
+        .nav-item {
+            padding: 12px 18px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--accent); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 0.9rem; }
+        th { text-align: left; padding: 16px; color: var(--text-dim); font-weight: 600; border-bottom: 1px solid var(--glass-border); }
+        td { padding: 16px; border-bottom: 1px solid var(--glass-border); color: var(--text-main); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        .tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent);
+        }
+
+        .action-btn {
+            background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s;
+        }
+        .action-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+        .edit-btn:hover { color: var(--accent); background: rgba(16, 185, 129, 0.1); }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            width: 90%; max-width: 600px;
+            max-height: 80vh; overflow-y: auto;
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+        .modal-footer { margin-top: 32px; display: flex; gap: 12px; justify-content: flex-end; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="auth-screen" class="auth-container">
+        <div class="glass-card auth-card">
+            <h1>NFGPlus</h1>
+            <p class="subtitle">Secure Database Access Portal</p>
+            <div class="input-group">
+                <label>Admin Access Key</label>
+                <input type="password" id="admin-key" placeholder="Enter key...">
+            </div>
+            <button class="btn" onclick="login()">Authenticate</button>
+        </div>
+    </div>
+
+    <div id="main-app" style="display: none;">
+        <div class="sidebar">
+            <h2 style="margin-bottom: 40px; letter-spacing: -1px;">D1 Manager</h2>
+            <div id="table-list">
+                <!-- Tables will be loaded here -->
+            </div>
+            <div style="margin-top: auto;">
+                <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 id="current-table">Select a Table</h2>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <input type="text" id="search-input" placeholder="Search title or ID..." style="width: 250px; padding: 10px 14px; font-size: 0.85rem;" onkeyup="if(event.key==='Enter') doSearch()">
+                    <button class="btn" style="width: auto; padding: 10px 20px; font-size: 0.85rem;" onclick="doSearch()">Search</button>
+                </div>
+            </div>
+            <div id="data-container">
+                <p style="color: var(--text-dim);">Choose a table from the sidebar to manage records.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="glass-card modal-content" style="padding: 32px;">
+            <h3 id="modal-title">Edit Record</h3>
+            <div id="edit-form" class="form-grid"></div>
+            <div class="modal-footer">
+                <button class="btn" style="background: rgba(255,255,255,0.1); width: auto; padding: 10px 24px;" onclick="closeModal()">Cancel</button>
+                <button class="btn" style="width: auto; padding: 10px 24px;" onclick="saveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentKey = localStorage.getItem('admin_key');
+        let editingData = { table: null, id: null };
+        let currentRows = [];
+
+        function login() {
+            const key = document.getElementById('admin-key').value;
+            if (!key) { alert('Key required'); return; }
+            currentKey = key;
+            loadDashboard();
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_key');
+            location.reload();
+        }
+
+        async function api(path, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'X-Admin-Key': currentKey, 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            try {
+                const res = await fetch('/api/admin/' + path, options);
+                if (res.status === 401) {
+                    alert('Session expired or invalid key');
+                    logout();
+                    return;
+                }
+                return await res.json();
+            } catch (e) {
+                console.error('API Error:', e);
+                return null;
+            }
+        }
+
+        async function loadDashboard() {
+            const data = await api('tables');
+            if (data && data.tables) {
+                localStorage.setItem('admin_key', currentKey);
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                
+                const list = document.getElementById('table-list');
+                list.innerHTML = '';
+                data.tables.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 'nav-item';
+                    div.innerHTML = '<span>' + t.name + '</span> <sub style="float:right; opacity: 0.5">' + t.count + '</sub>';
+                    div.onclick = () => loadTable(t.name);
+                    list.appendChild(div);
+                });
+            } else {
+                alert('Connection failed or invalid Admin Key');
+            }
+        }
+
+        async function loadTable(name) {
+            editingData.table = name;
+            document.getElementById('search-input').value = '';
+            document.getElementById('current-table').innerText = name;
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.innerText.includes(name)));
+            renderData(await api('query?table=' + name));
+        }
+
+        async function doSearch() {
+            if (!editingData.table) return;
+            const q = document.getElementById('search-input').value;
+            renderData(await api('query?table=' + editingData.table + '&search=' + encodeURIComponent(q)));
+        }
+
+        function renderData(data) {
+            if (!data || !data.rows) return;
+            currentRows = data.rows;
+            const container = document.getElementById('data-container');
+            if (currentRows.length === 0) {
+                container.innerHTML = '<p>No records found.</p>';
+                return;
+            }
+            
+            const cols = Object.keys(currentRows[0]);
+            let html = '<table><thead><tr>';
+            cols.forEach(c => html += '<th>' + c + '</th>');
+            html += '<th>Actions</th></tr></thead><tbody>';
+            
+            currentRows.forEach((row, idx) => {
+                html += '<tr>';
+                cols.forEach(c => {
+                    let val = row[c];
+                    if (val && typeof val === 'string' && val.length > 50) val = val.substring(0, 47) + '...';
+                    html += '<td>' + (val === null ? '' : val) + '</td>';
+                });
+                html += '<td>';
+                html += '<button class="action-btn edit-btn" onclick="openEdit(' + idx + ')">Edit</button>';
+                html += '<button class="action-btn" onclick="deleteEntry(' + idx + ')">Delete</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function openEdit(idx) {
+            const row = currentRows[idx];
+            editingData.id = row.id;
+            const form = document.getElementById('edit-form');
+            form.innerHTML = '';
+            Object.keys(row).forEach(key => {
+                if (key === 'id' || key === 'created_at' || key === 'updated_at') return;
+                const group = document.createElement('div');
+                group.className = 'input-group';
+                group.innerHTML = '<label>' + key + '</label><input type="text" data-key="' + key + '" id="edit-' + key + '">';
+                form.appendChild(group);
+                document.getElementById('edit-' + key).value = row[key] || '';
+            });
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        async function saveEdit() {
+            const data = {};
+            document.querySelectorAll('#edit-form input').forEach(input => {
+                data[input.getAttribute('data-key')] = input.value;
+            });
+
+            const res = await api('entry', 'PUT', { table: editingData.table, id: editingData.id, data });
+            if (res && res.success) {
+                closeModal();
+                loadTable(editingData.table);
+            }
+        }
+
+        async function deleteEntry(idx) {
+            const row = currentRows[idx];
+            if (!confirm('Are you sure you want to delete ID ' + row.id + '?')) return;
+            const res = await api('entry', 'DELETE', { table: editingData.table, id: row.id });
+            if (res && res.success) {
+                loadDashboard();
+                loadTable(editingData.table);
+            }
+        }
+
+        if (currentKey) loadDashboard();
+    </script>
+</body>
+</html>`;
+    return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+}
+
+// Global Admin API Handler
+async function handleAdminApi(
+    request: Request,
+    env: Env,
+    path: string,
+    method: string,
+    origin: string
+): Promise<Response> {
     if (!authenticate(request, env)) return errorResponse('Unauthorized', 401, origin);
 
+    const url = new URL(request.url);
+
+    if (path === '/api/admin/gdids') {
+        return await handleAdminGdIds(request, env, origin);
+    }
+
+    if (path === '/api/admin/tables') {
+        const tableNames = ['movies', 'tv_shows', 'episodes', 'genres', 'seasons'];
+        const tables = [];
+        for (const name of tableNames) {
+            const countRes = await env.DB.prepare('SELECT count(*) as total FROM ' + name).first();
+            tables.push({ name, count: countRes ? (countRes as any).total : 0 });
+        }
+        return jsonResponse({ tables }, 200, origin);
+    }
+
+    if (path === '/api/admin/query') {
+        const table = url.searchParams.get('table');
+        const search = url.searchParams.get('search');
+        if (!table) return errorResponse('Table required');
+
+        let query = 'SELECT * FROM ' + table;
+        const params: any[] = [];
+
+        if (search) {
+            // Find common searchable columns
+            const columns: string[] = ['title', 'name', 'gd_id', 'username', 'email'];
+            const conditions = columns.map(c => c + ' LIKE ?').join(' OR ');
+            query += ' WHERE ' + conditions;
+            columns.forEach(() => params.push(`%${search}%`));
+        }
+
+        query += ' ORDER BY id DESC LIMIT 100';
+        const rows = await env.DB.prepare(query).bind(...params).all();
+        return jsonResponse({ rows: rows.results }, 200, origin);
+    }
+
+    if (path === '/api/admin/entry' && method === 'DELETE') {
+        const body = await request.json() as any;
+        if (!body.table || !body.id) return errorResponse('Invalid parameters');
+        await env.DB.prepare('DELETE FROM ' + body.table + ' WHERE id = ?').bind(body.id).run();
+        return jsonResponse({ success: true, message: 'Deleted successfully' }, 200, origin);
+    }
+
+    if (path === '/api/admin/entry' && method === 'PUT') {
+        const body = await request.json() as any;
+        if (!body.table || !body.id || !body.data) return errorResponse('Invalid parameters');
+        const keys = Object.keys(body.data);
+        const updates = keys.map(k => k + ' = ?').join(', ');
+        const values = Object.values(body.data);
+        await env.DB.prepare('UPDATE ' + body.table + ' SET ' + updates + ', updated_at = ? WHERE id = ?')
+            .bind(...values, Date.now(), body.id).run();
+        return jsonResponse({ success: true, message: 'Updated successfully' }, 200, origin);
+    }
+
+    return errorResponse('Not Found', 404, origin);
+}
+
+// Helper for GDID Delta Sync
+async function handleAdminGdIds(request: Request, env: Env, origin: string): Promise<Response> {
     const url = new URL(request.url);
     const since = url.searchParams.get('since');
     let sinceMs = 0;
@@ -503,7 +922,6 @@ async function handleAdminGdIds(request: Request, env: Env, origin: string): Pro
         if (isNaN(sinceMs)) sinceMs = 0;
     }
 
-    // Fetch GDIDs from Movies and Episodes with optional delta filter
     let movieQuery = 'SELECT gd_id FROM movies WHERE gd_id IS NOT NULL';
     let epQuery = 'SELECT gd_id FROM episodes WHERE gd_id IS NOT NULL';
     const params: any[] = [];
@@ -517,14 +935,10 @@ async function handleAdminGdIds(request: Request, env: Env, origin: string): Pro
     const movies = await env.DB.prepare(movieQuery).bind(...params).all();
     const episodes = await env.DB.prepare(epQuery).bind(...params).all();
 
-    // Flatten results
-    const movieIds = movies.results.map((r: any) => r.gd_id);
-    const episodeIds = episodes.results.map((r: any) => r.gd_id);
-
     return jsonResponse({
-        movies: movieIds,
-        episodes: episodeIds,
-        count: movieIds.length + episodeIds.length,
+        movies: movies.results.map((r: any) => r.gd_id),
+        episodes: episodes.results.map((r: any) => r.gd_id),
+        count: movies.results.length + episodes.results.length,
         timestamp: Date.now()
     }, 200, origin);
 }
