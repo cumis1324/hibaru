@@ -101,6 +101,32 @@ fun TVShowDto.toTVShow(): TVShow = TVShow(
     add_to_list = add_to_list ?: 0
 )
 
+fun BulkTVShowDto.toTVShowEntity(): TVShow = TVShow(
+    idForDB = id,
+    id = tmdb_id,
+    name = name ?: "",
+    original_name = original_name,
+    overview = overview,
+    poster_path = poster_path,
+    backdrop_path = backdrop_path,
+    logo_path = logo_path ?: "",
+    first_air_date = first_air_date,
+    last_air_date = last_air_date,
+    number_of_seasons = number_of_seasons ?: 0,
+    number_of_episodes = number_of_episodes ?: 0,
+    vote_average = vote_average?.toDouble() ?: 0.0,
+    vote_count = vote_count ?: 0,
+    popularity = popularity?.toDouble() ?: 0.0,
+    adult = adult == 1,
+    in_production = in_production == 1,
+    status = status,
+    type = type,
+    tagline = tagline,
+    homepage = homepage,
+    original_language = original_language,
+    add_to_list = add_to_list ?: 0
+)
+
 // Episode DTO → Episode Entity
 fun EpisodeDto.toEpisode(): Episode = Episode(
     idForDB = id,
@@ -147,6 +173,7 @@ fun com.theflexproject.thunder.network.dto.SeasonDto.toSeasonDetails(): com.thef
 
 // Batch mappers
 fun List<MovieDto>.toMovies(): List<Movie> = map { it.toMovie() }
+fun List<BulkTVShowDto>.toTVShowsBulk(): List<TVShow> = map { it.toTVShowEntity() }
 fun List<TVShowDto>.toTVShows(): List<TVShow> = map { it.toTVShow() }
 fun List<EpisodeDto>.toEpisodes(): List<Episode> = map { it.toEpisode() }
 fun List<com.theflexproject.thunder.network.dto.SeasonDto>.toSeasonDetails(): List<com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails> = map { it.toSeasonDetails() }

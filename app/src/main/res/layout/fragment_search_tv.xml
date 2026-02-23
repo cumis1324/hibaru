@@ -41,7 +41,7 @@
         android:imeOptions="flagNoExtractUi|actionSearch"
         android:inputType="text"
         android:nextFocusDown="@id/homeRecyclerView"
-        android:textColor="?attr/colorSurface"
+        android:textColor="?android:attr/textColorPrimary"
         android:paddingHorizontal="50dp"
         android:layout_marginTop="60dp"
         android:paddingVertical="8dp"

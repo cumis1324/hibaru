@@ -2,10 +2,11 @@ package com.theflexproject.thunder.data.sync
 
 import android.util.Log
 import com.theflexproject.thunder.network.NFGPlusApi
+import com.theflexproject.thunder.network.dto.toTVShowsBulk
 import com.theflexproject.thunder.network.dto.toMovies
-import com.theflexproject.thunder.network.dto.toTVShows
 import com.theflexproject.thunder.network.dto.toEpisodes
 import com.theflexproject.thunder.network.dto.toSeasonDetails
+import com.theflexproject.thunder.model.TVShowInfo.TVShow
 import com.theflexproject.thunder.repository.MovieRepository
 import com.theflexproject.thunder.repository.TVShowRepository
 import kotlinx.coroutines.Dispatchers
@@ -177,7 +178,7 @@ class SyncManager @Inject constructor(
     }
 
     private suspend fun syncTVShows(isDemoMode: Boolean) {
-        Log.d(TAG, ">>> Start TV Show Sync (Demo: $isDemoMode)")
+        Log.d(TAG, ">>> Start TV Show Sync (Bulk Mode, Demo: $isDemoMode)")
         val lastSync = getLastSyncString()
         
         var offset = 0
@@ -186,58 +187,37 @@ class SyncManager @Inject constructor(
         var totalShowsSaved = 0
         
         while (hasMore) {
-            Log.d(TAG, "Requesting TV Shows: offset=$offset, limit=$limit, updated_after=$lastSync")
-            val response = api.getTVShows(limit = limit, offset = offset, updatedAfter = lastSync, demoMode = isDemoMode)
+            Log.d(TAG, "Requesting TV Shows Bulk: offset=$offset, limit=$limit, updated_after=$lastSync")
+            val response = api.getTVShowsBulk(limit = limit, offset = offset, updatedAfter = lastSync, demoMode = isDemoMode)
             if (response.isSuccessful) {
                 val dtos = response.body()?.tvshows ?: emptyList()
-                Log.d(TAG, "API Response: Found ${dtos.size} shows")
+                Log.d(TAG, "API Response: Found ${dtos.size} shows with sub-resources")
                 
                 if (dtos.isNotEmpty()) {
-                    val entities = dtos.toTVShows()
+                    val entities = dtos.toTVShowsBulk()
                     tvShowRepository.saveAllTVShows(entities)
                     totalShowsSaved += entities.size
-                    Log.d(TAG, "Batch Saved: ${entities.size} shows. Cumulative total: $totalShowsSaved")
                     
-                    // Sync Additional Data for each show
-                    entities.forEach { show ->
+                    // Save Batch Sub-Resources (Episodes & Seasons)
+                    dtos.forEach { bulkDto ->
                          try {
-                             Log.d(TAG, "Syncing Sub-Resources for Show [${show.name}] (ID: ${show.id})")
-                             
-                             // Sync Episodes
-                             val episodesResponse = api.getEpisodes(show.id, demoMode = isDemoMode)
-                             if (episodesResponse.isSuccessful) {
-                                 val episodeDtos = episodesResponse.body()?.episodes ?: emptyList()
-                                 if (episodeDtos.isNotEmpty()) {
-                                     val episodeEntities = episodeDtos.toEpisodes()
-                                     episodeEntities.forEach { it.show_id = show.id.toLong() }
-                                     tvShowRepository.saveAllEpisodes(episodeEntities)
-                                     Log.d(TAG, "  -> Saved ${episodeEntities.size} episodes")
-                                 } else {
-                                     Log.d(TAG, "  -> No episodes found")
-                                 }
-                             } else {
-                                 Log.w(TAG, "  -> Failed to fetch episodes: ${episodesResponse.code()}")
+                             if (bulkDto.episodes.isNotEmpty()) {
+                                 val episodeEntities = bulkDto.episodes.toEpisodes()
+                                 episodeEntities.forEach { it.show_id = bulkDto.id.toLong() }
+                                 tvShowRepository.saveAllEpisodes(episodeEntities)
                              }
                              
-                             // Sync Seasons
-                             val seasonsResponse = api.getSeasons(show.id, demoMode = isDemoMode)
-                             if (seasonsResponse.isSuccessful) {
-                                 val seasonDtos = seasonsResponse.body()?.seasons ?: emptyList()
-                                 if (seasonDtos.isNotEmpty()) {
-                                     val seasonEntities = seasonDtos.toSeasonDetails()
-                                     seasonEntities.forEach { it.show_id = show.id.toLong() }
-                                     tvShowRepository.saveAllSeasonDetails(seasonEntities)
-                                     Log.d(TAG, "  -> Saved ${seasonEntities.size} seasons")
-                                 } else {
-                                     Log.d(TAG, "  -> No seasons found")
-                                 }
-                             } else {
-                                 Log.w(TAG, "  -> Failed to fetch seasons: ${seasonsResponse.code()}")
+                             if (bulkDto.seasons.isNotEmpty()) {
+                                 val seasonEntities = bulkDto.seasons.toSeasonDetails()
+                                 seasonEntities.forEach { it.show_id = bulkDto.id.toLong() }
+                                 tvShowRepository.saveAllSeasonDetails(seasonEntities)
                              }
                          } catch (e: Exception) {
-                             Log.e(TAG, "Error syncing sub-resources for ${show.name}", e)
+                             Log.e(TAG, "Error saving sub-resources for ${bulkDto.name}", e)
                          }
                     }
+                    
+                    Log.d(TAG, "Batch Saved: ${entities.size} shows and their episodes/seasons. Cumulative total: $totalShowsSaved")
                     
                     if (dtos.size < limit) {
                         hasMore = false
@@ -248,10 +228,10 @@ class SyncManager @Inject constructor(
                     hasMore = false
                 }
             } else {
-                Log.e(TAG, "HTTP Error during TV Sync (offset $offset): ${response.code()} ${response.message()}")
+                Log.e(TAG, "HTTP Error during TV Bulk Sync (offset $offset): ${response.code()} ${response.message()}")
                 hasMore = false
             }
         }
-        Log.d(TAG, "<<< TV Show Sync Finished. Total processed: $totalShowsSaved")
+        Log.d(TAG, "<<< Bulk TV Show Sync Finished. Total processed: $totalShowsSaved")
     }
 }

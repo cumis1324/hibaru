@@ -43,6 +43,14 @@ interface NFGPlusApi {
         @Header("X-Demo-Mode") demoMode: Boolean = false
     ): Response<TVShowsResponse>
     
+    @GET("api/sync/tv-delta")
+    suspend fun getTVShowsBulk(
+        @Query("limit") limit: Int = 50,
+        @Query("offset") offset: Int = 0,
+        @Query("updated_after") updatedAfter: String? = null,
+        @Header("X-Demo-Mode") demoMode: Boolean = false
+    ): Response<BulkTVShowResponse>
+    
     @GET("api/tvshows/{id}")
     suspend fun getTVShowById(@Path("id") id: Int): Response<TVShowDto>
     

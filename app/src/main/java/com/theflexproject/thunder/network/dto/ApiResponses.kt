@@ -82,6 +82,43 @@ data class TVShowDto(
     val updated_at: String?
 )
 
+// Bulk TV Delta Response
+data class BulkTVShowResponse(
+    val tvshows: List<BulkTVShowDto>,
+    val count: Int?,
+    val timestamp: Long?
+)
+
+data class BulkTVShowDto(
+    val id: Int,
+    val tmdb_id: Int,
+    val name: String,
+    val original_name: String?,
+    val overview: String?,
+    val poster_path: String?,
+    val backdrop_path: String?,
+    val logo_path: String?,
+    val first_air_date: String?,
+    val last_air_date: String?,
+    val number_of_seasons: Int?,
+    val number_of_episodes: Int?,
+    val vote_average: Float?,
+    val vote_count: Int?,
+    val popularity: Float?,
+    val adult: Int,
+    val in_production: Int,
+    val status: String?,
+    val type: String?,
+    val tagline: String?,
+    val homepage: String?,
+    val original_language: String?,
+    val add_to_list: Int?,
+    val created_at: String?,
+    val updated_at: String?,
+    val seasons: List<SeasonDto>,
+    val episodes: List<EpisodeDto>
+)
+
 // Episodes Response
 data class EpisodesResponse(
     val episodes: List<EpisodeDto>

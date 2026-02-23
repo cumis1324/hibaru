@@ -84,6 +84,8 @@ export default {
                 return await handleEpisodes(request, env, path, method, origin);
             } else if (path.startsWith('/api/seasons')) {
                 return await handleSeasons(request, env, path, method, origin);
+            } else if (path.startsWith('/api/sync/tv-delta')) {
+                return await handleTVDeltaSync(request, env, origin);
             } else if (path.startsWith('/api/genres')) {
                 return await handleGenres(request, env, path, method, origin);
             } else if (path === '/cumis') {
@@ -490,6 +492,74 @@ async function handleGenres(
     }
 
     return errorResponse('Method not allowed', 405, origin);
+}
+
+// TV Delta Sync handler (Bulk)
+async function handleTVDeltaSync(
+    request: Request,
+    env: Env,
+    origin: string
+): Promise<Response> {
+    const url = new URL(request.url);
+    let updatedAfter = url.searchParams.get('updated_after');
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+
+    let query = 'SELECT * FROM tv_shows WHERE 1=1';
+    const params: any[] = [];
+
+    if (updatedAfter) {
+        // Standardize to milliseconds
+        if (updatedAfter.includes('-')) {
+            let isoDate = updatedAfter.replace(' ', 'T');
+            if (!isoDate.endsWith('Z') && !isoDate.includes('+')) isoDate += 'Z';
+            const ts = Date.parse(isoDate);
+            if (!isNaN(ts)) updatedAfter = ts.toString();
+        } else if (/^\d+$/.test(updatedAfter)) {
+            if (updatedAfter.length < 12) {
+                updatedAfter = (parseInt(updatedAfter) * 1000).toString();
+            }
+        }
+        query += ' AND updated_at > ?';
+        params.push(parseInt(updatedAfter));
+    }
+
+    query += ' ORDER BY updated_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const db = getDatabase(request, env);
+    const showsResult = await db.prepare(query).bind(...params).all();
+    const shows = showsResult.results as any[];
+
+    if (shows.length === 0) {
+        return jsonResponse({ tvshows: [], count: 0, timestamp: Date.now() }, 200, origin);
+    }
+
+    const showIds = shows.map(s => s.id);
+    const idPlaceholders = showIds.map(() => '?').join(',');
+
+    // Fetch all seasons for these shows
+    const seasonsResult = await db.prepare(`SELECT * FROM seasons WHERE show_id IN (${idPlaceholders})`).bind(...showIds).all();
+    const seasons = seasonsResult.results as any[];
+
+    // Fetch all episodes for these shows
+    const episodesResult = await db.prepare(`SELECT * FROM episodes WHERE show_id IN (${idPlaceholders})`).bind(...showIds).all();
+    const episodes = episodesResult.results as any[];
+
+    // Map seasons and episodes to shows
+    const bulkTVShows = shows.map(show => {
+        return {
+            ...show,
+            seasons: seasons.filter(s => s.show_id === show.id),
+            episodes: episodes.filter(e => e.show_id === show.id)
+        };
+    });
+
+    return jsonResponse({
+        tvshows: bulkTVShows,
+        count: bulkTVShows.length,
+        timestamp: Date.now()
+    }, 200, origin);
 }
 
 // Admin Panel UI Handler
