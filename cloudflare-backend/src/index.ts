@@ -155,7 +155,12 @@ async function handleMovies(
 
         const db = getDatabase(request, env);
         const result = await db.prepare(query).bind(...params).all();
-        return jsonResponse({ movies: result.results, count: result.results.length }, 200, origin);
+        const movies = result.results.map((m: any) => ({
+            ...m,
+            // Fallback: Use updated_at if modified_time is missing or 0
+            modified_time: m.modified_time && m.modified_time !== '0' ? m.modified_time : m.updated_at
+        }));
+        return jsonResponse({ movies, count: movies.length }, 200, origin);
     } else if (method === 'GET' && movieId) {
         // GET /api/movies/:id - Get single movie with genres
         const db = getDatabase(request, env);
@@ -255,10 +260,22 @@ async function handleTVShows(
     origin: string
 ): Promise<Response> {
     const pathParts = path.split('/').filter(Boolean);
-    const showId = pathParts[2] ? parseInt(pathParts[2]) : null;
+    const pathId = pathParts[2] ? parseInt(pathParts[2]) : null;
     const subResource = pathParts[3];
 
-    if (method === 'GET' && !showId) {
+    const db = getDatabase(request, env);
+
+    // Helper to resolve pathId to internal show record
+    let show: any = null;
+    if (pathId) {
+        show = await db.prepare('SELECT * FROM tv_shows WHERE id = ?').bind(pathId).first();
+        if (!show) {
+            // Try lookup by tmdb_id if PK lookup fails (Bilingual Support)
+            show = await db.prepare('SELECT * FROM tv_shows WHERE tmdb_id = ?').bind(pathId).first();
+        }
+    }
+
+    if (method === 'GET' && !pathId) {
         // GET /api/tvshows - List all TV shows
         const url = new URL(request.url);
         let updatedAfter = url.searchParams.get('updated_after');
@@ -287,20 +304,21 @@ async function handleTVShows(
         query += ' ORDER BY updated_at DESC LIMIT ? OFFSET ?';
         params.push(limit, offset);
 
-        const db = getDatabase(request, env);
         const result = await db.prepare(query).bind(...params).all();
-        return jsonResponse({ tvshows: result.results }, 200, origin);
-    } else if (method === 'GET' && showId && subResource === 'seasons') {
+        // Return TMDB ID as 'id' for legacy app compatibility
+        const tvshows = result.results.map((s: any) => ({ ...s, id: s.tmdb_id }));
+        return jsonResponse({ tvshows }, 200, origin);
+    } else if (method === 'GET' && show && subResource === 'seasons') {
         // GET /api/tvshows/:id/seasons - Get all seasons for a show
-        const db = getDatabase(request, env);
-        const seasons = await db.prepare('SELECT * FROM seasons WHERE show_id = ? ORDER BY season_number').bind(showId).all();
+        // Use show.tmdb_id for relation as per schema
+        const seasons = await db.prepare('SELECT * FROM seasons WHERE show_id = ? ORDER BY season_number').bind(show.tmdb_id).all();
         return jsonResponse({ seasons: seasons.results }, 200, origin);
-    } else if (method === 'GET' && showId && subResource === 'episodes') {
+    } else if (method === 'GET' && show && subResource === 'episodes') {
         const url = new URL(request.url);
         const seasonNumber = url.searchParams.get('season');
 
         let query = 'SELECT * FROM episodes WHERE show_id = ?';
-        const params: any[] = [showId];
+        const params: any[] = [show.tmdb_id]; // Use show.tmdb_id for relation
 
         if (seasonNumber) {
             query += ' AND season_number = ?';
@@ -309,15 +327,12 @@ async function handleTVShows(
 
         query += ' ORDER BY season_number, episode_number';
 
-        const db = getDatabase(request, env);
         const episodes = await db.prepare(query).bind(...params).all();
         return jsonResponse({ episodes: episodes.results }, 200, origin);
-    } else if (method === 'GET' && showId) {
+    } else if (method === 'GET' && show) {
         // GET /api/tvshows/:id
-        const db = getDatabase(request, env);
-        const show = await db.prepare('SELECT * FROM tv_shows WHERE id = ?').bind(showId).first();
-        if (!show) return errorResponse('TV Show not found', 404, origin);
-        return jsonResponse(show, 200, origin);
+        // Return TMDB ID as 'id' for legacy app compatibility
+        return jsonResponse({ ...show, id: show.tmdb_id }, 200, origin);
     } else if (method === 'POST') {
         // POST /api/tvshows - Create/Update TV Show
         if (!authenticate(request, env)) return errorResponse('Unauthorized', 401, origin);
@@ -369,15 +384,18 @@ async function handleSeasons(
         if (!authenticate(request, env)) return errorResponse('Unauthorized', 401, origin);
         const body = await request.json() as any;
 
-        // Ensure show_id exists (we assume caller passes internal DB ID for show_id)
-        // OR we can lookup by tmdb_id if passed. But usually hierarchical insert should know relation.
-        // Let's assume body has show_id (internal D1 ID).
+        const db = getDatabase(request, env);
+        // Resolve show_id (could be internal or tmdb_id) to the record
+        const show = await db.prepare('SELECT id, tmdb_id FROM tv_shows WHERE id = ? OR tmdb_id = ?').bind(body.show_id, body.show_id).first();
+        if (!show) return errorResponse('TV Show not found (Bilingual Resolution Failed)', 404, origin);
+        const parentTmdbId = (show as any).tmdb_id;
 
-        const existing = await env.DB.prepare('SELECT id FROM seasons WHERE show_id = ? AND season_number = ?').bind(body.show_id, body.season_number).first();
+        const existing = await db.prepare('SELECT id FROM seasons WHERE show_id = ? AND season_number = ?')
+            .bind(parentTmdbId, body.season_number).first();
 
         if (existing) {
             const now = Date.now();
-            await env.DB.prepare(`
+            await db.prepare(`
                 UPDATE seasons SET 
                     name = ?, overview = ?, poster_path = ?, air_date = ?, episode_count = ?,
                     updated_at = ?
@@ -386,10 +404,10 @@ async function handleSeasons(
             return jsonResponse({ id: existing.id, message: 'Season updated' }, 200, origin);
         } else {
             const now = Date.now();
-            const result = await env.DB.prepare(`
+            const result = await db.prepare(`
                 INSERT INTO seasons (show_id, season_number, name, overview, poster_path, air_date, episode_count, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-             `).bind(body.show_id, body.season_number, body.name, body.overview, body.poster_path, body.air_date, body.episode_count, now).run();
+             `).bind(parentTmdbId, body.season_number, body.name, body.overview, body.poster_path, body.air_date, body.episode_count, now).run();
             return jsonResponse({ id: result.meta.last_row_id, message: 'Season created' }, 201, origin);
         }
     }
@@ -423,30 +441,35 @@ async function handleEpisodes(
 
         const body = await request.json() as any;
         const now = Date.now();
-        await env.DB.prepare("UPDATE episodes SET played = ?, updated_at = ? WHERE id = ?")
+        await db.prepare("UPDATE episodes SET played = ?, updated_at = ? WHERE id = ?")
             .bind(body.played ? 1 : 0, now, episodeId).run();
         return jsonResponse({ message: 'Episode updated' }, 200, origin);
     } else if (method === 'POST') {
         if (!authenticate(request, env)) return errorResponse('Unauthorized', 401, origin);
         const body = await request.json() as any;
 
+        // Resolve show_id (Bilingual)
+        const show = await db.prepare('SELECT id, tmdb_id FROM tv_shows WHERE id = ? OR tmdb_id = ?').bind(body.show_id, body.show_id).first();
+        if (!show) return errorResponse('TV Show not found (Bilingual Resolution Failed)', 404, origin);
+        const parentTmdbId = (show as any).tmdb_id;
+
         let existing = null;
         if (body.gd_id) {
-            existing = await env.DB.prepare('SELECT id FROM episodes WHERE gd_id = ?').bind(body.gd_id).first();
+            existing = await db.prepare('SELECT id FROM episodes WHERE gd_id = ?').bind(body.gd_id).first();
 
             if (!existing) {
                 // Fallback: Claim orphan episode
-                existing = await env.DB.prepare('SELECT id FROM episodes WHERE show_id = ? AND season_number = ? AND episode_number = ? AND gd_id IS NULL')
-                    .bind(body.show_id, body.season_number, body.episode_number).first();
+                existing = await db.prepare('SELECT id FROM episodes WHERE show_id = ? AND season_number = ? AND episode_number = ? AND gd_id IS NULL')
+                    .bind(parentTmdbId, body.season_number, body.episode_number).first();
             }
         } else {
-            existing = await env.DB.prepare('SELECT id FROM episodes WHERE show_id = ? AND season_number = ? AND episode_number = ?')
-                .bind(body.show_id, body.season_number, body.episode_number).first();
+            existing = await db.prepare('SELECT id FROM episodes WHERE show_id = ? AND season_number = ? AND episode_number = ?')
+                .bind(parentTmdbId, body.season_number, body.episode_number).first();
         }
 
         if (existing) {
             const now = Date.now();
-            await env.DB.prepare(`
+            await db.prepare(`
                 UPDATE episodes SET 
                     tmdb_id = ?, name = ?, overview = ?, still_path = ?, air_date = ?, vote_average = ?,
                     url_string = ?, file_name = ?, mime_type = ?, size = ?, modified_time = ?, gd_id = ?,
@@ -460,12 +483,12 @@ async function handleEpisodes(
             return jsonResponse({ id: existing.id, message: 'Episode updated' }, 200, origin);
         } else {
             const now = Date.now();
-            const result = await env.DB.prepare(`
+            const result = await db.prepare(`
                 INSERT INTO episodes (show_id, season_number, episode_number, tmdb_id, name, overview, 
                     still_path, air_date, vote_average, url_string, file_name, mime_type, size, gd_id, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              `).bind(
-                body.show_id, body.season_number, body.episode_number, body.tmdb_id, body.name, body.overview,
+                parentTmdbId, body.season_number, body.episode_number, body.tmdb_id, body.name, body.overview,
                 body.still_path, body.air_date, body.vote_average,
                 body.url_string, body.file_name, body.mime_type, body.size,
                 body.gd_id, now
@@ -501,57 +524,73 @@ async function handleTVDeltaSync(
     origin: string
 ): Promise<Response> {
     const url = new URL(request.url);
-    let updatedAfter = url.searchParams.get('updated_after');
+    const updatedAfter = url.searchParams.get('updated_after');
     const limit = parseInt(url.searchParams.get('limit') || '50');
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
-    let query = 'SELECT * FROM tv_shows WHERE 1=1';
-    const params: any[] = [];
-
+    let ts = 0;
     if (updatedAfter) {
-        // Standardize to milliseconds
         if (updatedAfter.includes('-')) {
             let isoDate = updatedAfter.replace(' ', 'T');
             if (!isoDate.endsWith('Z') && !isoDate.includes('+')) isoDate += 'Z';
-            const ts = Date.parse(isoDate);
-            if (!isNaN(ts)) updatedAfter = ts.toString();
+            ts = Date.parse(isoDate);
         } else if (/^\d+$/.test(updatedAfter)) {
-            if (updatedAfter.length < 12) {
-                updatedAfter = (parseInt(updatedAfter) * 1000).toString();
-            }
+            ts = parseInt(updatedAfter);
+            if (ts < 10000000000) ts *= 1000; // Convert seconds to ms
         }
-        query += ' AND updated_at > ?';
-        params.push(parseInt(updatedAfter));
     }
 
-    query += ' ORDER BY updated_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
-
     const db = getDatabase(request, env);
-    const showsResult = await db.prepare(query).bind(...params).all();
+    let showsResult;
+
+    if (ts > 0) {
+        // Efficiency fix: Find shows that were updated OR have updated children
+        showsResult = await db.prepare(`
+            SELECT * FROM tv_shows 
+            WHERE tmdb_id IN (
+                SELECT tmdb_id FROM tv_shows WHERE updated_at > ?
+                UNION
+                SELECT show_id FROM seasons WHERE updated_at > ?
+                UNION
+                SELECT show_id FROM episodes WHERE updated_at > ?
+            )
+            ORDER BY updated_at DESC LIMIT ? OFFSET ?
+        `).bind(ts, ts, ts, limit, offset).all();
+    } else {
+        showsResult = await db.prepare('SELECT * FROM tv_shows ORDER BY updated_at DESC LIMIT ? OFFSET ?')
+            .bind(limit, offset).all();
+    }
+
     const shows = showsResult.results as any[];
 
     if (shows.length === 0) {
         return jsonResponse({ tvshows: [], count: 0, timestamp: Date.now() }, 200, origin);
     }
 
-    const showIds = shows.map(s => s.id);
-    const idPlaceholders = showIds.map(() => '?').join(',');
+    const showTMDBIds = shows.map(s => s.tmdb_id);
+    const idPlaceholders = showTMDBIds.map(() => '?').join(',');
 
-    // Fetch all seasons for these shows
-    const seasonsResult = await db.prepare(`SELECT * FROM seasons WHERE show_id IN (${idPlaceholders})`).bind(...showIds).all();
+    // Fetch all seasons and episodes for these shows using TMDB IDs for relation
+    const seasonsResult = await db.prepare(`SELECT * FROM seasons WHERE show_id IN (${idPlaceholders})`).bind(...showTMDBIds).all();
     const seasons = seasonsResult.results as any[];
 
-    // Fetch all episodes for these shows
-    const episodesResult = await db.prepare(`SELECT * FROM episodes WHERE show_id IN (${idPlaceholders})`).bind(...showIds).all();
+    const episodesResult = await db.prepare(`SELECT * FROM episodes WHERE show_id IN (${idPlaceholders})`).bind(...showTMDBIds).all();
     const episodes = episodesResult.results as any[];
 
-    // Map seasons and episodes to shows
+    // Map seasons and episodes to shows using TMDB IDs for linking
+    // Fix: Use tmdb_id as the 'id' for legacy app compatibility. 
+    // The app maps bulkDto.id to its internal storage, so we send TMDB ID in that field.
     const bulkTVShows = shows.map(show => {
         return {
             ...show,
-            seasons: seasons.filter(s => s.show_id === show.id),
-            episodes: episodes.filter(e => e.show_id === show.id)
+            id: show.tmdb_id, // OVERRIDE: App expects this to be the TMDB ID
+            seasons: seasons.filter(s => s.show_id === show.tmdb_id).map(s => ({ ...s, show_id: show.tmdb_id })),
+            episodes: episodes.filter(e => e.show_id === show.tmdb_id).map(e => ({
+                ...e,
+                show_id: show.tmdb_id,
+                // Fallback: Use updated_at if modified_time is missing or 0
+                modified_time: e.modified_time && e.modified_time !== '0' ? e.modified_time : e.updated_at
+            }))
         };
     });
 
