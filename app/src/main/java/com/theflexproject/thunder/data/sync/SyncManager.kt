@@ -138,7 +138,7 @@ class SyncManager @Inject constructor(
         val lastSync = getLastSyncString()
         
         var offset = 0
-        val limit = 50
+        val limit = 1000
         var hasMore = true
         var totalSaved = 0
         
@@ -182,7 +182,7 @@ class SyncManager @Inject constructor(
         val lastSync = getLastSyncString()
         
         var offset = 0
-        val limit = 50
+        val limit = 1000
         var hasMore = true
         var totalShowsSaved = 0
         
@@ -203,12 +203,15 @@ class SyncManager @Inject constructor(
                          try {
                              if (bulkDto.episodes.isNotEmpty()) {
                                  val episodeEntities = bulkDto.episodes.toEpisodes()
+                                 // Bilingual v2: Revert to using bulkDto.id for show_id
+                                 // The backend will send tmdb_id in the 'id' field
                                  episodeEntities.forEach { it.show_id = bulkDto.id.toLong() }
                                  tvShowRepository.saveAllEpisodes(episodeEntities)
                              }
                              
                              if (bulkDto.seasons.isNotEmpty()) {
                                  val seasonEntities = bulkDto.seasons.toSeasonDetails()
+                                 // Bilingual v2: Revert to using bulkDto.id for show_id
                                  seasonEntities.forEach { it.show_id = bulkDto.id.toLong() }
                                  tvShowRepository.saveAllSeasonDetails(seasonEntities)
                              }

@@ -77,7 +77,12 @@ fun DetailScreen(
                 TopAppBar(
                     title = { 
                         Text(
-                            text = if (uiState.isMovie) uiState.movie?.title ?: "Movie" else uiState.tvShow?.name ?: "TV Show",
+                            text = if (uiState.isMovie) {
+                                val movie = uiState.movie
+                                if (movie?.original_language == "id") movie.original_title ?: movie.title ?: "Movie" else movie?.title ?: "Movie"
+                            } else {
+                                uiState.tvShow?.name ?: "TV Show"
+                            },
                             color = MaterialTheme.colorScheme.onSurface
                         ) 
                     },
@@ -123,7 +128,7 @@ fun DetailScreen(
                                             uiState.season
                                         )
                                     }
-                                },
+                                }, 
                                 onShare = {
                                     activity?.let {
                                         com.theflexproject.thunder.player.PlayerUtils.share(
@@ -289,7 +294,7 @@ fun DetailInfo(uiState: DetailUiState, onClick: () -> Unit) {
     val episode = uiState.episode
     
     val title = if (uiState.isMovie) {
-        movie?.title
+        if (movie?.original_language == "id") movie.original_title ?: movie.title else movie?.title
     } else {
         if (uiState.season != null && uiState.episode != null) {
             "${tvShow?.name} - S${uiState.season?.season_number}E${uiState.episode?.episode_number}"

@@ -463,7 +463,9 @@ public class PlayerFragment extends BaseFragment
                 player.seekTo(startItemIndex, startPosition);
             }
             player.addListener(new PlayerEventListener());
-            AdHelper.loadReward(mActivity, mActivity, player, playerView);
+            if (player.getPlayWhenReady()) {
+                AdHelper.loadReward(mActivity, mActivity, player, playerView);
+            }
         }
     }
     @OptIn(markerClass = UnstableApi.class)

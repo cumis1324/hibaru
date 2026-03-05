@@ -110,7 +110,7 @@ fun MediaGridItem(
     }
     
     val title = when (item) {
-        is Movie -> item.title
+        is Movie -> if (item.original_language == "id") item.original_title ?: item.title else item.title
         is TVShow -> item.name
         else -> ""
     }

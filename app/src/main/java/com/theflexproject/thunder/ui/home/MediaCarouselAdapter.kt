@@ -112,7 +112,7 @@ class MediaCarouselAdapter(
 
             when (item) {
                 is Movie -> {
-                    title = item.title ?: item.file_name
+                    title = if (item.original_language == "id") item.original_title ?: item.title ?: item.file_name else (item.title ?: item.file_name)
                     posterPath = item.poster_path
                     backdropPath = item.backdrop_path
                     voteAverage = item.vote_average
@@ -135,10 +135,10 @@ class MediaCarouselAdapter(
                 }
             }
 
-            if (year != null) {
+            if (year != null && title != null) {
                 name?.text = "$title ($year)"
             } else {
-                name?.text = title
+                name?.text = title ?: ""
             }
 
             if (voteAverage != 0.0) {
