@@ -126,6 +126,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                     SettingsSection.MAIN -> "Settings"
                     SettingsSection.AUDIO -> "Audio Track"
                     SettingsSection.SPEED -> "Playback Speed"
+                    SettingsSection.RESIZE -> "Resize Mode"
                 }
 
                 Text(
@@ -141,7 +142,8 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                         SettingsSection.MAIN -> {
                             MainSettingsMenu(
                                 onAudioClick = { currentSection = SettingsSection.AUDIO },
-                                onSpeedClick = { currentSection = SettingsSection.SPEED }
+                                onSpeedClick = { currentSection = SettingsSection.SPEED },
+                                onResizeClick = { currentSection = SettingsSection.RESIZE }
                             )
                         }
                         SettingsSection.AUDIO -> {
@@ -166,6 +168,29 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                                 }
                             )
                         }
+                        SettingsSection.RESIZE -> {
+                            val playerFragment = parentFragment as? PlayerFragment
+                            val currentResizeMode = playerFragment?.getCurrentResizeMode() ?: 0
+                            val resizeModes = listOf(
+                                "Original (Fit)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT,
+                                "Stretch" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL,
+                                "Fill (Zoom)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                            )
+                            SubSettingsList(
+                                items = resizeModes.map { it.first },
+                                activeItem = when(currentResizeMode) {
+                                    androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
+                                    androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Fill (Zoom)"
+                                    else -> "Original (Fit)"
+                                },
+                                icon = Icons.Default.Settings,
+                                onItemSelected = { label ->
+                                    val mode = resizeModes.find { it.first == label }?.second ?: 0
+                                    playerFragment?.setResizeMode(mode)
+                                    onDismiss()
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -173,8 +198,8 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
     }
 
     @Composable
-    fun MainSettingsMenu(onAudioClick: () -> Unit, onSpeedClick: () -> Unit) {
-        val focusRequesters = remember { List(2) { FocusRequester() } }
+    fun MainSettingsMenu(onAudioClick: () -> Unit, onSpeedClick: () -> Unit, onResizeClick: () -> Unit) {
+        val focusRequesters = remember { List(3) { FocusRequester() } }
         
         LaunchedEffect(Unit) {
             focusRequesters[0].requestFocus()
@@ -192,6 +217,12 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                 icon = Icons.Default.PlayArrow,
                 focusRequester = focusRequesters[1],
                 onClick = onSpeedClick
+            )
+            SettingMenuTvItem(
+                label = "Resize Mode",
+                icon = Icons.Default.Settings,
+                focusRequester = focusRequesters[2],
+                onClick = onResizeClick
             )
         }
     }
@@ -346,7 +377,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
     }
 
     enum class SettingsSection {
-        MAIN, AUDIO, SPEED
+        MAIN, AUDIO, SPEED, RESIZE
     }
 
     companion object {

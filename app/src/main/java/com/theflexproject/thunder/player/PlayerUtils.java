@@ -197,6 +197,7 @@ public class PlayerUtils {
 
     public static void saveResume(Player player, String tmdbId) {
         long startPosition = Math.max(0, player.getContentPosition());
+        long duration = player.getDuration();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
         if (tmdbId != null) {
@@ -206,6 +207,10 @@ public class PlayerUtils {
                 userMap.put("lastPosition", startPosition);
                 userMap.put("lastPlayed", currentDateTime);
                 userReference.setValue(userMap);
+
+                // Populate Google TV "Continue Watching" row
+                // This is also handled in real-time by PlayerFragment.updateWatchNext()
+                android.util.Log.d("PlayerUtils", "Progress saved for " + tmdbId + " at " + startPosition + "ms");
             }
         }
     }

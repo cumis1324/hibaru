@@ -43,23 +43,5 @@ class MyApplication : Application(), Configuration.Provider {
         
         // Initialize Firebase Analytics
         FirebaseAnalytics.getInstance(this)
-
-        // Initialize TV Channel Sync (periodic) - LOCAL ONLY
-        val tvChannelRequest = PeriodicWorkRequestBuilder<TvChannelSyncWorker>(24, TimeUnit.HOURS)
-            .build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "TvChannelSync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            tvChannelRequest
-        )
-        
-        // Initialize Engage SDK Sync (periodic) - LOCAL ONLY
-        val engageRequest = PeriodicWorkRequestBuilder<EngageSyncWorker>(24, TimeUnit.HOURS)
-            .build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "EngageSync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            engageRequest
-        )
     }
 }

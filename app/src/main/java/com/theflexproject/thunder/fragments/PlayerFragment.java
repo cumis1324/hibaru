@@ -48,6 +48,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.animation.ValueAnimator;
 import android.view.animation.DecelerateInterpolator;
+import android.media.AudioManager;
+import android.view.Window;
+import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -174,6 +177,11 @@ public class PlayerFragment extends BaseFragment
     private String randomUrl;
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
+    private boolean isLocked = false;
+    private int currentResizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT;
+    private ImageButton btnLock;
+    private View judulUtama, settingContainer, middleControls, bottomControls;
+
     public PlayerFragment() {
         // Default constructor
     }
@@ -298,6 +306,22 @@ public class PlayerFragment extends BaseFragment
         bufferText = view.findViewById(R.id.buffer_text);
 
         customControls = playerView.findViewById(R.id.custom_controlss);
+        judulUtama = customControls.findViewById(R.id.judulUtama);
+        settingContainer = customControls.findViewById(R.id.setting);
+        middleControls = customControls.findViewById(R.id.middle_controls);
+        bottomControls = customControls.findViewById(R.id.player_timer).getParent().getParent() instanceof View
+                ? (View) customControls.findViewById(R.id.player_timer).getParent().getParent()
+                : null;
+
+        btnLock = customControls.findViewById(R.id.btn_lock);
+        if (!isTVDevice(mActivity)) {
+            btnLock.setVisibility(View.VISIBLE);
+            btnLock.setOnClickListener(v -> toggleLock());
+        } else {
+            btnLock.setVisibility(View.GONE);
+        }
+
+        loadResizeMode();
         playPauseButton = customControls.findViewById(R.id.btn_play_pause);
         seekBar = customControls.findViewById(R.id.seek_bar);
         timer = customControls.findViewById(R.id.player_timer);
@@ -407,7 +431,7 @@ public class PlayerFragment extends BaseFragment
 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                if (isBuffering)
+                if (isLocked || isBuffering)
                     return false;
                 // Tentukan area tap: kiri untuk rewind, kanan untuk fast forward
                 float screenWidth = playerView.getWidth();
@@ -417,6 +441,24 @@ public class PlayerFragment extends BaseFragment
                     fastForward(player, ff);
                 }
                 return true; // Menandakan double-tap berhasil diproses
+            }
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                if (isLocked || isTVDevice(mActivity) || !isFullscreen)
+                    return false;
+
+                float screenWidth = playerView.getWidth();
+                float screenHeight = playerView.getHeight();
+
+                if (e1.getX() < screenWidth / 2) {
+                    // Left side: Brightness
+                    adjustBrightness(distanceY / screenHeight);
+                } else {
+                    // Right side: Volume
+                    adjustVolume(distanceY / screenHeight);
+                }
+                return true;
             }
 
             @Override
@@ -505,7 +547,9 @@ public class PlayerFragment extends BaseFragment
 
     @Override
     public void onVisibilityChange(int visibility) {
-        // Handle UI visibility change
+        if (visibility == View.VISIBLE && isLocked) {
+            updateLockUI();
+        }
     }
 
     @Override
@@ -668,6 +712,9 @@ public class PlayerFragment extends BaseFragment
                 isBuffering = false;
                 imageView.setVisibility(View.GONE);
                 customBufferingIndicator.setVisibility(View.GONE);
+                if (isTVDevice(mActivity) && tmdbId != null) {
+                    com.theflexproject.thunder.utils.WatchNextHelper.INSTANCE.removeFromWatchNext(mActivity, tmdbId);
+                }
             }
         }
 
@@ -1016,6 +1063,81 @@ public class PlayerFragment extends BaseFragment
         animator.setDuration(300);
         animator.setInterpolator(new DecelerateInterpolator());
         animator.start();
+    }
+
+    public void toggleLock() {
+        isLocked = !isLocked;
+        updateLockUI();
+    }
+
+    private void updateLockUI() {
+        if (isLocked) {
+            btnLock.setImageResource(R.drawable.ic_lock);
+            judulUtama.setVisibility(View.INVISIBLE);
+            settingContainer.setVisibility(View.INVISIBLE);
+
+            if (middleControls != null)
+                middleControls.setVisibility(View.INVISIBLE);
+            if (bottomControls != null)
+                bottomControls.setVisibility(View.INVISIBLE);
+
+        } else {
+            btnLock.setImageResource(R.drawable.ic_unlock);
+            judulUtama.setVisibility(View.VISIBLE);
+            settingContainer.setVisibility(View.VISIBLE);
+
+            if (middleControls != null)
+                middleControls.setVisibility(View.VISIBLE);
+            if (bottomControls != null)
+                bottomControls.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void adjustVolume(float percent) {
+        AudioManager audioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int delta = (int) (percent * maxVolume * 1.2); // Sensitivity factor
+        int newVolume = Math.max(0, Math.min(maxVolume, currentVolume + delta));
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI);
+    }
+
+    private void adjustBrightness(float percent) {
+        Window window = mActivity.getWindow();
+        WindowManager.LayoutParams layoutParams = window.getAttributes();
+        float currentBrightness = layoutParams.screenBrightness;
+        if (currentBrightness < 0)
+            currentBrightness = 0.5f; // Initial default
+
+        float newBrightness = Math.max(0.01f, Math.min(1.0f, currentBrightness + (percent * 1.2f)));
+        layoutParams.screenBrightness = newBrightness;
+        window.setAttributes(layoutParams);
+    }
+
+    public void setResizeMode(int mode) {
+        this.currentResizeMode = mode;
+        if (playerView != null) {
+            playerView.setResizeMode(mode);
+        }
+        SharedPreferences.Editor editor = mActivity.getSharedPreferences("PlayerSettings", Context.MODE_PRIVATE).edit();
+        editor.putInt("resize_mode", mode);
+        editor.apply();
+    }
+
+    private void loadResizeMode() {
+        SharedPreferences prefs = mActivity.getSharedPreferences("PlayerSettings", Context.MODE_PRIVATE);
+        currentResizeMode = prefs.getInt("resize_mode", androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        if (playerView != null) {
+            playerView.setResizeMode(currentResizeMode);
+        }
+    }
+
+    public int getCurrentResizeMode() {
+        return currentResizeMode;
+    }
+
+    public boolean isLocked() {
+        return isLocked;
     }
 
 }

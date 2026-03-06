@@ -96,10 +96,10 @@ class TvChannelSyncWorker @AssistedInject constructor(
                 android.util.Log.d(TAG, "Inserted TV Show: ${show.name}, uri: $uri")
             }
 
-            Log.d(TAG, "TV Channel Sync Finished successfully")
+            Log.d(TAG, "TV Channel Sync Finished successfully. Added ${topMovies.size} movies and ${topShows.size} shows.")
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Error syncing TV channel", e)
+            Log.e(TAG, "Error syncing TV channel: ${e.message}", e)
             Result.retry()
         }
     }
@@ -164,6 +164,12 @@ class TvChannelSyncWorker @AssistedInject constructor(
             }
         } else {
             android.util.Log.d(TAG, "Using existing channelId: $channelId")
+        }
+        
+        // Always request browsable to ensure it's visible in "Customise Channels"
+        if (channelId != -1L) {
+            android.util.Log.d(TAG, "Requesting channel browsable (persistent): $channelId")
+            TvContractCompat.requestChannelBrowsable(applicationContext, channelId)
         }
         
         return channelId

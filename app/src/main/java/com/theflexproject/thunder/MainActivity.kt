@@ -148,6 +148,12 @@ class MainActivity : AppCompatActivity() {
                 putInt("videoId", videoId)
                 putBoolean("isMovie", isMovie)
             })
+        } else if (data.scheme == "nfgplus" && data.host == "home") {
+            android.util.Log.d("DeepLink", "Home link received")
+            // Already at home or handle navigation to home specifically if deep linked from elsewhere
+            if (navController.currentDestination?.id != R.id.homeFragment) {
+                // navController.navigate(R.id.homeFragment) // Optional: enforce home
+            }
         } else if (data.scheme == "https" && data.path?.contains("reviews.html") == true) {
             val itemId = data.getQueryParameter("id")?.toIntOrNull() ?: return
             val itemType = data.getQueryParameter("type")

@@ -142,6 +142,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     SettingsSection.MAIN -> "Settings"
                     SettingsSection.AUDIO -> "Select Audio Track"
                     SettingsSection.SPEED -> "Playback Speed"
+                    SettingsSection.RESIZE -> "Resize Mode"
                 }
 
                 Text(
@@ -169,6 +170,30 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                                         value = currentSpeed,
                                         icon = Icons.Default.PlayArrow,
                                         onClick = { currentSection = SettingsSection.SPEED }
+                                    )
+                                    val playerFragment = parentFragment as? PlayerFragment
+                                    val currentResizeMode = playerFragment?.getCurrentResizeMode() ?: 0
+                                    val resizeLabel = when(currentResizeMode) {
+                                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
+                                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Fill (Zoom)"
+                                        else -> "Original (Fit)"
+                                    }
+                                    SettingMenuEntry(
+                                        label = "Resize Mode",
+                                        value = resizeLabel,
+                                        icon = Icons.Default.Settings,
+                                        onClick = { currentSection = SettingsSection.RESIZE }
+                                    )
+                                    
+                                    val isLocked = playerFragment?.isLocked() ?: false
+                                    SettingMenuEntry(
+                                        label = "Screen Lock",
+                                        value = if (isLocked) "Locked" else "Unlocked",
+                                        icon = Icons.Default.Settings, // TODO: Use lock icon if available in material icons
+                                        onClick = { 
+                                            playerFragment?.toggleLock()
+                                            onDismiss()
+                                        }
                                     )
                             }
                         }
@@ -201,6 +226,28 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                                         icon = Icons.Default.PlayArrow,
                                         onClick = {
                                             applyPlaybackSpeed(speed, player)
+                                            onDismiss()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        SettingsSection.RESIZE -> {
+                            val playerFragment = parentFragment as? PlayerFragment
+                            val currentResizeMode = playerFragment?.getCurrentResizeMode() ?: 0
+                            val resizeModes = listOf(
+                                "Original (Fit)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT,
+                                "Stretch" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL,
+                                "Fill (Zoom)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                            )
+                            Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                                resizeModes.forEach { (label, mode) ->
+                                    SettingItem(
+                                        label = label,
+                                        isActive = mode == currentResizeMode,
+                                        icon = Icons.Default.Settings,
+                                        onClick = {
+                                            playerFragment?.setResizeMode(mode)
                                             onDismiss()
                                         }
                                     )
@@ -309,7 +356,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     enum class SettingsSection {
-        MAIN, AUDIO, SPEED
+        MAIN, AUDIO, SPEED, RESIZE
     }
 
     companion object {

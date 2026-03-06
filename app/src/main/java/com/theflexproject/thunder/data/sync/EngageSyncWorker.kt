@@ -10,8 +10,12 @@ import com.google.android.engage.service.AppEngagePublishClient
 import com.google.android.engage.video.datamodel.MovieEntity
 import com.google.android.engage.video.datamodel.TvShowEntity
 import com.google.android.engage.common.datamodel.RecommendationCluster
+import com.google.android.engage.common.datamodel.ContinuationCluster
 import com.google.android.engage.common.datamodel.Image
 import com.google.android.engage.service.PublishRecommendationClustersRequest
+import com.google.android.engage.service.PublishContinuationClusterRequest
+import androidx.tvprovider.media.tv.TvContractCompat
+import androidx.tvprovider.media.tv.WatchNextProgram
 import com.theflexproject.thunder.repository.MovieRepository
 import com.theflexproject.thunder.repository.TVShowRepository
 import dagger.assisted.Assisted
@@ -38,6 +42,9 @@ class EngageSyncWorker @AssistedInject constructor(
 
             // Publish Recommendations (Trending Content)
             publishTrendingRecommendations(publishClient)
+
+            // Publish Continuation (Watch Next / Continue Watching)
+            publishContinuation(publishClient)
 
             Log.d(TAG, "Engage SDK Sync Finished successfully")
             Result.success()
@@ -103,6 +110,55 @@ class EngageSyncWorker @AssistedInject constructor(
                 .addRecommendationCluster(cluster)
                 .build()
             publishClient.publishRecommendationClusters(request)
+        }
+    }
+
+    private fun publishContinuation(publishClient: AppEngagePublishClient) {
+        try {
+            val cursor = applicationContext.contentResolver.query(
+                TvContractCompat.WatchNextPrograms.CONTENT_URI,
+                null, null, null, null
+            )
+
+            val builder = ContinuationCluster.Builder()
+            var count = 0
+
+            cursor?.use {
+                while (it.moveToNext()) {
+                    val program = WatchNextProgram.fromCursor(it)
+                    val isMovie = program.type == TvContractCompat.WatchNextPrograms.TYPE_MOVIE
+                    
+                    val entity = if (isMovie) {
+                        MovieEntity.Builder()
+                            .setEntityId(program.internalProviderId ?: program.id.toString())
+                            .setName(program.title ?: "Unknown")
+                            .setPlayBackUri(program.intentUri)
+                            .addPosterImage(Image.Builder().setImageUri(program.posterArtUri).build())
+                            .setLastEngagementTimeMillis(program.lastEngagementTimeUtcMillis)
+                            .build()
+                    } else {
+                        TvShowEntity.Builder()
+                            .setEntityId(program.internalProviderId ?: program.id.toString())
+                            .setName(program.title ?: "Unknown")
+                            .setPlayBackUri(program.intentUri)
+                            .addPosterImage(Image.Builder().setImageUri(program.posterArtUri).build())
+                            .setLastEngagementTimeMillis(program.lastEngagementTimeUtcMillis)
+                            .build()
+                    }
+                    builder.addEntity(entity)
+                    count++
+                }
+            }
+
+            if (count > 0) {
+                Log.d(TAG, "Publishing ContinuationCluster with $count entities")
+                val request = PublishContinuationClusterRequest.Builder()
+                    .setContinuationCluster(builder.build())
+                    .build()
+                publishClient.publishContinuationCluster(request)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error publishing ContinuationCluster", e)
         }
     }
 }

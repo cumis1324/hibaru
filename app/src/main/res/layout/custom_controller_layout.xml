@@ -98,13 +98,30 @@
             android:background="@drawable/button_selector"
             android:padding="15dp"/>
     </LinearLayout>
+    <ImageButton
+        android:focusable="true"
+        android:clickable="true"
+        android:id="@+id/btn_lock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="20dp"
+        android:background="@drawable/button_selector"
+        android:src="@drawable/ic_unlock"
+        android:padding="15dp"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
     <LinearLayout
+        android:id="@+id/middle_controls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
         android:layout_centerInParent="true"
         >
+        
         <ImageButton
             android:focusable="true"
             android:clickable="true"

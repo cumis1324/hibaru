@@ -17,6 +17,13 @@ import com.theflexproject.thunder.data.sync.SyncManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import com.google.firebase.messaging.FirebaseMessaging
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.ExistingPeriodicWorkPolicy
+import com.theflexproject.thunder.data.sync.TvChannelSyncWorker
+import com.theflexproject.thunder.data.sync.EngageSyncWorker
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -94,6 +101,33 @@ class SyncActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 syncManager.syncAll()
+                
+                // Initialize TV Channel Sync (periodic) - LOCAL ONLY
+                val tvChannelRequest = PeriodicWorkRequestBuilder<TvChannelSyncWorker>(24, TimeUnit.HOURS)
+                    .build()
+                WorkManager.getInstance(this@SyncActivity).enqueueUniquePeriodicWork(
+                    "TvChannelSync",
+                    ExistingPeriodicWorkPolicy.REPLACE,
+                    tvChannelRequest
+                )
+                
+                // Initialize Engage SDK Sync (periodic) - LOCAL ONLY
+                val engageRequest = PeriodicWorkRequestBuilder<EngageSyncWorker>(24, TimeUnit.HOURS)
+                    .build()
+                WorkManager.getInstance(this@SyncActivity).enqueueUniquePeriodicWork(
+                    "EngageSync",
+                    ExistingPeriodicWorkPolicy.REPLACE,
+                    engageRequest
+                )
+                
+                // Also trigger immediate sync for TV Recommendations
+                if (isTVDevice) {
+                    val tvOneTime = OneTimeWorkRequestBuilder<TvChannelSyncWorker>().build()
+                    val engageOneTime = OneTimeWorkRequestBuilder<EngageSyncWorker>().build()
+                    WorkManager.getInstance(this@SyncActivity).enqueue(tvOneTime)
+                    WorkManager.getInstance(this@SyncActivity).enqueue(engageOneTime)
+                }
+
                 navigateToMain()
             } catch (e: Exception) {
                 showError("Gagal menyinkronkan data: ${e.message}")
