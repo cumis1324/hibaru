@@ -3,8 +3,6 @@ package com.theflexproject.thunder.fragments;
 import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 import static com.theflexproject.thunder.player.PlayerListener.fastForward;
 import static com.theflexproject.thunder.player.PlayerListener.rewind;
-import static com.theflexproject.thunder.player.PlayerListener.showSettingsDialog;
-import static com.theflexproject.thunder.player.PlayerListener.showSubtitleSelectionDialog;
 import static com.theflexproject.thunder.player.PlayerListener.togglePlayback;
 import static com.theflexproject.thunder.player.PlayerUtils.createMediaSourceFactory;
 import static com.theflexproject.thunder.player.PlayerUtils.enterFullscreen;
@@ -48,6 +46,8 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.animation.ValueAnimator;
+import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -58,6 +58,12 @@ import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.theflexproject.thunder.adapter.SourceAdapter;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.util.UnstableApi;
@@ -143,13 +149,12 @@ public class PlayerFragment extends BaseFragment
     private MappingTrackSelector.MappedTrackInfo mappedTrackInfo;
     private ImageView imageView;
     private RelativeLayout customBufferingIndicator;
+    private FrameLayout detailContainer;
     private View topNavigationView;
     private ViewGroup rootView;
-    private Spinner spinnerAudioTrack, spinnerSource;
     private List<MyMedia> sourceList, similarOrEpisode;
     private GestureDetector gestureDetector;
     PictureInPictureParams pipParams;
-    View dialogView;
     private Movie movieDetails;
     private TVShow tvShowDetails;
     private TVShowSeasonDetails season;
@@ -161,6 +166,7 @@ public class PlayerFragment extends BaseFragment
     private NestedScrollView nestedScrollView;
     private Episode episode;
     private boolean isSubscribed;
+    private boolean isBuffering = true;
 
     private View decorView;
     private Intent intent;
@@ -279,10 +285,6 @@ public class PlayerFragment extends BaseFragment
     }
 
     private void initViews(View view) {
-        LayoutInflater inflater = getLayoutInflater();
-        dialogView = inflater.inflate(R.layout.dialog_setting, null);
-        spinnerAudioTrack = dialogView.findViewById(R.id.spinnerAudioTrack);
-        spinnerSource = dialogView.findViewById(R.id.speed);
         playerFrame = view.findViewById(R.id.playerFrame);
         playerFrame.post(() -> {
             int width = playerFrame.getWidth(); // Lebar FrameLayout
@@ -323,6 +325,7 @@ public class PlayerFragment extends BaseFragment
                     .build();
         }
         similarView = view.findViewById(R.id.similarAndEpisode);
+        detailContainer = view.findViewById(R.id.detail_container);
         if (isTVDevice(mActivity)) {
             topNavigationView = mActivity.findViewById(R.id.top_navigation);
             if (topNavigationView != null) {
@@ -354,6 +357,18 @@ public class PlayerFragment extends BaseFragment
 
     private void setControlListeners() {
         source.setOnClickListener(v -> showSources());
+        cc.setOnClickListener(v -> {
+            if (mappedTrackInfo != null) {
+                showSubtitles();
+            } else {
+                Toast.makeText(mActivity, "Loading streams, please wait...", Toast.LENGTH_SHORT).show();
+            }
+        });
+        setting.setOnClickListener(v -> {
+            if (player != null) {
+                showSettings();
+            }
+        });
         if (btn_info != null) {
             btn_info.setOnClickListener(v -> showInfoSideSheet());
         }
@@ -392,6 +407,8 @@ public class PlayerFragment extends BaseFragment
 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
+                if (isBuffering)
+                    return false;
                 // Tentukan area tap: kiri untuk rewind, kanan untuk fast forward
                 float screenWidth = playerView.getWidth();
                 if (e.getX() < screenWidth / 2) {
@@ -409,6 +426,8 @@ public class PlayerFragment extends BaseFragment
             }
         });
 
+        // Paksa listener sentuhan aktif sejak awal agar menu bisa muncul saat Loading
+        playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
     }
 
     private void initPlayerState(Bundle savedInstanceState) {
@@ -463,11 +482,13 @@ public class PlayerFragment extends BaseFragment
                 player.seekTo(startItemIndex, startPosition);
             }
             player.addListener(new PlayerEventListener());
+            btn_info.requestFocus();
             if (player.getPlayWhenReady()) {
                 AdHelper.loadReward(mActivity, mActivity, player, playerView);
             }
         }
     }
+
     @OptIn(markerClass = UnstableApi.class)
     private void setRenderersFactory(
             ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
@@ -583,9 +604,7 @@ public class PlayerFragment extends BaseFragment
         @Override
         public void onTracksChanged(Tracks tracks) {
             mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-            cc.setOnClickListener(v -> showSubtitleSelectionDialog(mActivity, mappedTrackInfo, trackSelector));
             cc.setImageResource(subOn(trackSelector) ? R.drawable.ic_cc : R.drawable.ic_cc_filled);
-            setting.setOnClickListener(v -> loadSetting());
             Player.Listener.super.onTracksChanged(tracks);
         }
 
@@ -603,35 +622,53 @@ public class PlayerFragment extends BaseFragment
         @Override
         public void onPlaybackStateChanged(@Player.State int playbackState) {
             if (playbackState == Player.STATE_READY) {
+                isBuffering = false;
                 mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-                cc.setOnClickListener(v -> showSubtitleSelectionDialog(mActivity, mappedTrackInfo, trackSelector));
                 startSeekBarUpdate();
                 imageView.setVisibility(View.GONE);
                 customBufferingIndicator.setVisibility(View.GONE);
                 ff.setOnClickListener(v -> fastForward(player, ff));
                 bw.setOnClickListener(v -> rewind(player, bw));
+
+                // Aktifkan kembali kontrol playback
+                playPauseButton.setEnabled(true);
+                playPauseButton.setAlpha(1.0f);
+                seekBar.setEnabled(true);
+                seekBar.setAlpha(1.0f);
+                ff.setEnabled(true);
+                ff.setAlpha(1.0f);
+                bw.setEnabled(true);
+                bw.setAlpha(1.0f);
+
                 if (isTVDevice(mActivity)) {
                     movietitle.setVisibility(View.VISIBLE);
+                    if (playPauseButton != null) {
+                        playPauseButton.requestFocus();
+                    }
                 }
-
-                playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
-            }
-            if (playbackState != Player.STATE_READY) {
+            } else if (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_IDLE) {
+                isBuffering = true;
                 customBufferingIndicator.setVisibility(View.VISIBLE);
                 imageView.setVisibility(View.VISIBLE);
-            }
-            if (playbackState == Player.STATE_ENDED) {
+
+                // Matikan kontrol playback agar tidak mengganggu loading
+                playPauseButton.setEnabled(false);
+                playPauseButton.setAlpha(0.5f);
+                seekBar.setEnabled(false);
+                seekBar.setAlpha(0.5f);
+                ff.setEnabled(false);
+                ff.setAlpha(0.5f);
+                bw.setEnabled(false);
+                bw.setAlpha(0.5f);
+
+                if (isTVDevice(mActivity) && btn_info != null) {
+                    btn_info.requestFocus();
+                }
+            } else if (playbackState == Player.STATE_ENDED) {
+                isBuffering = false;
                 imageView.setVisibility(View.GONE);
                 customBufferingIndicator.setVisibility(View.GONE);
-
             }
-            if (playbackState == Player.STATE_BUFFERING) {
-
-                // Tampilkan indikator buffering
-                customBufferingIndicator.setVisibility(View.VISIBLE);
-                imageView.setVisibility(View.VISIBLE);
-            }
-
         }
 
         @Override
@@ -646,9 +683,40 @@ public class PlayerFragment extends BaseFragment
 
     }
 
-    private void loadSetting() {
-        showSettingsDialog(mActivity, spinnerAudioTrack, spinnerSource, dialogView, trackSelector, mappedTrackInfo,
-                player);
+    private void showSubtitles() {
+        if (mappedTrackInfo == null)
+            return;
+
+        if (isTVDevice(mActivity)) {
+            SubtitleSideSheetDialogFragment subtitleSheet = SubtitleSideSheetDialogFragment.Companion.newInstance(
+                    mappedTrackInfo,
+                    trackSelector);
+            subtitleSheet.show(getChildFragmentManager(), "subtitle_side_sheet");
+        } else {
+            SubtitleBottomSheetDialogFragment subtitleSheet = SubtitleBottomSheetDialogFragment.Companion.newInstance(
+                    mappedTrackInfo,
+                    trackSelector);
+            subtitleSheet.show(getChildFragmentManager(), "subtitle_bottom_sheet");
+        }
+    }
+
+    private void showSettings() {
+        if (player == null)
+            return;
+
+        if (isTVDevice(mActivity)) {
+            SettingsSideSheetDialogFragment settingsSheet = SettingsSideSheetDialogFragment.Companion.newInstance(
+                    trackSelector,
+                    mappedTrackInfo,
+                    player);
+            settingsSheet.show(getChildFragmentManager(), "settings_side_sheet");
+        } else {
+            SettingsBottomSheetDialogFragment settingsSheet = SettingsBottomSheetDialogFragment.Companion.newInstance(
+                    trackSelector,
+                    mappedTrackInfo,
+                    player);
+            settingsSheet.show(getChildFragmentManager(), "settings_bottom_sheet");
+        }
     }
 
     @Override
@@ -664,48 +732,70 @@ public class PlayerFragment extends BaseFragment
     }
 
     private void showSources() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle("Select Source");
-        List<String> sourcesOptions = new ArrayList<>();
-        for (MyMedia source : sourceList) {
-            if (source instanceof Movie) {
-                String qualityStr = MovieQualityExtractor.extractQualtiy(((Movie) source).getFileName());
-                sourcesOptions.add(qualityStr);
-            } else if (source instanceof Episode) {
-                String qualityStr = MovieQualityExtractor.extractQualtiy(((Episode) source).getFileName());
-                sourcesOptions.add(qualityStr);
-            } else {
-                sourcesOptions.add("Unknown Source"); // Penanganan untuk tipe lain
-            }
+        if (sourceList == null || sourceList.isEmpty()) {
+            Toast.makeText(mActivity, "No sources available", Toast.LENGTH_SHORT).show();
+            return;
         }
-        final int[] selectedIndex = { 0 };
-        builder.setSingleChoiceItems(sourcesOptions.toArray(new String[0]), selectedIndex[0], (dialog, which) -> {
-            selectedIndex[0] = which; // Simpan indeks pilihan terbaru
-        });
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            MyMedia selectedSource = sourceList.get(selectedIndex[0]);
-            if (selectedSource instanceof Movie) {
-                String selectedUrl2 = ((Movie) selectedSource).getUrlString();
-                String newUrl = selectedUrl2.replaceAll(
-                        "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        randomUrl);
-                if (!Objects.equals(selectedUrl2, urlString)) {
-                    newSource();
-                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(newUrl));
-                }
-            } else if (selectedSource instanceof Episode) {
-                String selectedUrl2 = ((Episode) selectedSource).getUrlString();
-                String newUrl = selectedUrl2.replaceAll(
-                        "drive\\d*\\.nfgplusmirror\\.workers.dev",
-                        randomUrl);
-                if (!Objects.equals(selectedUrl2, urlString)) {
-                    newSource();
-                    new Handler(Looper.getMainLooper()).post(() -> initializePlayer(newUrl));
-                }
-            }
-        });
-        builder.create().show();
 
+        if (isTVDevice(mActivity)) {
+            // TV Strategy: Use Side Sheet
+            SourceSideSheetDialogFragment sourceSheet = SourceSideSheetDialogFragment.Companion.newInstance(
+                    sourceList,
+                    urlString,
+                    selectedSource -> {
+                        String selectedUrlRaw = "";
+                        if (selectedSource instanceof Movie)
+                            selectedUrlRaw = ((Movie) selectedSource).getUrlString();
+                        else if (selectedSource instanceof Episode)
+                            selectedUrlRaw = ((Episode) selectedSource).getUrlString();
+
+                        String newUrl = selectedUrlRaw.replaceAll("drive\\d*\\.nfgplusmirror\\.workers.dev", randomUrl);
+
+                        if (!Objects.equals(selectedUrlRaw, urlString)) {
+                            switchSource(newUrl);
+                            urlString = selectedUrlRaw;
+                        }
+                        return null;
+                    });
+            sourceSheet.show(getChildFragmentManager(), "source_side_sheet");
+        } else {
+            // Mobile Strategy: Use modern Compose-based Bottom Sheet
+            SourceBottomSheetDialogFragment sourceSheet = SourceBottomSheetDialogFragment.Companion.newInstance(
+                    sourceList,
+                    urlString,
+                    selectedSource -> {
+                        String selectedUrlRaw = "";
+                        if (selectedSource instanceof Movie)
+                            selectedUrlRaw = ((Movie) selectedSource).getUrlString();
+                        else if (selectedSource instanceof Episode)
+                            selectedUrlRaw = ((Episode) selectedSource).getUrlString();
+
+                        String newUrl = selectedUrlRaw.replaceAll("drive\\d*\\.nfgplusmirror\\.workers.dev", randomUrl);
+
+                        if (!Objects.equals(selectedUrlRaw, urlString)) {
+                            switchSource(newUrl);
+                            urlString = selectedUrlRaw;
+                        }
+                        return null;
+                    });
+            sourceSheet.show(getChildFragmentManager(), "source_bottom_sheet");
+        }
+    }
+
+    private void switchSource(String newUrl) {
+        if (player != null) {
+            long currentPos = player.getCurrentPosition();
+            boolean wasPlaying = player.getPlayWhenReady();
+
+            MediaItem mediaItem = MediaItem.fromUri(Uri.parse(newUrl));
+            player.setMediaItem(mediaItem, false); // false = don't reset position if possible
+            player.seekTo(currentPos);
+            player.prepare();
+            player.setPlayWhenReady(wasPlaying);
+
+            customBufferingIndicator.setVisibility(View.VISIBLE);
+            imageView.setVisibility(View.VISIBLE);
+        }
     }
 
     protected void newSource() {
@@ -783,10 +873,12 @@ public class PlayerFragment extends BaseFragment
             String yearCrop = year.substring(0, year.indexOf('-'));
             tmdbId = String.valueOf(movieDetails.getId());
             movietitle.setText(titleText + " (" + yearCrop + ")");
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container,
-                            com.theflexproject.thunder.ui.detail.DetailFragment.Companion.newInstance(movieId))
-                    .commit();
+            if (!isTVDevice(mActivity)) {
+                mActivity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container,
+                                com.theflexproject.thunder.ui.detail.DetailFragment.Companion.newInstance(movieId))
+                        .commit();
+            }
             if (movieDetails.getBackdropPath() != null) {
                 Glide.with(mActivity)
                         .load(TMDB_BACKDROP_IMAGE_BASE_URL + movieDetails.getBackdropPath())
@@ -830,11 +922,13 @@ public class PlayerFragment extends BaseFragment
 
             // Load DetailFragment with tvShowId (like movies do)
             Log.d(TAG, "loadSeriesDetails: Loading DetailFragment with tvShowId=" + tvShowDetails.getId());
-            mActivity.getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_container,
-                            com.theflexproject.thunder.ui.detail.DetailFragment.Companion
-                                    .newTvInstance(tvShowDetails.getId()))
-                    .commit();
+            if (!isTVDevice(mActivity)) {
+                mActivity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.detail_container,
+                                com.theflexproject.thunder.ui.detail.DetailFragment.Companion
+                                        .newTvInstance(tvShowDetails.getId()))
+                        .commit();
+            }
 
             if (episode != null) {
                 epstitle.setText("Season: " + seasonDetails.getSeasonNumber()
@@ -889,6 +983,39 @@ public class PlayerFragment extends BaseFragment
                     player.getCurrentPosition(),
                     player.getDuration());
         }
+    }
+
+    public void toggleSideSheetResize(boolean shrink) {
+        if (!isTVDevice(mActivity) || playerFrame == null)
+            return;
+
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int targetWidth = shrink ? (int) (screenWidth * 0.65) : screenWidth;
+        int startWidth = playerFrame.getWidth();
+
+        ValueAnimator animator = ValueAnimator.ofInt(startWidth, targetWidth);
+        animator.addUpdateListener(animation -> {
+            int val = (int) animation.getAnimatedValue();
+            ViewGroup.LayoutParams params = playerFrame.getLayoutParams();
+            params.width = val;
+            params.height = (int) (val / 16.0 * 9.0);
+            playerFrame.setLayoutParams(params);
+        });
+
+        // Detail container is only for mobile now
+        if (!isTVDevice(mActivity) && detailContainer != null) {
+            if (shrink) {
+                detailContainer.animate().alpha(0f).setDuration(200)
+                        .withEndAction(() -> detailContainer.setVisibility(View.GONE)).start();
+            } else {
+                detailContainer.setVisibility(View.VISIBLE);
+                detailContainer.animate().alpha(1f).setDuration(200).start();
+            }
+        }
+
+        animator.setDuration(300);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.start();
     }
 
 }

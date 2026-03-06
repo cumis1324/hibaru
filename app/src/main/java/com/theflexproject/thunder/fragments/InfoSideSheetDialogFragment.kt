@@ -31,11 +31,18 @@ class InfoSideSheetDialogFragment : DialogFragment() {
             params.gravity = Gravity.END
             params.width = (resources.displayMetrics.widthPixels * 0.4).toInt() // 40% width
             params.height = ViewGroup.LayoutParams.MATCH_PARENT
+            params.dimAmount = 0f
             window.attributes = params
             window.setBackgroundDrawableResource(android.R.color.transparent)
             // Add entry animation from right
             window.setWindowAnimations(android.R.style.Animation_InputMethod) 
         }
+        (parentFragment as? PlayerFragment)?.toggleSideSheetResize(true)
+    }
+
+    override fun onDismiss(dialog: android.content.DialogInterface) {
+        super.onDismiss(dialog)
+        (parentFragment as? PlayerFragment)?.toggleSideSheetResize(false)
     }
 
     override fun onCreateView(

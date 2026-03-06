@@ -1,6 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#80000000"
     android:id="@+id/custom_controlss">
 
@@ -23,9 +24,11 @@
             android:textColor="#CCCCCC"
             android:maxLines="2"
             android:textSize="20sp"
+            android:paddingVertical="15dp"
             android:textAlignment="viewStart"
             android:text="Kung Fu panda 4 (2024)"
             android:visibility="gone"
+            tools:visibility="visible"
             />
         <TextView
             android:id="@+id/playerEpsTitle"

@@ -70,6 +70,18 @@
             app:iconTintMode="add"
             android:elevation="4dp" />
 
+        <TextView
+            android:id="@+id/tv_gms_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Perangkat Anda tidak mendukung Google Play Services.\nSilakan gunakan perangkat yang mendukung untuk masuk."
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:fontFamily="@font/jost_medium"
+            android:visibility="gone" />
+
     </LinearLayout>
 
     <ProgressBar

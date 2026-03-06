@@ -23,46 +23,53 @@
             android:background="@color/black"
             app:resize_mode="fit"
             app:controller_layout_id="@layout/custom_controller_layout"
-            />
-        <ImageView
-            android:id="@+id/background_image"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scaleType="centerCrop"
-            android:src="@drawable/bd"
-            android:visibility="visible"
-            android:alpha="0.45"/>
-        <RelativeLayout
-            android:id="@+id/custom_buffering_indicator"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="visible"
-            android:background="#AA000000"
-            android:layout_centerInParent="true"> <!-- Semi-transparent background -->
-
-            <ProgressBar
-                android:id="@+id/buffer_progress"
-                style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Small"
-                android:layout_width="wrap_content"
+            >
+            <ImageView
+                android:id="@+id/background_image"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true" />
-            <TextView
-                android:id="@+id/buffer_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/buffer_progress"
-                android:layout_marginTop="16dp"
-                android:text="Loading..."
+                android:scaleType="centerCrop"
+                android:src="@drawable/bd"
+                android:visibility="visible"
+                android:alpha="0.45"
+                android:clickable="false"
+                android:focusable="false"/>
+            <RelativeLayout
+                android:id="@+id/custom_buffering_indicator"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                android:background="#AA000000"
                 android:layout_centerInParent="true"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="16sp"
-                />
+                android:clickable="false"
+                android:focusable="false"> <!-- Semi-transparent background -->
 
-        </RelativeLayout>
+                <ProgressBar
+                    android:id="@+id/buffer_progress"
+                    style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true" />
+                <TextView
+                    android:id="@+id/buffer_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/buffer_progress"
+                    android:layout_marginTop="16dp"
+                    android:text="Loading..."
+                    android:layout_centerInParent="true"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    />
+
+            </RelativeLayout>
+        </androidx.media3.ui.PlayerView>
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:clickable="false"
+            android:focusable="false">
 
             <TextView
                 android:id="@+id/nfgpluslogo"

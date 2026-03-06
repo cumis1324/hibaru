@@ -1,5 +1,7 @@
 package com.theflexproject.thunder;
 
+import static android.view.View.GONE;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -35,11 +37,16 @@ import java.util.Objects;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import android.widget.TextView;
+
 public class SignInActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 9001;
 
     private Button googleSignInButton;
+    private TextView tvGmsError;
     private android.widget.ProgressBar progressBar;
 
     private FirebaseAuth firebaseAuth;
@@ -52,6 +59,8 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signin);
 
         googleSignInButton = findViewById(R.id.google_signin_button);
+        googleSignInButton.setVisibility(GONE);
+        tvGmsError = findViewById(R.id.tv_gms_error);
         progressBar = findViewById(R.id.progress_circular);
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -68,12 +77,21 @@ public class SignInActivity extends AppCompatActivity {
 
         setupWindow();
 
-        googleSignInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signInWithGoogle();
-            }
-        });
+        checkGmsAndSignIn();
+    }
+
+    private void checkGmsAndSignIn() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (resultCode == ConnectionResult.SUCCESS) {
+            signInWithGoogle();
+        } else {
+            progressBar.setVisibility(GONE);
+            googleSignInButton.setVisibility(GONE);
+            tvGmsError.setVisibility(View.VISIBLE);
+            Log.e("SignInActivity", "Google Play Services not available. Result code: " + resultCode);
+        }
     }
 
     private void setupWindow() {
@@ -99,7 +117,7 @@ public class SignInActivity extends AppCompatActivity {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
-                progressBar.setVisibility(View.GONE);
+                progressBar.setVisibility(GONE);
                 googleSignInButton.setEnabled(true);
                 Toast.makeText(this, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
@@ -112,7 +130,7 @@ public class SignInActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<com.google.firebase.auth.AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<com.google.firebase.auth.AuthResult> task) {
-                        progressBar.setVisibility(View.GONE);
+                        progressBar.setVisibility(GONE);
                         googleSignInButton.setEnabled(true);
 
                         if (task.isSuccessful()) {
