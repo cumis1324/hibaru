@@ -178,6 +178,7 @@ public class PlayerFragment extends BaseFragment
     private String vastUrl = "https://pubads.g.doubleclick.net/gampad/ads?iu=/23200225483/64&description_url=http%3A%2F%2Fwww.nfgplus.my.id&tfcd=0&npa=0&sz=400x300%7C640x480&gdfp_req=1&unviewed_position_start=1&output=vast&env=vp&impl=s&correlator=&vad_type=linear";
 
     private boolean isLocked = false;
+    private float volumeAccumulator = 0f;
     private int currentResizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT;
     private ImageButton btnLock;
     private View judulUtama, settingContainer, middleControls, bottomControls;
@@ -469,7 +470,10 @@ public class PlayerFragment extends BaseFragment
         });
 
         // Paksa listener sentuhan aktif sejak awal agar menu bisa muncul saat Loading
-        playerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+        playerView.setOnTouchListener((v, event) -> {
+            boolean handled = gestureDetector.onTouchEvent(event);
+            return handled || v.performClick();
+        });
     }
 
     private void initPlayerState(Bundle savedInstanceState) {
@@ -1097,9 +1101,17 @@ public class PlayerFragment extends BaseFragment
         AudioManager audioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
         int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        int delta = (int) (percent * maxVolume * 1.2); // Sensitivity factor
-        int newVolume = Math.max(0, Math.min(maxVolume, currentVolume + delta));
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI);
+
+        // Accumulate the scroll delta (percent is typically small)
+        volumeAccumulator += (percent * maxVolume * 1.5f); // Sensitivity factor
+
+        int delta = (int) volumeAccumulator;
+        if (delta != 0) {
+            int newVolume = Math.max(0, Math.min(maxVolume, currentVolume + delta));
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI);
+            // Deduct the applied delta from the accumulator
+            volumeAccumulator -= delta;
+        }
     }
 
     private void adjustBrightness(float percent) {

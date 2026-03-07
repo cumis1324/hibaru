@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
@@ -103,6 +105,7 @@ class SourceBottomSheetDialogFragment : BottomSheetDialogFragment() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(top = 12.dp, bottom = 24.dp)
             ) {
                 // handle bar dekoratif
@@ -129,13 +132,12 @@ class SourceBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                        .padding(horizontal = 8.dp)
                 ) {
-                    itemsIndexed(sources) { _, source ->
+                    sources.forEach { source ->
                         val url = when (source) {
                             is Movie -> source.url_string
                             is Episode -> source.url_string

@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
@@ -122,6 +124,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(top = 12.dp, bottom = 24.dp)
             ) {
                 // handle bar
@@ -198,8 +201,8 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                             }
                         }
                         SettingsSection.AUDIO -> {
-                            LazyColumn(modifier = Modifier.padding(horizontal = 8.dp).heightIn(max = 400.dp)) {
-                                itemsIndexed(audioTracks) { _, track ->
+                            Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                                audioTracks.forEach { track ->
                                     // Note: we don't easily have 'isActive' for audio without parsing label
                                     // but we can try to guess or just let user click.
                                     // For now, let's keep it simple as the original logic didn't show active check.
