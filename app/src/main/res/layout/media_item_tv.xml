@@ -27,6 +27,13 @@
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             tools:src="@color/light_blue_600" />
+        <View
+            android:id="@+id/progress_overlay2"
+            android:layout_width="0dp"
+            android:layout_gravity="bottom|start"
+            android:layout_height="6dp"
+            android:background="@color/blue"
+            android:visibility="gone" />
 
         <!-- Jellyfin Focus Overlay / Glow -->
         <View

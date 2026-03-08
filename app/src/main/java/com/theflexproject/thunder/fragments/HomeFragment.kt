@@ -81,6 +81,14 @@ class HomeFragment : Fragment() {
                         }
                         findNavController().navigate(R.id.action_homeFragment_to_playerFragment, bundle)
                     }
+                    is com.theflexproject.thunder.model.TVShowInfo.Episode -> {
+                        val bundle = Bundle().apply {
+                            putInt("videoId", item.id)
+                            putBoolean("isMovie", false)
+                            putInt("episodeId", item.id)
+                        }
+                        findNavController().navigate(R.id.action_homeFragment_to_playerFragment, bundle)
+                    }
                     is TVShow -> {
                         val bundle = Bundle().apply {
                             putInt("tvShowId", item.id)
@@ -188,6 +196,19 @@ class HomeFragment : Fragment() {
                 val year = item.first_air_date?.take(4) ?: ""
                 val rating = if (item.vote_average > 0) " | ${java.text.DecimalFormat("0.0").format(item.vote_average)} ★" else ""
                 metadata = "$year$rating"
+            }
+            is com.theflexproject.thunder.model.TVShowInfo.Episode -> {
+                title = "${item.show_name ?: ""} - ${item.name}"
+                // Use TVShow backdrop for the background
+                backdropPath = item.show_backdrop_path
+                // Still use poster for the poster area
+                posterPath = item.show_poster_path
+                overview = item.overview
+                val season = item.season_number
+                val ep = item.episode_number
+                val rating = if (item.vote_average > 0) " | ${java.text.DecimalFormat("0.0").format(item.vote_average)} ★" else ""
+                val showTitle = item.show_name ?: ""
+                metadata = "$showTitle | S${season}E${ep}$rating"
             }
         }
 

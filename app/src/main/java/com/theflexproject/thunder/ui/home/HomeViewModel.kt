@@ -72,7 +72,7 @@ class HomeViewModel @Inject constructor(
 
             val continueWatchingItems = mutableListOf<com.theflexproject.thunder.model.MyMedia>()
             
-            history.forEach { (tmdbId, _) ->
+            history.forEach { (tmdbId, data) ->
                 val idInt = tmdbId.toIntOrNull() ?: return@forEach
                 
                 // 1. Check if it's a Movie ID
@@ -80,10 +80,15 @@ class HomeViewModel @Inject constructor(
                 if (movieResult.isNotEmpty()) {
                     continueWatchingItems.add(movieResult[0])
                 } else {
-                    // 2. Check if it's an Episode ID -> Resolve to TVShow
-                    val show = tvShowRepository.getTVShowByEpisodeId(idInt)
-                    if (show != null) {
-                        continueWatchingItems.add(show)
+                    // 2. Check if it's an Episode ID -> Add Episode directly
+                    val episode = tvShowRepository.getEpisodeById(idInt)
+                    if (episode != null) {
+                        // Populate parent poster as fallback
+                        val show = tvShowRepository.getTVShowByEpisodeId(episode.id)
+                        episode.show_poster_path = show?.poster_path
+                        episode.show_backdrop_path = show?.backdrop_path
+                        episode.show_name = show?.name
+                        continueWatchingItems.add(episode)
                     }
                 }
             }
@@ -111,7 +116,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchHistoryFromFirebase(): List<Pair<String, Long>> = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+    private suspend fun fetchHistoryFromFirebase(): List<Pair<String, Pair<Long, Long>>> = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
         val manager = com.theflexproject.thunder.model.FirebaseManager()
         val user = manager.currentUser
         if (user == null) {
@@ -124,7 +129,7 @@ class HomeViewModel @Inject constructor(
 
         historyRef.addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
             override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                val list = mutableListOf<Pair<String, Long>>()
+                val list = mutableListOf<Pair<String, Pair<Long, Long>>>()
                 val formatter = java.time.format.DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.ENGLISH)
                 
                 snapshot.children.forEach { child ->
@@ -135,13 +140,14 @@ class HomeViewModel @Inject constructor(
                         val timestamp = if (!lastPlayedStr.isNullOrEmpty()) {
                             java.time.ZonedDateTime.parse(lastPlayedStr, formatter).toInstant().toEpochMilli()
                         } else 0L
-                        list.add(tmdbId to timestamp)
+                        val lastPos = child.child("lastPosition").getValue(Long::class.java) ?: 0L
+                        list.add(tmdbId to (lastPos to timestamp))
                     } catch (e: Exception) {
-                        list.add(tmdbId to 0L)
+                        list.add(tmdbId to (0L to 0L))
                     }
                 }
                 // Sort by timestamp desc and take top 20
-                continuation.resume(list.sortedByDescending { it.second }.take(20))
+                continuation.resume(list.sortedByDescending { it.second.second }.take(20))
             }
 
             override fun onCancelled(error: com.google.firebase.database.DatabaseError) {

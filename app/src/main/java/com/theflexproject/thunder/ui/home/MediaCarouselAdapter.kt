@@ -17,6 +17,12 @@ import com.theflexproject.thunder.R
 import com.theflexproject.thunder.model.Movie
 import com.theflexproject.thunder.model.MyMedia
 import com.theflexproject.thunder.model.TVShowInfo.TVShow
+import com.theflexproject.thunder.model.TVShowInfo.Episode
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.theflexproject.thunder.model.FirebaseManager
 import java.text.DecimalFormat
 
 class LoadingMedia : MyMedia
@@ -70,13 +76,15 @@ class MediaCarouselAdapter(
         private val name: TextView? = if (isHero) itemView.findViewById(R.id.textView4) else itemView.findViewById(R.id.nameInMediaItem)
         private val poster: ImageView? = if (isHero) itemView.findViewById(R.id.moviePoster) else itemView.findViewById(R.id.posterInMediaItem)
         private val textStar: TextView? = itemView.findViewById(R.id.textStar)
-        
+        private val subtitle: TextView? = itemView.findViewById(R.id.episodeSubtitleInMediaItem)
+
         // TV Hero specific views
         private val description: TextView? = itemView.findViewById(R.id.movieDescription)
         private val watchNowBtn: View? = itemView.findViewById(R.id.watchNowBtn)
         
         // TV item specifics
         private val focusOverlay: View? = itemView.findViewById(R.id.focusOverlay)
+        private val progressOverlay: View? = itemView.findViewById(R.id.progress_overlay2)
 
         init {
             if (isTV) {
@@ -133,6 +141,21 @@ class MediaCarouselAdapter(
                         year = date.substring(0, 4)
                     }
                 }
+                is Episode -> {
+                    val seasonLabel = "S${item.season_number}E${item.episode_number}"
+                    // Main title: episode name only (maxLines=1, ellipsize)
+                    title = item.name
+                    // Subtitle: ShowName | S*E*
+                    subtitle?.visibility = View.VISIBLE
+                    subtitle?.text = "${item.show_name ?: ""} | $seasonLabel"
+                    posterPath = item.show_poster_path  // Always use show poster for consistent portrait cards
+                    voteAverage = item.vote_average
+                    overview = item.overview
+                    val date = item.air_date
+                    if (!date.isNullOrEmpty() && date.length >= 4) {
+                        year = null // don't show year for episodes — subtitle has more useful info
+                    }
+                }
             }
 
             if (year != null && title != null) {
@@ -169,6 +192,47 @@ class MediaCarouselAdapter(
                 onItemClick(item)
             }
 
+            // Sync Progress from Firebase (Origin Method)
+            val tmdbId = when(item) {
+                is Movie -> item.id.toString()
+                is Episode -> item.id.toString()
+                else -> null
+            }
+            if (tmdbId != null && progressOverlay != null) {
+                val userId = FirebaseManager().currentUser?.uid
+                if (userId != null) {
+                    val ref = FirebaseDatabase.getInstance().getReference("History")
+                        .child(userId).child(tmdbId).child("lastPosition")
+                    ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val lastPos = snapshot.getValue(Long::class.java) ?: 0L
+                            if (lastPos > 0) {
+                                val runtime = when(item) {
+                                    is Movie -> item.runtime.toLong() * 60 * 1000
+                                    is Episode -> item.runtime.toLong() * 60 * 1000
+                                    else -> 0L
+                                }
+                                if (runtime > 0) {
+                                    val progress = lastPos.toDouble() / runtime
+                                    val fullWidth = poster?.width ?: 0
+                                    if (fullWidth > 0) {
+                                        progressOverlay.visibility = View.VISIBLE
+                                        val params = progressOverlay.layoutParams
+                                        params.width = (fullWidth * progress).toInt()
+                                        progressOverlay.layoutParams = params
+                                    }
+                                }
+                            } else {
+                                progressOverlay.visibility = View.GONE
+                            }
+                        }
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
+                }
+            } else {
+                progressOverlay?.visibility = View.GONE
+            }
+
             // Sync visual state manually if this item is re-bound while focused (recycling fix)
             if (isTV) {
                 if (itemView.hasFocus()) {
@@ -193,6 +257,8 @@ class MediaCarouselAdapter(
             return if (oldItem is Movie && newItem is Movie) {
                 oldItem.id == newItem.id
             } else if (oldItem is TVShow && newItem is TVShow) {
+                oldItem.id == newItem.id
+            } else if (oldItem is Episode && newItem is Episode) {
                 oldItem.id == newItem.id
             } else {
                 false

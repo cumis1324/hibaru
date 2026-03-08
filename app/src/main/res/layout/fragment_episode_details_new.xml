@@ -32,18 +32,11 @@
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:id="@+id/players">
-        <androidx.media3.ui.PlayerView
+        <org.videolan.libvlc.util.VLCVideoLayout
             android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/black"
-            app:show_shuffle_button="false"
-            app:show_subtitle_button="true"
-            app:show_buffering="always"
-            app:use_controller="true"
-            app:played_color="@color/blue"
-            app:resize_mode="fit"
-            app:animation_enabled="true"
             android:visibility="visible"
             />
         <ImageButton

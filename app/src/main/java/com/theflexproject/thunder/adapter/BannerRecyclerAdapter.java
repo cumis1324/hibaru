@@ -19,7 +19,6 @@ import androidx.annotation.OptIn;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -71,16 +70,14 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         return new MovieViewHolder(view);
     }
 
-    @OptIn(markerClass = UnstableApi.class)
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Movie movie = mediaList.get(position);
         String year = movie.getReleaseDate().substring(0, 4);
-        if (Objects.equals(movie.getOriginalLanguage(), "id")){
-            holder.name.setText(movie.getOriginalTitle()+ " (" + year + ")");
-        }
-        else {
+        if (Objects.equals(movie.getOriginalLanguage(), "id")) {
+            holder.name.setText(movie.getOriginalTitle() + " (" + year + ")");
+        } else {
             holder.name.setText(movie.getTitle() + " (" + year + ")");
         }
 
@@ -133,7 +130,8 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
                     if (lastPlayed != null) {
                         // Update the played field in your local database asynchronously
                         AsyncTask.execute(() -> {
-                            DatabaseClient.getInstance(context).getAppDatabase().movieDao().updatePlayed(Integer.parseInt(tmdbId), lastPlayed+" added");
+                            DatabaseClient.getInstance(context).getAppDatabase().movieDao()
+                                    .updatePlayed(Integer.parseInt(tmdbId), lastPlayed + " added");
                         });
                     }
                 }
@@ -199,4 +197,3 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
         void onClick(View view, int position);
     }
 }
-

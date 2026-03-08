@@ -1,8 +1,6 @@
 package com.theflexproject.thunder.fragments;
 
-// 
-import static com.theflexproject.thunder.utils.StringUtils.tmdbIdExtractor_FromLink;
-import static com.theflexproject.thunder.utils.StringUtils.tmdbIdExtractor_FromLink_TV;
+import com.theflexproject.thunder.utils.StringUtils;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,7 +20,6 @@ import com.theflexproject.thunder.model.MyMedia;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 
-
 public class ChangeTMDBFragment extends BaseFragment {
 
     MyMedia myMedia;
@@ -36,24 +33,23 @@ public class ChangeTMDBFragment extends BaseFragment {
     }
 
     public ChangeTMDBFragment(MyMedia myMedia) {
-        this.myMedia=myMedia;
+        this.myMedia = myMedia;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater , ViewGroup container ,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_change_tmdb , container , false);
+        return inflater.inflate(R.layout.fragment_change_tmdb, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view , savedInstanceState);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         tmdbLinkText = view.findViewById(R.id.tmdbLinkText);
         changeTMDBIdButton = view.findViewById(R.id.changeTMDBIdButton);
         invalidTMDBLink = view.findViewById(R.id.invalidTMDBLink);
-
 
         changeTMDBIdButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,24 +58,23 @@ public class ChangeTMDBFragment extends BaseFragment {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        if(tmdbLinkText.getText()!=null){
+                        if (tmdbLinkText.getText() != null) {
 
                             String link = tmdbLinkText.getText().toString();
-                            if(myMedia instanceof Movie){
-                                //send get request tmdb movie
-                                long id = tmdbIdExtractor_FromLink(link);
+                            if (myMedia instanceof Movie) {
+                                // send get request tmdb movie
+                                long id = StringUtils.tmdbIdExtractor_FromLink(link);
 
-                                if(id!=0){
-                                    // 
-                                }
-                                else {
+                                if (id != 0) {
+                                    //
+                                } else {
                                     boolean failed = false;
                                     try {
-                                        id =Long.parseLong(link);
-                                        // 
-                                    }catch (Exception e){
+                                        id = Long.parseLong(link);
+                                        //
+                                    } catch (Exception e) {
                                         failed = true;
-                                        System.out.println("Failed to parse long"+e);
+                                        System.out.println("Failed to parse long" + e);
                                         mActivity.runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
@@ -88,22 +83,19 @@ public class ChangeTMDBFragment extends BaseFragment {
                                         });
                                     }
                                 }
-                            }
-                            else if(myMedia instanceof TVShow || myMedia instanceof  Episode){
-                                //send get request tmdb tvshow
-                                long id = tmdbIdExtractor_FromLink_TV(link);
-                                if(id!=0){
-                                    // 
-                                }
-                                else if(link.length()<15){
+                            } else if (myMedia instanceof TVShow || myMedia instanceof Episode) {
+                                // send get request tmdb tvshow
+                                long id = StringUtils.tmdbIdExtractor_FromLink_TV(link);
+                                if (id != 0) {
+                                    //
+                                } else if (link.length() < 15) {
                                     try {
-                                        id =Long.parseLong(link);
-                                        // 
-                                    }catch (Exception e){
-                                        System.out.println("Failed to parse long"+e);
+                                        id = Long.parseLong(link);
+                                        //
+                                    } catch (Exception e) {
+                                        System.out.println("Failed to parse long" + e);
                                     }
-                                }
-                                else {
+                                } else {
                                     invalidTMDBLink.setVisibility(View.VISIBLE);
                                 }
 
@@ -115,15 +107,10 @@ public class ChangeTMDBFragment extends BaseFragment {
                 });
                 thread.start();
 
-                Toast.makeText(mActivity,"Changed",Toast.LENGTH_LONG).show();
+                Toast.makeText(mActivity, "Changed", Toast.LENGTH_LONG).show();
             }
         });
 
-
-
     }
-
-
-
 
 }

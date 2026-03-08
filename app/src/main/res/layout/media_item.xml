@@ -24,6 +24,14 @@
             android:layout_centerHorizontal="true"
             android:scaleType="centerCrop"
             app:srcCompat="@color/transparent" />
+        <View
+            android:id="@+id/progress_overlay2"
+            android:layout_width="0dp"
+            android:layout_alignStart="@+id/posterInMediaItem"
+            android:layout_alignBottom="@id/posterInMediaItem"
+            android:layout_height="6dp"
+            android:background="@color/blue"
+            android:visibility="gone" />
 
 
         <TextView
@@ -39,11 +47,29 @@
             android:gravity="center"
             android:maxLines="2"
             android:paddingHorizontal="5dp"
-            android:scrollHorizontally="true"
             android:text="TextView"
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textSize="14sp"
+            android:textSize="13sp"
+            />
+
+        <TextView
+            android:id="@+id/episodeSubtitleInMediaItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/posterInMediaItem"
+            android:layout_alignEnd="@+id/posterInMediaItem"
+            android:layout_below="@id/nameInMediaItem"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/jost_light"
+            android:gravity="center"
+            android:maxLines="2"
+            android:paddingHorizontal="5dp"
+            android:textAlignment="center"
+            android:textColor="#888888"
+            android:textSize="11sp"
+            android:visibility="gone"
             />
 
         <TextView

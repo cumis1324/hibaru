@@ -23,30 +23,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 
-import androidx.media3.common.AudioAttributes;
-import androidx.media3.common.C;
-import androidx.media3.common.Format;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.PlaybackException;
-import androidx.media3.common.Player;
-import androidx.media3.common.TrackSelectionParameters;
-import androidx.media3.common.Tracks;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.exoplayer.ExoPlayer;
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaPlayer;
+import org.videolan.libvlc.util.VLCVideoLayout;
 
-import androidx.media3.exoplayer.RenderersFactory;
-import androidx.media3.exoplayer.drm.DefaultDrmSessionManagerProvider;
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
-import androidx.media3.exoplayer.source.MediaSource;
-import androidx.media3.exoplayer.source.TrackGroupArray;
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
-
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
-import androidx.media3.exoplayer.util.EventLogger;
-import androidx.media3.ui.PlayerControlView;
-import androidx.media3.ui.PlayerView;
-
-import androidx.media3.datasource.DataSource;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -59,13 +40,14 @@ import com.theflexproject.thunder.utils.pembayaran.IklanPremium;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 public class PlayerActivity extends AppCompatActivity
-        implements View.OnClickListener, PlayerView.ControllerVisibilityListener {
+        implements View.OnClickListener {
 
     public static final String KEY_TRACK_SELECTION_PARAMETERS = "track_selection_parameters";
     public static final String KEY_ITEM_INDEX = "item_index";
@@ -74,35 +56,30 @@ public class PlayerActivity extends AppCompatActivity
 
     public static final String PREFER_EXTENSION_DECODERS_EXTRA = "prefer_extension_decoders";
 
-    protected PlayerView playerView;
+    protected VLCVideoLayout playerView;
 
     protected LinearLayout debugRootView;
-    protected @Nullable ExoPlayer player;
+    protected @Nullable MediaPlayer player;
+    private LibVLC libVLC;
 
-    private DataSource.Factory dataSourceFactory;
-    private MediaItem mediaItem;
-    private TrackSelectionParameters trackSelectionParameters;
-    private boolean startAutoPlay;
-    private int startItemIndex;
-    private long startPosition;
-    private TextView nfgpluslog;
-    private static final int REQUEST_CODE_PICTURE_IN_PICTURE = 1;
+    private String tmdbId;
+    private Intent intent;
+    private FirebaseManager manager;
+    private DatabaseReference databaseReference;
+    private String offline;
+    private View decorView;
+    private int uiOptions;
 
-    private ImageButton buttonAspectRatio;
     private TextView playerTitle;
     private TextView playerEpsTitle;
-    Intent intent;
-    int uiOptions;
-    View decorView;
-    private String TAG = "PlayerActivity";
-    FirebaseManager manager;
-    private DatabaseReference databaseReference;
-    String offline;
-    private boolean ad25;
-    private boolean ad50;
-    private boolean ad75;
+    private View nfgpluslog;
 
-    @OptIn(markerClass = UnstableApi.class)
+    private boolean startAutoPlay;
+    private long startPosition;
+    private int startItemIndex;
+    private static final String TAG = "PlayerActivity";
+    private boolean ad25, ad50, ad75;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,13 +102,16 @@ public class PlayerActivity extends AppCompatActivity
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
-        dataSourceFactory = DemoUtil.getDataSourceFactory(/* context= */ this);
+        ArrayList<String> options = new ArrayList<>();
+        options.add("--no-drop-late-frames");
+        options.add("--no-skip-frames");
+        options.add("-vv");
+        libVLC = new LibVLC(this, options);
 
         playerView = findViewById(R.id.player_view);
         playerTitle = findViewById(R.id.playerTitle);
         nfgpluslog = findViewById(R.id.nfgpluslogo);
         playerEpsTitle = findViewById(R.id.playerEpsTitle);
-        playerView.setControllerVisibilityListener(this);
         loadTitle();
         Rational aspectRatio = new Rational(playerView.getWidth(), playerView.getHeight());
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -141,14 +121,9 @@ public class PlayerActivity extends AppCompatActivity
         }
 
         if (savedInstanceState != null) {
-            trackSelectionParameters = TrackSelectionParameters.fromBundle(
-                    Objects.requireNonNull(savedInstanceState.getBundle(KEY_TRACK_SELECTION_PARAMETERS)));
             startAutoPlay = savedInstanceState.getBoolean(KEY_AUTO_PLAY);
-            startItemIndex = savedInstanceState.getInt(KEY_ITEM_INDEX);
             startPosition = savedInstanceState.getLong(KEY_POSITION);
-
         } else {
-            trackSelectionParameters = new TrackSelectionParameters.Builder(/* context= */ this).build();
             clearStartPosition();
         }
 
@@ -159,7 +134,7 @@ public class PlayerActivity extends AppCompatActivity
         com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.loadRewardedAd();
 
         if (player != null) {
-            player.setPlayWhenReady(false);
+            player.pause();
         }
 
         com.theflexproject.thunder.utils.UnityAdHelper.INSTANCE.showRewardedAd(PlayerActivity.this,
@@ -168,10 +143,7 @@ public class PlayerActivity extends AppCompatActivity
                     public void onAdComplete() {
                         Log.d(TAG, "Reward ad completed successfully");
                         if (player != null) {
-                            player.setPlayWhenReady(true);
-                        }
-                        if (playerView != null) {
-                            playerView.onResume();
+                            player.play();
                         }
                     }
 
@@ -179,10 +151,7 @@ public class PlayerActivity extends AppCompatActivity
                     public void onAdFailed() {
                         Log.e(TAG, "Reward ad failed");
                         if (player != null) {
-                            player.setPlayWhenReady(true);
-                        }
-                        if (playerView != null) {
-                            playerView.onResume();
+                            player.play();
                         }
                     }
                 });
@@ -230,9 +199,6 @@ public class PlayerActivity extends AppCompatActivity
         super.onStart();
         if (Build.VERSION.SDK_INT > 23) {
             initializePlayer();
-            if (playerView != null) {
-                playerView.onResume();
-            }
         }
     }
 
@@ -267,20 +233,13 @@ public class PlayerActivity extends AppCompatActivity
         super.onResume();
         if (Build.VERSION.SDK_INT <= 23 || player == null) {
             initializePlayer();
-            if (playerView != null) {
-                playerView.onResume();
-            }
         }
-
     }
 
     @Override
     public void onPause() {
         super.onPause();
         if (Build.VERSION.SDK_INT <= 23) {
-            if (playerView != null) {
-                playerView.onPause();
-            }
             releasePlayer();
         }
     }
@@ -289,9 +248,6 @@ public class PlayerActivity extends AppCompatActivity
     public void onStop() {
         super.onStop();
         if (Build.VERSION.SDK_INT > 23) {
-            if (playerView != null) {
-                playerView.onPause();
-            }
             releasePlayer();
         }
     }
@@ -307,9 +263,7 @@ public class PlayerActivity extends AppCompatActivity
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        updateTrackSelectorParameters();
         updateStartPosition();
-        outState.putBundle(KEY_TRACK_SELECTION_PARAMETERS, trackSelectionParameters.toBundle());
         outState.putBoolean(KEY_AUTO_PLAY, startAutoPlay);
         outState.putInt(KEY_ITEM_INDEX, startItemIndex);
         outState.putLong(KEY_POSITION, startPosition);
@@ -319,18 +273,7 @@ public class PlayerActivity extends AppCompatActivity
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        // See whether the player view wants to handle media or DPAD keys events.
-        return playerView.dispatchKeyEvent(event) || super.dispatchKeyEvent(event);
-    }
-
-    // OnClickListener methods
-
-    // StyledPlayerView.ControllerVisibilityListener implementation
-
-    @Override
-    public void onVisibilityChanged(int visibility) {
-        playerTitle.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
-        playerEpsTitle.setVisibility(visibility == View.VISIBLE ? View.VISIBLE : View.GONE);
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -373,164 +316,123 @@ public class PlayerActivity extends AppCompatActivity
      */
     protected boolean initializePlayer() {
         if (player == null) {
+            player = new MediaPlayer(libVLC);
+            player.attachViews(playerView, null, true, false);
 
             String urlString = intent.getStringExtra("url");
             Uri uri = Uri.parse(urlString);
             Log.i("Inside Player", uri.toString());
-            mediaItem = MediaItem.fromUri(uri);
+            Media media = new Media(libVLC, uri);
+            player.setMedia(media);
+            media.release();
 
-            ExoPlayer.Builder playerBuilder = new ExoPlayer.Builder(/* context= */ this)
-                    .setMediaSourceFactory(createMediaSourceFactory());
-            setRenderersFactory(playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
-            player = playerBuilder.build();
-            player.setTrackSelectionParameters(trackSelectionParameters);
-            player.addListener(new PlayerEventListener());
-            player.addAnalyticsListener(new EventLogger());
-            player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
-            player.setPlayWhenReady(startAutoPlay);
-            playerView.setPlayer(player);
-
+            player.setEventListener(new PlayerEventListener());
         }
+
         String userId = manager.getCurrentUser().getUid();
         String tmdbId = intent.getStringExtra("tmdbId");
-        if (tmdbId != null) {
-            if (!tmdbId.equals(offline)) {
-                DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
-                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            // Get the last position from the database
-                            Long lastPosition = dataSnapshot.getValue(Long.class);
-                            if (lastPosition != null) {
-                                // Update the startPosition with the retrieved value
-                                startPosition = lastPosition;
-
-                                // Seek the player to the last position
-                                player.seekTo(startPosition);
-                                String formattedPosition = formatDuration(startPosition);
-                                Toast.makeText(getApplicationContext(),
-                                        "Resuming to your last position " + formattedPosition, Toast.LENGTH_LONG)
-                                        .show();
-                            }
+        if (tmdbId != null && !tmdbId.equals(offline)) {
+            DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
+            userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        Long lastPosition = dataSnapshot.getValue(Long.class);
+                        if (lastPosition != null && player != null) {
+                            startPosition = lastPosition;
+                            player.setTime(startPosition);
+                            Toast.makeText(getApplicationContext(),
+                                    "Resuming to your last position " + formatDuration(startPosition),
+                                    Toast.LENGTH_LONG)
+                                    .show();
                         }
                     }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        // Handle onCancelled event
+                    if (startAutoPlay) {
+                        player.play();
                     }
-                });
-            }
-        }
+                }
 
-        boolean haveStartPosition = startItemIndex != C.INDEX_UNSET;
-        if (haveStartPosition) {
-            player.seekTo(startItemIndex, startPosition);
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
+        } else if (startAutoPlay) {
+            player.play();
         }
-        player.setMediaItem(mediaItem, /* resetPosition= */ !haveStartPosition);
-        player.prepare();
 
         return true;
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    private MediaSource.Factory createMediaSourceFactory() {
-        DefaultDrmSessionManagerProvider drmSessionManagerProvider = new DefaultDrmSessionManagerProvider();
-        drmSessionManagerProvider.setDrmHttpDataSourceFactory(
-                DemoUtil.getHttpDataSourceFactory(/* context= */ this));
-        return new DefaultMediaSourceFactory(/* context= */ this)
-                .setDataSourceFactory(dataSourceFactory)
-                .setDrmSessionManagerProvider(drmSessionManagerProvider);
-    }
+    private void createMediaSourceFactory() {
+    } // Stub
 
-    @OptIn(markerClass = UnstableApi.class)
-    private void setRenderersFactory(
-            ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
-        RenderersFactory renderersFactory = DemoUtil.buildRenderersFactory(/* context= */ this,
-                preferExtensionDecoders);
-        playerBuilder.setRenderersFactory(renderersFactory);
-    }
+    private void setRenderersFactory() {
+    } // Stub
 
     protected void releasePlayer() {
         if (player != null) {
-            updateTrackSelectorParameters();
             updateStartPosition();
+            player.stop();
             player.release();
             player = null;
-            playerView.setPlayer(/* player= */ null);
-            loadReward();
         }
-    }
-
-    private void updateTrackSelectorParameters() {
-        if (player != null) {
-            trackSelectionParameters = player.getTrackSelectionParameters();
+        if (libVLC != null) {
+            libVLC.release();
+            libVLC = null;
         }
     }
 
     private void updateStartPosition() {
         if (player != null) {
-            startAutoPlay = player.getPlayWhenReady();
-            startItemIndex = player.getCurrentMediaItemIndex();
-            startPosition = Math.max(0, player.getContentPosition());
+            startAutoPlay = player.isPlaying();
+            startPosition = Math.max(0, player.getTime());
             String userId = manager.getCurrentUser().getUid();
             String tmdbId = intent.getStringExtra("tmdbId");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
             String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-            if (tmdbId != null) {
-                if (!tmdbId.equals(offline)) {
-                    DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
-                    Map<String, Object> userMap = new HashMap<>();
-                    userMap.put("lastPosition", startPosition);
-                    userMap.put("lastPlayed", currentDateTime);
-                    userReference.setValue(userMap);
-                }
+            if (tmdbId != null && !tmdbId.equals(offline)) {
+                DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("lastPosition", startPosition);
+                userMap.put("lastPlayed", currentDateTime);
+                userReference.setValue(userMap);
             }
-
         }
     }
 
     protected void clearStartPosition() {
         startAutoPlay = true;
-        startItemIndex = C.INDEX_UNSET;
-        startPosition = C.TIME_UNSET;
+        startPosition = -1;
     }
 
     private void showControls() {
-
     }
 
-    private class PlayerEventListener implements Player.Listener {
-
+    private class PlayerEventListener implements MediaPlayer.EventListener {
         @Override
-        public void onPlaybackStateChanged(@Player.State int playbackState) {
-            playerView.onPause();
-            if (playbackState == Player.STATE_READY) {
-                load3ads();
-            }
-            if (playbackState == Player.STATE_ENDED) {
-                showControls();
-            }
-            decorView.setSystemUiVisibility(uiOptions);
-        }
-
-        @Override
-        public void onPlayerError(PlaybackException error) {
-            if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
-                player.seekToDefaultPosition();
-                player.prepare();
-            } else {
-                showControls();
+        public void onEvent(MediaPlayer.Event event) {
+            switch (event.type) {
+                case MediaPlayer.Event.Buffering:
+                    break;
+                case MediaPlayer.Event.EndReached:
+                    showControls();
+                    break;
+                case MediaPlayer.Event.EncounteredError:
+                    showControls();
+                    break;
+                case MediaPlayer.Event.Playing:
+                case MediaPlayer.Event.Paused:
+                case MediaPlayer.Event.Stopped:
+                    decorView.setSystemUiVisibility(uiOptions);
+                    break;
             }
         }
-
     }
 
     private void load3ads() {
         if (player != null) {
-            long cp = player.getCurrentPosition();
-            long tp = player.getDuration();
+            long cp = player.getTime();
+            long tp = player.getLength();
             if (tp > 0) {
                 if (!ad25 && cp >= tp * 0.25) {
                     loadReward();

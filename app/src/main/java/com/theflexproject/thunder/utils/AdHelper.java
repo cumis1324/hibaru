@@ -2,8 +2,8 @@ package com.theflexproject.thunder.utils;
 
 import android.app.Activity;
 import android.content.Context;
-import androidx.media3.common.Player;
-import androidx.media3.ui.PlayerView;
+import org.videolan.libvlc.MediaPlayer;
+import org.videolan.libvlc.util.VLCVideoLayout;
 import com.theflexproject.thunder.utils.UnityAdHelper;
 
 /**
@@ -18,13 +18,13 @@ public class AdHelper {
         void onAdFailed();
     }
 
-    public static void loadReward(Context mCtx, Activity activity, Player player, PlayerView playerView) {
+    public static void loadReward(Context mCtx, Activity activity, MediaPlayer player, VLCVideoLayout playerView) {
         // Bridge to Unity Rewarded Ad
         UnityAdHelper.INSTANCE.showRewardedAd(activity, new UnityAdHelper.AdCallback() {
             @Override
             public void onAdComplete() {
                 if (player != null) {
-                    player.setPlayWhenReady(true);
+                    player.play();
                 }
             }
 
@@ -32,7 +32,7 @@ public class AdHelper {
             public void onAdFailed() {
                 // If ad fails, we might still want to play or show error
                 if (player != null) {
-                    player.setPlayWhenReady(true); // Fallback to play anyway or handle as you wish
+                    player.play(); // Fallback to play anyway or handle as you wish
                 }
             }
         });

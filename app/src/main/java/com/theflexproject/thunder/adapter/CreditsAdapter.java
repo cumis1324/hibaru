@@ -21,7 +21,6 @@ import androidx.annotation.OptIn;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -114,7 +113,6 @@ public class CreditsAdapter extends RecyclerView.Adapter<CreditsAdapter.CreditsA
         movieDetailsFragment.show(fragmentManager, "bottomSheet");
     }
 
-    @OptIn(markerClass = UnstableApi.class)
     private void loadMovie(int id) {
         BottomPerson movieDetailsFragment = new BottomPerson(id);
         movieDetailsFragment.show(fragmentManager, "bottomSheet");

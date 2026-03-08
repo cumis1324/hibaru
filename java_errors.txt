@@ -1,0 +1,1048 @@
+﻿> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDebug UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kaptGenerateStubsDebugKotlin UP-TO-DATE
+> Task :app:kaptDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+
+> Task :app:compileDebugJavaWithJavac
+.\gradlew.bat : D:\Project\
+nfgplus\app\src\main\java\c
+om\theflexproject\thunder\p
+layer\PlayerUtils.java:244:
+ error: cannot find symbol
+At line:1 char:1
++ .\gradlew.bat :app:compil
+eDebugJavaWithJavac 2>&1 | 
+Out-File -FilePat ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (D:\  
+  Project\nfgp...not fin   
+ d symbol:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+            long cp = playe
+r.getCurrentPosition();
+                           
+ ^
+  symbol:   method 
+getCurrentPosition()
+  location: variable 
+player of type MediaPlayer
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerUtil
+s.java:245: error: cannot 
+find symbol
+            long tp = 
+player.getDuration();
+                           
+ ^
+  symbol:   method 
+getDuration()
+  location: variable 
+player of type MediaPlayer
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:522: error: 
+cannot find symbol
+            
+trackSelectionParameters = 
+TrackSelectionParameters.fr
+omBundle(
+            ^
+  symbol:   variable 
+trackSelectionParameters
+  location: class 
+PlayerFragment
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:522: error: 
+cannot find symbol
+            
+trackSelectionParameters = 
+TrackSelectionParameters.fr
+omBundle(
+                           
+            ^
+  symbol:   variable 
+TrackSelectionParameters
+  location: class 
+PlayerFragment
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:528: error: 
+cannot find symbol
+            
+trackSelectionParameters = 
+new TrackSelectionParameter
+s.Builder(mActivity).build(
+);
+            ^
+  symbol:   variable 
+trackSelectionParameters
+  location: class 
+PlayerFragment
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:528: error: 
+package 
+TrackSelectionParameters 
+does not exist
+            
+trackSelectionParameters = 
+new TrackSelectionParameter
+s.Builder(mActivity).build(
+);
+                           
+                           
+             ^
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:535: error: 
+cannot find symbol
+        startItemIndex = 
+C.INDEX_UNSET;
+                         ^
+  symbol:   variable C
+  location: class 
+PlayerFragment
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:536: error: 
+cannot find symbol
+        startPosition = 
+C.TIME_UNSET;
+                        ^
+  symbol:   variable C
+  location: class 
+PlayerFragment
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:580: error: 
+method does not override 
+or implement a method from 
+a supertype
+    @Override
+    ^
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:1045: error: 
+cannot find symbol
+                    player.
+getCurrentPosition(),
+                          ^
+  symbol:   method 
+getCurrentPosition()
+  location: variable 
+player of type MediaPlayer
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\fragments\PlayerF
+ragment.java:1046: error: 
+cannot find symbol
+                    
+player.getDuration());
+                          ^
+  symbol:   method 
+getDuration()
+  location: variable 
+player of type MediaPlayer
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:118: error: 
+cannot find symbol
+            startAutoPlay 
+= savedInstanceState.getBoo
+lean(KEY_AUTO_PLAY);
+            ^
+  symbol:   variable 
+startAutoPlay
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:119: error: 
+cannot find symbol
+            startPosition 
+= savedInstanceState.getLon
+g(KEY_POSITION);
+            ^
+  symbol:   variable 
+startPosition
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:138: error: 
+cannot find symbol
+                        
+Log.d(TAG, "Reward ad 
+completed successfully");
+                           
+   ^
+  symbol: variable TAG
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:146: error: 
+cannot find symbol
+                        
+Log.e(TAG, "Reward ad 
+failed");
+                           
+   ^
+  symbol: variable TAG
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:262: error: 
+cannot find symbol
+        outState.putBundle(
+KEY_TRACK_SELECTION_PARAMET
+ERS, trackSelectionParamete
+rs.toBundle());
+                           
+                           
+     ^
+  symbol:   variable 
+trackSelectionParameters
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:263: error: 
+cannot find symbol
+        outState.putBoolean
+(KEY_AUTO_PLAY, 
+startAutoPlay);
+                           
+                ^
+  symbol:   variable 
+startAutoPlay
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:264: error: 
+cannot find symbol
+        outState.putInt(KEY
+_ITEM_INDEX, 
+startItemIndex);
+                           
+             ^
+  symbol:   variable 
+startItemIndex
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:265: error: 
+cannot find symbol
+        outState.putLong(KE
+Y_POSITION, startPosition);
+                           
+            ^
+  symbol:   variable 
+startPosition
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:279: error: 
+method does not override 
+or implement a method from 
+a supertype
+    @Override
+    ^
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:326: error: no 
+suitable method found for s
+etVideoView(VLCVideoLayout)
+            player.getVLCVo
+ut().setVideoView(playerVie
+w);
+                           
+    ^
+    method IVLCVout.setVide
+oView(SurfaceView) is not 
+applicable
+      (argument mismatch; 
+VLCVideoLayout cannot be 
+converted to SurfaceView)
+    method IVLCVout.setVide
+oView(TextureView) is not 
+applicable
+      (argument mismatch; 
+VLCVideoLayout cannot be 
+converted to TextureView)
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:349: error: 
+cannot find symbol
+                           
+ startPosition = 
+lastPosition;
+                           
+ ^
+  symbol: variable 
+startPosition
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:350: error: 
+cannot find symbol
+                           
+ player.setTime(startPositi
+on);
+                           
+                ^
+  symbol: variable 
+startPosition
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:352: error: 
+cannot find symbol
+                           
+         "Resuming to your 
+last position " + formatDur
+ation(startPosition),
+                           
+                           
+                           
+      ^
+  symbol: variable 
+startPosition
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:357: error: 
+cannot find symbol
+                    if 
+(startAutoPlay) {
+                        ^
+  symbol: variable 
+startAutoPlay
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:366: error: 
+cannot find symbol
+        } else if 
+(startAutoPlay) {
+                   ^
+  symbol:   variable 
+startAutoPlay
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:397: error: 
+cannot find symbol
+            startAutoPlay 
+= player.isPlaying();
+            ^
+  symbol:   variable 
+startAutoPlay
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:398: error: 
+cannot find symbol
+            startPosition 
+= Math.max(0, 
+player.getTime());
+            ^
+  symbol:   variable 
+startPosition
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:406: error: 
+cannot find symbol
+                userMap.put
+("lastPosition", 
+startPosition);
+                           
+                 ^
+  symbol:   variable 
+startPosition
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:414: error: 
+cannot find symbol
+        startAutoPlay = 
+true;
+        ^
+  symbol:   variable 
+startAutoPlay
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:415: error: 
+cannot find symbol
+        startPosition = -1;
+        ^
+  symbol:   variable 
+startPosition
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:447: error: 
+cannot find symbol
+                if (!ad25 
+&& cp >= tp * 0.25) {
+                     ^
+  symbol:   variable ad25
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:449: error: 
+cannot find symbol
+                    ad25 = 
+true;
+                    ^
+  symbol:   variable ad25
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:451: error: 
+cannot find symbol
+                if (!ad50 
+&& cp >= tp * 0.50) {
+                     ^
+  symbol:   variable ad50
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:453: error: 
+cannot find symbol
+                    ad50 = 
+true;
+                    ^
+  symbol:   variable ad50
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:455: error: 
+cannot find symbol
+                if (!ad75 
+&& cp >= tp * 0.75) {
+                     ^
+  symbol:   variable ad75
+  location: class 
+PlayerActivity
+D:\Project\nfgplus\app\src\
+main\java\com\theflexprojec
+t\thunder\player\PlayerActi
+vity.java:457: error: 
+cannot find symbol
+                    ad75 = 
+true;
+                    ^
+  symbol:   variable ad75
+  location: class 
+PlayerActivity
+Note: Some input files use 
+or override a deprecated 
+API.
+Note: Recompile with 
+-Xlint:deprecation for 
+details.
+Note: D:\Project\nfgplus\ap
+p\src\main\java\com\theflex
+project\thunder\fragments\P
+layerFragment.java uses 
+unchecked or unsafe 
+operations.
+Note: Recompile with 
+-Xlint:unchecked for 
+details.
+37 errors
+
+> Task :app:compileDebugJavaWithJavac FAILED
+
+[Incubating] Problems report is available at: file:///D:/Project/nfgplus/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with 
+an exception.
+
+* What went wrong:
+Execution failed for task '
+:app:compileDebugJavaWithJa
+vac'.
+> Compilation failed; see 
+the compiler output below.
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerUt
+ils.java:244: error: 
+cannot find symbol
+              long cp = pla
+yer.getCurrentPosition();
+                           
+   ^
+    symbol:   method 
+getCurrentPosition()
+    location: variable 
+player of type MediaPlayer
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerUt
+ils.java:245: error: 
+cannot find symbol
+              long tp = 
+player.getDuration();
+                           
+   ^
+    symbol:   method 
+getDuration()
+    location: variable 
+player of type MediaPlayer
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:522: error: 
+cannot find symbol
+              
+trackSelectionParameters = 
+TrackSelectionParameters.fr
+omBundle(
+              ^
+    symbol:   variable 
+trackSelectionParameters
+    location: class 
+PlayerFragment
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:522: error: 
+cannot find symbol
+              
+trackSelectionParameters = 
+TrackSelectionParameters.fr
+omBundle(
+                           
+              ^
+    symbol:   variable 
+TrackSelectionParameters
+    location: class 
+PlayerFragment
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:528: error: 
+cannot find symbol
+              
+trackSelectionParameters = 
+new TrackSelectionParameter
+s.Builder(mActivity).build(
+);
+              ^
+    symbol:   variable 
+trackSelectionParameters
+    location: class 
+PlayerFragment
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:528: error: 
+package 
+TrackSelectionParameters 
+does not exist
+              
+trackSelectionParameters = 
+new TrackSelectionParameter
+s.Builder(mActivity).build(
+);
+                           
+                           
+               ^
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:535: error: 
+cannot find symbol
+          startItemIndex = 
+C.INDEX_UNSET;
+                           
+^
+    symbol:   variable C
+    location: class 
+PlayerFragment
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:536: error: 
+cannot find symbol
+          startPosition = 
+C.TIME_UNSET;
+                          ^
+    symbol:   variable C
+    location: class 
+PlayerFragment
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:580: error: 
+method does not override 
+or implement a method from 
+a supertype
+      @Override
+      ^
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:1045: 
+error: cannot find symbol
+                      playe
+r.getCurrentPosition(),
+                           
+ ^
+    symbol:   method 
+getCurrentPosition()
+    location: variable 
+player of type MediaPlayer
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\fragments\Playe
+rFragment.java:1046: 
+error: cannot find symbol
+                      
+player.getDuration());
+                           
+ ^
+    symbol:   method 
+getDuration()
+    location: variable 
+player of type MediaPlayer
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:118: error: 
+cannot find symbol
+              
+startAutoPlay = savedInstan
+ceState.getBoolean(KEY_AUTO
+_PLAY);
+              ^
+    symbol:   variable 
+startAutoPlay
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:119: error: 
+cannot find symbol
+              
+startPosition = savedInstan
+ceState.getLong(KEY_POSITIO
+N);
+              ^
+    symbol:   variable 
+startPosition
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:138: error: 
+cannot find symbol
+                          
+Log.d(TAG, "Reward ad 
+completed successfully");
+                           
+     ^
+    symbol: variable TAG
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:146: error: 
+cannot find symbol
+                          
+Log.e(TAG, "Reward ad 
+failed");
+                           
+     ^
+    symbol: variable TAG
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:262: error: 
+cannot find symbol
+          outState.putBundl
+e(KEY_TRACK_SELECTION_PARAM
+ETERS, trackSelectionParame
+ters.toBundle());
+                           
+                           
+       ^
+    symbol:   variable 
+trackSelectionParameters
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:263: error: 
+cannot find symbol
+          outState.putBoole
+an(KEY_AUTO_PLAY, 
+startAutoPlay);
+                           
+                  ^
+    symbol:   variable 
+startAutoPlay
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:264: error: 
+cannot find symbol
+          outState.putInt(K
+EY_ITEM_INDEX, 
+startItemIndex);
+                           
+               ^
+    symbol:   variable 
+startItemIndex
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:265: error: 
+cannot find symbol
+          outState.putLong(
+KEY_POSITION, 
+startPosition);
+                           
+              ^
+    symbol:   variable 
+startPosition
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:279: error: 
+method does not override 
+or implement a method from 
+a supertype
+      @Override
+      ^
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:326: error: no 
+suitable method found for s
+etVideoView(VLCVideoLayout)
+              player.getVLC
+Vout().setVideoView(playerV
+iew);
+                           
+      ^
+      method IVLCVout.setVi
+deoView(SurfaceView) is 
+not applicable
+        (argument 
+mismatch; VLCVideoLayout 
+cannot be converted to 
+SurfaceView)
+      method IVLCVout.setVi
+deoView(TextureView) is 
+not applicable
+        (argument 
+mismatch; VLCVideoLayout 
+cannot be converted to 
+TextureView)
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:349: error: 
+cannot find symbol
+                           
+   startPosition = 
+lastPosition;
+                           
+   ^
+    symbol: variable 
+startPosition
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:350: error: 
+cannot find symbol
+                           
+   player.setTime(startPosi
+tion);
+                           
+                  ^
+    symbol: variable 
+startPosition
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:352: error: 
+cannot find symbol
+                           
+           "Resuming to 
+your last position " + form
+atDuration(startPosition),
+                           
+                           
+                           
+        ^
+    symbol: variable 
+startPosition
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:357: error: 
+cannot find symbol
+                      if 
+(startAutoPlay) {
+                          ^
+    symbol: variable 
+startAutoPlay
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:366: error: 
+cannot find symbol
+          } else if 
+(startAutoPlay) {
+                     ^
+    symbol:   variable 
+startAutoPlay
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:397: error: 
+cannot find symbol
+              
+startAutoPlay = 
+player.isPlaying();
+              ^
+    symbol:   variable 
+startAutoPlay
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:398: error: 
+cannot find symbol
+              
+startPosition = 
+Math.max(0, 
+player.getTime());
+              ^
+    symbol:   variable 
+startPosition
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:406: error: 
+cannot find symbol
+                  userMap.p
+ut("lastPosition", 
+startPosition);
+                           
+                   ^
+    symbol:   variable 
+startPosition
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:414: error: 
+cannot find symbol
+          startAutoPlay = 
+true;
+          ^
+    symbol:   variable 
+startAutoPlay
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:415: error: 
+cannot find symbol
+          startPosition = 
+-1;
+          ^
+    symbol:   variable 
+startPosition
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:447: error: 
+cannot find symbol
+                  if 
+(!ad25 && cp >= tp * 0.25) 
+{
+                       ^
+    symbol:   variable ad25
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:449: error: 
+cannot find symbol
+                      ad25 
+= true;
+                      ^
+    symbol:   variable ad25
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:451: error: 
+cannot find symbol
+                  if 
+(!ad50 && cp >= tp * 0.50) 
+{
+                       ^
+    symbol:   variable ad50
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:453: error: 
+cannot find symbol
+                      ad50 
+= true;
+                      ^
+    symbol:   variable ad50
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:455: error: 
+cannot find symbol
+                  if 
+(!ad75 && cp >= tp * 0.75) 
+{
+                       ^
+    symbol:   variable ad75
+    location: class 
+PlayerActivity
+  D:\Project\nfgplus\app\sr
+c\main\java\com\theflexproj
+ect\thunder\player\PlayerAc
+tivity.java:457: error: 
+cannot find symbol
+                      ad75 
+= true;
+                      ^
+    symbol:   variable ad75
+    location: class 
+PlayerActivity
+  Note: Some input files 
+use or override a 
+deprecated API.
+  Note: Recompile with 
+-Xlint:deprecation for 
+details.
+  Note: D:\Project\nfgplus\
+app\src\main\java\com\thefl
+exproject\thunder\fragments
+\PlayerFragment.java uses 
+unchecked or unsafe 
+operations.
+  Note: Recompile with 
+-Xlint:unchecked for 
+details.
+  37 errors
+
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+23 actionable tasks: 2 executed, 21 up-to-date
+* Try:
+> Check your code and 
+dependencies to fix the 
+compilation error(s)
+> Run with --scan to get 
+full insights.
+
+BUILD FAILED in 5s

@@ -137,11 +137,11 @@
         <ImageButton
             android:focusable="true"
             android:clickable="true"
+            android:id="@+id/btn_play_pause"
             android:nextFocusDown="@id/btn_fullscreen"
             android:nextFocusUp="@id/btn_cc"
             android:nextFocusLeft="@id/btn_bw"
             android:nextFocusRight="@id/btn_ff"
-            android:id="@+id/btn_play_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/button_selector"

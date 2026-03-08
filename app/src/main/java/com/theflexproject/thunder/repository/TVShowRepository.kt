@@ -140,4 +140,8 @@ class TVShowRepository @Inject constructor(
             null
         }
     }
+
+    suspend fun getEpisodeById(episodeId: Int): Episode? = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        episodeDao.find(episodeId)
+    }
 }

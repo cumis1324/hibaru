@@ -18,13 +18,11 @@ import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
 
 import com.theflexproject.thunder.fragments.PlayerFragment;
 import com.theflexproject.thunder.model.Movie;
 import com.theflexproject.thunder.model.SharedViewModel;
 
-@UnstableApi
 public class DetailActivity extends AppCompatActivity {
     private SharedViewModel sharedViewModel;
     private PlayerFragment movieDetailsFragment;
@@ -34,17 +32,17 @@ public class DetailActivity extends AppCompatActivity {
     PictureInPictureParams params;
     private OnUserLeaveHintListener userLeaveHintListener;
 
-    @OptIn(markerClass = UnstableApi.class)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(1);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         setContentView(R.layout.activity_detail);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         textView = findViewById(R.id.tesText);
         bukaIntent();
-       }
+    }
 
     private void bukaIntent() {
         intent = getIntent();
@@ -60,10 +58,11 @@ public class DetailActivity extends AppCompatActivity {
         if (itemType.equals("movie")) {
             movieDetailsFragment = new PlayerFragment(itemId, true);
             getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .replace(R.id.detailFrame,movieDetailsFragment).commit();
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.detailFrame, movieDetailsFragment).commit();
         }
     }
+
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();

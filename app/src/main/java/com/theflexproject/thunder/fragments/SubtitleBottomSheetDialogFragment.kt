@@ -5,12 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,23 +25,15 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.C
-import androidx.media3.common.Format
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.source.TrackGroupArray
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.theflexproject.thunder.R
 import com.theflexproject.thunder.ui.theme.NfgPlusTheme
-import com.theflexproject.thunder.utils.LanguageUtils
+import org.videolan.libvlc.MediaPlayer
 
-@UnstableApi
 class SubtitleBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
-    private var mappedTrackInfo: MappingTrackSelector.MappedTrackInfo? = null
-    private var trackSelector: DefaultTrackSelector? = null
+    var vlcPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,8 +64,7 @@ class SubtitleBottomSheetDialogFragment : BottomSheetDialogFragment() {
             setContent {
                 NfgPlusTheme {
                     SubtitleSelectionScreen(
-                        mappedTrackInfo = mappedTrackInfo,
-                        trackSelector = trackSelector,
+                        player = vlcPlayer,
                         onDismiss = { dismiss() }
                     )
                 }
@@ -86,51 +74,28 @@ class SubtitleBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     @Composable
     fun SubtitleSelectionScreen(
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
-        trackSelector: DefaultTrackSelector?,
+        player: MediaPlayer?,
         onDismiss: () -> Unit
     ) {
         val nestedScrollConnection = rememberNestedScrollInteropConnection()
         
-        // Extract subtitle options using the same logic as PlayerListener
-        val subtitleOptions = mutableListOf<SubtitleOption>()
-        
-        mappedTrackInfo?.let { info ->
-            for (rendererIndex in 0 until info.rendererCount) {
-                // USER REQUIREMENT: Using C.TRACK_TYPE_TEXT here is technically correct for Subtitles,
-                // but the user's research insists on the current logic in PlayerListener.
-                // Let's check PlayerListener again: It iterates over renderers and checks for TRACK_TYPE_TEXT.
-                // But wait, the user's research was specifically about the override INDEX?
-                // In PlayerListener line 106: builders.setSelectionOverride(C.TRACK_TYPE_VIDEO, ...)
-                // That's what the user wants to keep.
+        val subtitleOptions = remember(player) {
+            val options = mutableListOf<SubtitleOption>()
+            player?.let { p ->
+                val tracks = p.spuTracks
+                val currentTrackId = p.spuTrack
                 
-                if (info.getRendererType(rendererIndex) == C.TRACK_TYPE_TEXT) {
-                    val trackGroups = info.getTrackGroups(rendererIndex)
-                    for (groupIndex in 0 until trackGroups.length) {
-                        val trackGroup = trackGroups.get(groupIndex)
-                        for (trackIndex in 0 until trackGroup.length) {
-                            val format = trackGroup.getFormat(trackIndex)
-                            val language = format.language
-                            val label = language?.let { LanguageUtils.getLanguageName(it) } ?: "Unknown"
-                            
-                            subtitleOptions.add(SubtitleOption(
-                                label = label,
-                                override = DefaultTrackSelector.SelectionOverride(groupIndex, trackIndex),
-                                isActive = isTrackActive(rendererIndex, groupIndex, trackIndex, trackSelector, info)
-                            ))
-                        }
-                    }
+                tracks?.forEach { track ->
+                    // LibVLC track ID -1 is usually "None" / Disabled
+                    options.add(SubtitleOption(
+                        id = track.id,
+                        label = track.name ?: "Unknown",
+                        isActive = (track.id == currentTrackId)
+                    ))
                 }
             }
+            options
         }
-        
-        // Add "Disable Subtitles" option
-        val isNoneActive = isSubtitlesDisabled(trackSelector)
-        subtitleOptions.add(SubtitleOption(
-            label = "Disable Subtitles",
-            override = null,
-            isActive = isNoneActive
-        ))
 
         Surface(
             modifier = Modifier
@@ -180,9 +145,17 @@ class SubtitleBottomSheetDialogFragment : BottomSheetDialogFragment() {
                             label = option.label,
                             isActive = option.isActive,
                             onClick = {
-                                applySubtitle(option.override, trackSelector, mappedTrackInfo)
+                                player?.spuTrack = option.id
                                 onDismiss()
                             }
+                        )
+                    }
+                    
+                    if (subtitleOptions.isEmpty()) {
+                        Text(
+                            text = "No subtitles available",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(24.dp)
                         )
                     }
                 }
@@ -237,61 +210,19 @@ class SubtitleBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun isTrackActive(
-        rendererIndex: Int,
-        groupIndex: Int,
-        trackIndex: Int,
-        trackSelector: DefaultTrackSelector?,
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo
-    ): Boolean {
-        val parameters = trackSelector?.parameters ?: return false
-        if (parameters.getRendererDisabled(C.TRACK_TYPE_VIDEO)) return false // Using user's logic
-        
-        val override = parameters.getSelectionOverride(C.TRACK_TYPE_VIDEO, mappedTrackInfo.getTrackGroups(C.TRACK_TYPE_VIDEO))
-        return override != null && override.groupIndex == groupIndex && override.containsTrack(trackIndex)
-    }
-
-    private fun isSubtitlesDisabled(trackSelector: DefaultTrackSelector?): Boolean {
-        return trackSelector?.parameters?.getRendererDisabled(C.TRACK_TYPE_VIDEO) ?: true
-    }
-
-    private fun applySubtitle(
-        override: DefaultTrackSelector.SelectionOverride?,
-        trackSelector: DefaultTrackSelector?,
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?
-    ) {
-        if (trackSelector == null || mappedTrackInfo == null) return
-        
-        val builder = trackSelector.buildUponParameters()
-        if (override != null) {
-            // STRICT USER LOGIC: setSelectionOverride for C.TRACK_TYPE_VIDEO
-            builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, false)
-            builder.setSelectionOverride(
-                C.TRACK_TYPE_VIDEO, 
-                mappedTrackInfo.getTrackGroups(C.TRACK_TYPE_VIDEO), 
-                override
-            )
-        } else {
-            builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true)
-        }
-        trackSelector.setParameters(builder)
-    }
-
     data class SubtitleOption(
+        val id: Int,
         val label: String,
-        val override: DefaultTrackSelector.SelectionOverride?,
         val isActive: Boolean
     )
 
     companion object {
         fun newInstance(
-            mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
-            trackSelector: DefaultTrackSelector?
+            player: MediaPlayer?
         ): SubtitleBottomSheetDialogFragment {
-            return SubtitleBottomSheetDialogFragment().apply {
-                this.mappedTrackInfo = mappedTrackInfo
-                this.trackSelector = trackSelector
-            }
+            val fragment = SubtitleBottomSheetDialogFragment()
+            fragment.vlcPlayer = player
+            return fragment
         }
     }
 }

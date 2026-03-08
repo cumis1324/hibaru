@@ -89,5 +89,12 @@ data class Episode(
     @ColumnInfo(name = "local_path", defaultValue = "")
     var localPath: String? = null,
     @ColumnInfo(name = "download_id", defaultValue = "-1")
-    var downloadId: Long = -1L
+    var downloadId: Long = -1L,
+    
+    @Ignore
+    var show_poster_path: String? = null,
+    @Ignore
+    var show_backdrop_path: String? = null,
+    @Ignore
+    var show_name: String? = null
 ) : MyMedia, Parcelable

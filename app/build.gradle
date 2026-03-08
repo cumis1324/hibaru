@@ -17,8 +17,8 @@ android {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 36
-        versionCode 87
-        versionName "Saptasitih"
+        versionCode 88
+        versionName "Sidasitih"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -127,9 +127,10 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'com.github.bumptech.glide:glide:4.13.2'
     kapt 'com.github.bumptech.glide:compiler:4.13.2'  // Changed from annotationProcessor to kapt
-    implementation "androidx.media3:media3-exoplayer:1.4.1"
-    implementation "androidx.media3:media3-exoplayer-dash:1.4.1"
-    implementation "androidx.media3:media3-ui:1.4.1"
+    // implementation "androidx.media3:media3-exoplayer:1.4.1"
+    // implementation "androidx.media3:media3-exoplayer-dash:1.4.1"
+    // implementation "androidx.media3:media3-ui:1.4.1"
+    implementation 'org.videolan.android:libvlc-all:3.6.4'
 //    implementation fileTree(dir: "libs", include: ["extension-*.aar"])
     implementation 'com.github.Dimezis:BlurView:version-2.0.2'
     implementation 'me.xdrop:fuzzywuzzy:1.4.0'

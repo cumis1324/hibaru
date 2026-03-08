@@ -21,7 +21,6 @@ import androidx.annotation.OptIn;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -185,7 +184,6 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
         transaction.commit();
     }
 
-    @OptIn(markerClass = UnstableApi.class)
     private void loadMovie(int id) {
         PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
         FragmentTransaction transaction = fragmentManager.beginTransaction();

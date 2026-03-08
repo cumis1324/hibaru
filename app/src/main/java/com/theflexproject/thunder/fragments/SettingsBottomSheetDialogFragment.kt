@@ -5,12 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -30,22 +27,15 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.theflexproject.thunder.R
-import com.theflexproject.thunder.player.PlayerListener
 import com.theflexproject.thunder.ui.theme.NfgPlusTheme
+import org.videolan.libvlc.MediaPlayer
 
-@UnstableApi
 class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
-    private var trackSelector: DefaultTrackSelector? = null
-    private var mappedTrackInfo: MappingTrackSelector.MappedTrackInfo? = null
-    private var player: Player? = null
+    private var vlcPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,9 +66,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             setContent {
                 NfgPlusTheme {
                     SettingsSelectionScreen(
-                        player = player,
-                        trackSelector = trackSelector,
-                        mappedTrackInfo = mappedTrackInfo,
+                        player = vlcPlayer,
                         onDismiss = { dismiss() }
                     )
                 }
@@ -88,27 +76,37 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     @Composable
     fun SettingsSelectionScreen(
-        player: Player?,
-        trackSelector: DefaultTrackSelector?,
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
+        player: MediaPlayer?,
         onDismiss: () -> Unit
     ) {
         val nestedScrollConnection = rememberNestedScrollInteropConnection()
         var currentSection by remember { mutableStateOf<SettingsSection>(SettingsSection.MAIN) }
         
         // Data for Audio Tracks
-        val audioTracks = remember(mappedTrackInfo, trackSelector) {
-            PlayerListener.getAudioTracks(mappedTrackInfo, trackSelector)
+        val audioTracks = remember(player) {
+            val options = mutableListOf<AudioOption>()
+            player?.let { p ->
+                val tracks = p.audioTracks
+                val currentTrackId = p.audioTrack
+                tracks?.forEach { track ->
+                    options.add(AudioOption(
+                        id = track.id,
+                        label = track.name ?: "Unknown",
+                        isActive = (track.id == currentTrackId)
+                    ))
+                }
+            }
+            options
         }
         
         // Data for Playback Speeds
         val speeds = listOf("0.5x", "1.0x (Normal)", "1.5x", "2.0x")
-        val currentSpeed = remember(player) {
-            val s = player?.playbackParameters?.speed ?: 1.0f
+        val currentSpeedLabel = remember(player) {
+            val rate = player?.rate ?: 1.0f
             when {
-                s == 0.5f -> "0.5x"
-                s == 1.5f -> "1.5x"
-                s == 2.0f -> "2.0x"
+                rate == 0.5f -> "0.5x"
+                rate == 1.5f -> "1.5x"
+                rate == 2.0f -> "2.0x"
                 else -> "1.0x (Normal)"
             }
         }
@@ -170,15 +168,15 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                                     )
                                     SettingMenuEntry(
                                         label = "Playback Speed",
-                                        value = currentSpeed,
+                                        value = currentSpeedLabel,
                                         icon = Icons.Default.PlayArrow,
                                         onClick = { currentSection = SettingsSection.SPEED }
                                     )
                                     val playerFragment = parentFragment as? PlayerFragment
                                     val currentResizeMode = playerFragment?.getCurrentResizeMode() ?: 0
                                     val resizeLabel = when(currentResizeMode) {
-                                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
-                                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Fill (Zoom)"
+                                        1 -> "Stretch"
+                                        3 -> "Fill (Zoom)"
                                         else -> "Original (Fit)"
                                     }
                                     SettingMenuEntry(
@@ -192,7 +190,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                                     SettingMenuEntry(
                                         label = "Screen Lock",
                                         value = if (isLocked) "Locked" else "Unlocked",
-                                        icon = Icons.Default.Settings, // TODO: Use lock icon if available in material icons
+                                        icon = Icons.Default.Settings,
                                         onClick = { 
                                             playerFragment?.toggleLock()
                                             onDismiss()
@@ -202,20 +200,22 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                         }
                         SettingsSection.AUDIO -> {
                             Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-                                audioTracks.forEach { track ->
-                                    // Note: we don't easily have 'isActive' for audio without parsing label
-                                    // but we can try to guess or just let user click.
-                                    // For now, let's keep it simple as the original logic didn't show active check.
-                                    // Actually, user wants penanda aktif.
-                                    
+                                audioTracks.forEach { option ->
                                     SettingItem(
-                                        label = track,
-                                        isActive = false, // TODO: Implement active check if possible
+                                        label = option.label,
+                                        isActive = option.isActive,
                                         icon = Icons.Default.Settings,
                                         onClick = {
-                                            PlayerListener.applyAudioTrack(track, mappedTrackInfo, trackSelector)
+                                            player?.audioTrack = option.id
                                             onDismiss()
                                         }
+                                    )
+                                }
+                                if (audioTracks.isEmpty()) {
+                                    Text(
+                                        text = "No audio tracks available",
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(24.dp)
                                     )
                                 }
                             }
@@ -225,7 +225,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                                 speeds.forEach { speed ->
                                     SettingItem(
                                         label = speed,
-                                        isActive = speed == currentSpeed,
+                                        isActive = speed == currentSpeedLabel,
                                         icon = Icons.Default.PlayArrow,
                                         onClick = {
                                             applyPlaybackSpeed(speed, player)
@@ -239,9 +239,9 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                             val playerFragment = parentFragment as? PlayerFragment
                             val currentResizeMode = playerFragment?.getCurrentResizeMode() ?: 0
                             val resizeModes = listOf(
-                                "Original (Fit)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT,
-                                "Stretch" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL,
-                                "Fill (Zoom)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                "Original (Fit)" to 0,
+                                "Stretch" to 1,
+                                "Fill (Zoom)" to 3
                             )
                             Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                                 resizeModes.forEach { (label, mode) ->
@@ -347,7 +347,7 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private fun applyPlaybackSpeed(speed: String, player: Player?) {
+    private fun applyPlaybackSpeed(speed: String, player: MediaPlayer?) {
         if (player == null) return
         val playbackSpeed = when (speed) {
             "0.5x" -> 0.5f
@@ -355,8 +355,14 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             "2.0x" -> 2.0f
             else -> 1.0f
         }
-        player.setPlaybackParameters(player.playbackParameters.withSpeed(playbackSpeed))
+        player.rate = playbackSpeed
     }
+
+    data class AudioOption(
+        val id: Int,
+        val label: String,
+        val isActive: Boolean
+    )
 
     enum class SettingsSection {
         MAIN, AUDIO, SPEED, RESIZE
@@ -364,14 +370,10 @@ class SettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         fun newInstance(
-            trackSelector: DefaultTrackSelector?,
-            mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
-            player: Player?
+            player: MediaPlayer?
         ): SettingsBottomSheetDialogFragment {
             return SettingsBottomSheetDialogFragment().apply {
-                this.trackSelector = trackSelector
-                this.mappedTrackInfo = mappedTrackInfo
-                this.player = player
+                this.vlcPlayer = player
             }
         }
     }

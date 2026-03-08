@@ -4,8 +4,7 @@ import android.content.Context;
 
 import androidx.annotation.OptIn;
 import androidx.fragment.app.FragmentActivity;
-import androidx.media3.common.util.Log;
-import androidx.media3.common.util.UnstableApi;
+import android.util.Log;
 
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.model.Movie;
@@ -224,7 +223,6 @@ public class DetailsUtils {
         }
     }
 
-    @OptIn(markerClass = UnstableApi.class)
     public static List<Movie> getSimilarMovies(Context mActivity, int id) {
         tmdbTrending movieSimilar = new tmdbTrending();
         List<String> similarId = movieSimilar.getSimilarMovie(id);
@@ -304,7 +302,6 @@ public class DetailsUtils {
         }
     }
 
-    @OptIn(markerClass = UnstableApi.class)
     public static List<Movie> getRecommendationMovies(Context mActivity, int id) {
         tmdbTrending movieSimilar = new tmdbTrending();
         List<String> similarId = movieSimilar.getRecommendationMovie(id);

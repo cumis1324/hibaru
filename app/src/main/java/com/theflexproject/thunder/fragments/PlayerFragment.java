@@ -4,7 +4,6 @@ import static com.theflexproject.thunder.Constants.TMDB_BACKDROP_IMAGE_BASE_URL;
 import static com.theflexproject.thunder.player.PlayerListener.fastForward;
 import static com.theflexproject.thunder.player.PlayerListener.rewind;
 import static com.theflexproject.thunder.player.PlayerListener.togglePlayback;
-import static com.theflexproject.thunder.player.PlayerUtils.createMediaSourceFactory;
 import static com.theflexproject.thunder.player.PlayerUtils.enterFullscreen;
 import static com.theflexproject.thunder.player.PlayerUtils.exitFullscreen;
 import static com.theflexproject.thunder.player.PlayerUtils.isTVDevice;
@@ -12,7 +11,6 @@ import static com.theflexproject.thunder.player.PlayerUtils.lastPositionListener
 import static com.theflexproject.thunder.player.PlayerUtils.load3ads;
 import static com.theflexproject.thunder.player.PlayerUtils.resumePlayerState;
 import static com.theflexproject.thunder.player.PlayerUtils.saveResume;
-import static com.theflexproject.thunder.player.PlayerUtils.subOn;
 import static com.theflexproject.thunder.player.PlayerUtils.updateTimer;
 
 import android.annotation.SuppressLint;
@@ -41,6 +39,7 @@ import androidx.core.view.WindowCompat;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -56,32 +55,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.core.widget.NestedScrollView;
-import androidx.media3.common.AudioAttributes;
-import androidx.media3.common.C;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.PlaybackException;
-import androidx.media3.common.Player;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.theflexproject.thunder.adapter.SourceAdapter;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.TrackSelectionParameters;
-import androidx.media3.common.Tracks;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.exoplayer.DefaultRenderersFactory;
-import androidx.media3.exoplayer.ExoPlayer;
+// import androidx.media3.ui.PlayerView;
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaPlayer;
+import org.videolan.libvlc.util.VLCVideoLayout;
 
-import androidx.media3.exoplayer.RenderersFactory;
-import androidx.media3.exoplayer.analytics.AnalyticsListener;
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
-
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
-import androidx.media3.ui.PlayerControlView;
-import androidx.media3.ui.PlayerView;
-
-import androidx.media3.datasource.DataSource;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -107,9 +86,7 @@ import com.theflexproject.thunder.model.RandomIndex;
 import com.theflexproject.thunder.model.TVShowInfo.Episode;
 import com.theflexproject.thunder.model.TVShowInfo.TVShow;
 import com.theflexproject.thunder.model.TVShowInfo.TVShowSeasonDetails;
-import com.theflexproject.thunder.player.DemoUtil;
 import com.theflexproject.thunder.player.PlayerUtils;
-import com.theflexproject.thunder.utils.AdHelper;
 import com.theflexproject.thunder.utils.DetailsUtils;
 import com.theflexproject.thunder.utils.MovieQualityExtractor;
 
@@ -117,9 +94,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@UnstableApi
 public class PlayerFragment extends BaseFragment
-        implements PlayerControlView.VisibilityListener, MainActivity.OnUserLeaveHintListener {
+        implements MainActivity.OnUserLeaveHintListener {
 
     private static final String TAG = "PlayerFragment", OFFLINE = "offline",
             HISTORY_PATH = "History/", LAST_POSITION = "lastPosition",
@@ -133,25 +109,23 @@ public class PlayerFragment extends BaseFragment
     private DatabaseReference databaseReference;
     private String tmdbId, userId, urlString, localPath;
 
-    private ExoPlayer player;
-    private PlayerView playerView;
+    private LibVLC libVLC;
+    private MediaPlayer player;
+    private VLCVideoLayout videoLayout;
     private ImageButton playPauseButton, setting, fullscreen, cc, ff, bw, source, btn_info;
     private SeekBar seekBar;
     private TextView timer, movietitle, epstitle, bufferText;
+    private ProgressBar bufferProgress;
 
     private boolean startAutoPlay;
     private int startItemIndex;
     private long startPosition;
 
-    private DataSource.Factory dataSourceFactory;
-    private TrackSelectionParameters trackSelectionParameters;
     BottomNavigationView bottomNavigationView;
     private boolean isFullscreen = false;
     private FrameLayout playerFrame;
-    private DefaultTrackSelector trackSelector;
-    private MappingTrackSelector.MappedTrackInfo mappedTrackInfo;
     private ImageView imageView;
-    private RelativeLayout customBufferingIndicator;
+    private View customBufferingIndicator;
     private FrameLayout detailContainer;
     private View topNavigationView;
     private ViewGroup rootView;
@@ -179,9 +153,12 @@ public class PlayerFragment extends BaseFragment
 
     private boolean isLocked = false;
     private float volumeAccumulator = 0f;
-    private int currentResizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT;
+    private int currentResizeMode = 0; // FIT
     private ImageButton btnLock;
     private View judulUtama, settingContainer, middleControls, bottomControls;
+
+    private final Handler hideControlsHandler = new Handler(Looper.getMainLooper());
+    private final Runnable hideControlsRunnable = this::hideControls;
 
     public PlayerFragment() {
         // Default constructor
@@ -253,6 +230,11 @@ public class PlayerFragment extends BaseFragment
             } else {
                 Log.d(TAG, "onCreate: Movie mode - itemId=" + itemId);
             }
+            long intentPos = getArguments().getLong("startPos", -1);
+            if (intentPos > 0) {
+                startPosition = intentPos;
+                Log.d(TAG, "onCreate: Received startPos from intent: " + intentPos);
+            }
         }
         SharedPreferences prefs = requireContext().getSharedPreferences("langgananUser", Context.MODE_PRIVATE);
         isSubscribed = prefs.getBoolean("isSubscribed", false);
@@ -302,11 +284,10 @@ public class PlayerFragment extends BaseFragment
             params.height = height;
             playerFrame.setLayoutParams(params);
         });
-        playerView = view.findViewById(R.id.video_view);
-        playerView.setControllerVisibilityListener(this);
+        videoLayout = view.findViewById(R.id.video_layout);
         bufferText = view.findViewById(R.id.buffer_text);
 
-        customControls = playerView.findViewById(R.id.custom_controlss);
+        customControls = view.findViewById(R.id.player_controls);
         judulUtama = customControls.findViewById(R.id.judulUtama);
         settingContainer = customControls.findViewById(R.id.setting);
         middleControls = customControls.findViewById(R.id.middle_controls);
@@ -335,6 +316,8 @@ public class PlayerFragment extends BaseFragment
         setting = customControls.findViewById(R.id.btn_setting);
         imageView = view.findViewById(R.id.background_image);
         customBufferingIndicator = view.findViewById(R.id.custom_buffering_indicator);
+        bufferProgress = view.findViewById(R.id.buffer_progress);
+        bufferText = view.findViewById(R.id.buffer_text);
         ff = customControls.findViewById(R.id.btn_ff);
         bw = customControls.findViewById(R.id.btn_bw);
         source = customControls.findViewById(R.id.btn_src);
@@ -361,13 +344,54 @@ public class PlayerFragment extends BaseFragment
                 btn_info.setVisibility(View.VISIBLE);
             }
 
-            // Remote Info key support
-            playerView.setOnKeyListener((v, keyCode, event) -> {
-                if (keyCode == android.view.KeyEvent.KEYCODE_INFO) {
-                    if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+            videoLayout.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() != android.view.KeyEvent.ACTION_DOWN)
+                    return false;
+
+                boolean controlsVisible = customControls != null && customControls.getVisibility() == View.VISIBLE;
+
+                // Reset hide timer on any key press if controls are visible
+                if (controlsVisible) {
+                    startAutoHideControls();
+                }
+
+                switch (keyCode) {
+                    case android.view.KeyEvent.KEYCODE_INFO:
                         showInfoSideSheet();
-                    }
-                    return true;
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_DPAD_CENTER:
+                    case android.view.KeyEvent.KEYCODE_ENTER:
+                        if (controlsVisible) {
+                            return false; // Let the focused button handle the click
+                        } else {
+                            toggleControls();
+                            return true;
+                        }
+                    case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:
+                        if (controlsVisible)
+                            return false; // Let native focus handle it
+                        fastForward(player, ff);
+                        showControls();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_DPAD_LEFT:
+                        if (controlsVisible)
+                            return false; // Let native focus handle it
+                        rewind(player, bw);
+                        showControls();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                        fastForward(player, ff);
+                        startAutoHideControls();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_MEDIA_REWIND:
+                        rewind(player, bw);
+                        startAutoHideControls();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    case android.view.KeyEvent.KEYCODE_SPACE:
+                        togglePlayback(player, playPauseButton);
+                        startAutoHideControls();
+                        return true;
                 }
                 return false;
             });
@@ -378,26 +402,100 @@ public class PlayerFragment extends BaseFragment
         }
         exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
 
+        if (!isTVDevice(mActivity)) {
+            videoLayout.setClickable(true);
+            videoLayout.setFocusable(true);
+        }
+        customControls.setOnClickListener(v -> toggleControls());
+        startAutoHideControls();
+    }
+
+    private void toggleControls() {
+        if (isLocked) {
+            if (btnLock.getVisibility() == View.VISIBLE) {
+                btnLock.setVisibility(View.GONE);
+            } else {
+                btnLock.setVisibility(View.VISIBLE);
+                startAutoHideControls();
+            }
+            return;
+        }
+
+        if (customControls.getVisibility() == View.VISIBLE) {
+            hideControls();
+        } else {
+            showControls();
+        }
+    }
+
+    private void showControls() {
+        customControls.setVisibility(View.VISIBLE);
+        if (isTVDevice(mActivity)) {
+            playPauseButton.requestFocus();
+        }
+        startAutoHideControls();
+    }
+
+    private void hideControls() {
+        if (isLocked) {
+            btnLock.setVisibility(View.GONE);
+            return;
+        }
+        customControls.setVisibility(View.GONE);
+    }
+
+    private void startAutoHideControls() {
+        if (isBuffering)
+            return; // Keep controls visible while buffering
+        hideControlsHandler.removeCallbacks(hideControlsRunnable);
+        hideControlsHandler.postDelayed(hideControlsRunnable, 3500);
     }
 
     private void setControlListeners() {
-        source.setOnClickListener(v -> showSources());
+        source.setOnClickListener(v -> {
+            showSources();
+            startAutoHideControls();
+        });
+        ff.setOnClickListener(v -> {
+            fastForward(player, ff);
+            startAutoHideControls();
+        });
+        bw.setOnClickListener(v -> {
+            rewind(player, bw);
+            startAutoHideControls();
+        });
         cc.setOnClickListener(v -> {
-            if (mappedTrackInfo != null) {
+            if (player != null) {
                 showSubtitles();
             } else {
                 Toast.makeText(mActivity, "Loading streams, please wait...", Toast.LENGTH_SHORT).show();
             }
+            startAutoHideControls();
         });
         setting.setOnClickListener(v -> {
             if (player != null) {
                 showSettings();
             }
+            startAutoHideControls();
         });
         if (btn_info != null) {
-            btn_info.setOnClickListener(v -> showInfoSideSheet());
+            btn_info.setOnClickListener(v -> {
+                showInfoSideSheet();
+                startAutoHideControls();
+            });
         }
-        playPauseButton.setOnClickListener(v -> togglePlayback(player, playPauseButton));
+        playPauseButton.setOnClickListener(v -> {
+            if (player != null) {
+                if (player.isPlaying()) {
+                    player.pause();
+                    playPauseButton.setImageResource(R.drawable.ic_play);
+                } else {
+                    player.play();
+                    playPauseButton.setImageResource(R.drawable.ic_pause);
+                }
+            }
+            startAutoHideControls();
+        });
         fullscreen.setOnClickListener(v -> {
             if (isFullscreen) {
                 exitFullscreen(mActivity, playerFrame, movietitle, fullscreen);
@@ -406,28 +504,37 @@ public class PlayerFragment extends BaseFragment
                 enterFullscreen(mActivity, playerFrame, movietitle, fullscreen);
                 isFullscreen = true;
             }
+            startAutoHideControls();
         });
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (player != null && fromUser) {
-                    player.seekTo(progress);
+                    player.setTime(progress);
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
+                hideControlsHandler.removeCallbacks(hideControlsRunnable);
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                startAutoHideControls();
             }
         });
         gestureDetector = new GestureDetector(mActivity, new GestureDetector.SimpleOnGestureListener() {
             @Override
+            public boolean onDown(MotionEvent e) {
+                return true; // Must return true to track gestures
+            }
+
+            @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
-                return true; // Menangani tap tunggal (opsional)
+                toggleControls();
+                return true;
             }
 
             @Override
@@ -435,7 +542,7 @@ public class PlayerFragment extends BaseFragment
                 if (isLocked || isBuffering)
                     return false;
                 // Tentukan area tap: kiri untuk rewind, kanan untuk fast forward
-                float screenWidth = playerView.getWidth();
+                float screenWidth = videoLayout.getWidth();
                 if (e.getX() < screenWidth / 2) {
                     rewind(player, bw);
                 } else {
@@ -449,8 +556,8 @@ public class PlayerFragment extends BaseFragment
                 if (isLocked || isTVDevice(mActivity) || !isFullscreen)
                     return false;
 
-                float screenWidth = playerView.getWidth();
-                float screenHeight = playerView.getHeight();
+                float screenWidth = videoLayout.getWidth();
+                float screenHeight = videoLayout.getHeight();
 
                 if (e1.getX() < screenWidth / 2) {
                     // Left side: Brightness
@@ -470,7 +577,7 @@ public class PlayerFragment extends BaseFragment
         });
 
         // Paksa listener sentuhan aktif sejak awal agar menu bisa muncul saat Loading
-        playerView.setOnTouchListener((v, event) -> {
+        videoLayout.setOnTouchListener((v, event) -> {
             boolean handled = gestureDetector.onTouchEvent(event);
             return handled || v.performClick();
         });
@@ -479,21 +586,18 @@ public class PlayerFragment extends BaseFragment
     private void initPlayerState(Bundle savedInstanceState) {
 
         if (savedInstanceState != null) {
-            trackSelectionParameters = TrackSelectionParameters.fromBundle(
-                    Objects.requireNonNull(savedInstanceState.getBundle(KEY_TRACK_SELECTION_PARAMETERS)));
             startAutoPlay = savedInstanceState.getBoolean(KEY_AUTO_PLAY);
             startItemIndex = savedInstanceState.getInt(KEY_ITEM_INDEX);
             startPosition = savedInstanceState.getLong(KEY_POSITION);
         } else {
-            trackSelectionParameters = new TrackSelectionParameters.Builder(mActivity).build();
             clearStartPosition();
         }
     }
 
     private void clearStartPosition() {
         startAutoPlay = true;
-        startItemIndex = C.INDEX_UNSET;
-        startPosition = C.TIME_UNSET;
+        startItemIndex = -1;
+        startPosition = -1;
     }
 
     private void initializePlayer(String urlString) {
@@ -501,46 +605,42 @@ public class PlayerFragment extends BaseFragment
             if (urlString == null || urlString.isEmpty()) {
                 return;
             }
-            Uri uri = Uri.parse(urlString);
-            MediaItem mediaItem = MediaItem.fromUri(uri);
-            trackSelector = new DefaultTrackSelector(mActivity);
-            trackSelector.setParameters(
-                    new DefaultTrackSelector.ParametersBuilder(mActivity)
-                            .setExceedRendererCapabilitiesIfNecessary(false)
-                            .build());
-            ExoPlayer.Builder playerBuilder = new ExoPlayer.Builder(/* context= */ mActivity)
-                    .setMediaSourceFactory(createMediaSourceFactory(mActivity));
-            setRenderersFactory(playerBuilder, intent.getBooleanExtra(PREFER_EXTENSION_DECODERS_EXTRA, false));
-            player = playerBuilder.setTrackSelector(trackSelector).build();
 
-            player.setTrackSelectionParameters(trackSelectionParameters);
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
-                    .setUsage(C.USAGE_MEDIA)
-                    .build();
-            player.setAudioAttributes(audioAttributes, true);
-            player.setPlayWhenReady(startAutoPlay);
-            playerView.setPlayer(player);
-            player.setMediaItem(mediaItem);
-            player.prepare();
-            resumePlayerState(player, tmdbId);
-            if (startItemIndex != C.INDEX_UNSET) {
-                player.seekTo(startItemIndex, startPosition);
+            ArrayList<String> options = new ArrayList<>();
+            options.add("--http-reconnect");
+            options.add("--network-caching=3000");
+            // Add hardware acceleration based on preference if needed
+            options.add("-vvv"); // Verbose logging for debugging
+
+            libVLC = new LibVLC(mActivity, options);
+            player = new MediaPlayer(libVLC);
+            // Use TextureView and VideoScale for better subtitle compatibility
+            player.attachViews(videoLayout, null, true, true);
+
+            Media media = new Media(libVLC, Uri.parse(urlString));
+            media.setHWDecoderEnabled(true, false);
+            media.addOption(":network-caching=3000");
+            player.setMedia(media);
+            media.release();
+
+            player.setEventListener(new PlayerEventListener());
+            player.play();
+
+            // Resume position
+            long lastPos = startPosition;
+            if (lastPos <= 0) {
+                lastPos = PlayerUtils.getResumePosition(mActivity, tmdbId);
             }
-            player.addListener(new PlayerEventListener());
+
+            if (lastPos > 0) {
+                player.setTime(lastPos);
+                Log.d(TAG, "initializePlayer: Seeking to " + lastPos);
+            }
+            // Also sync from Firebase (Async)
+            PlayerUtils.resumePlayerState(player, tmdbId);
+
             btn_info.requestFocus();
-            if (player.getPlayWhenReady()) {
-                AdHelper.loadReward(mActivity, mActivity, player, playerView);
-            }
         }
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    private void setRenderersFactory(
-            ExoPlayer.Builder playerBuilder, boolean preferExtensionDecoders) {
-        RenderersFactory renderersFactory = DemoUtil.buildRenderersFactory(/* context= */ mActivity,
-                preferExtensionDecoders);
-        playerBuilder.setRenderersFactory(renderersFactory);
     }
 
     @Override
@@ -550,17 +650,11 @@ public class PlayerFragment extends BaseFragment
     }
 
     @Override
-    public void onVisibilityChange(int visibility) {
-        if (visibility == View.VISIBLE && isLocked) {
-            updateLockUI();
-        }
-    }
-
-    @Override
     public void onPause() {
         super.onPause();
         if (player != null) {
-            player.setPlayWhenReady(false);
+            PlayerUtils.saveResume(mActivity, player.getTime(), player.getLength(), tmdbId);
+            player.pause();
         }
     }
 
@@ -568,7 +662,7 @@ public class PlayerFragment extends BaseFragment
     public void onResume() {
         super.onResume();
         if (player != null) {
-            player.setPlayWhenReady(true);
+            player.play();
             if (bottomNavigationView != null) {
                 bottomNavigationView.setVisibility(View.GONE);
             }
@@ -577,27 +671,8 @@ public class PlayerFragment extends BaseFragment
                     topNavigationView.setVisibility(View.GONE);
                 }
             }
-            startSeekBarUpdate();
         }
-
     }
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private final Runnable updateSeekBar = new Runnable() {
-        @Override
-        public void run() {
-            if (player != null && player.isPlaying()) {
-                seekBar.setProgress((int) player.getCurrentPosition());
-                seekBar.setMax((int) player.getDuration());
-                updateTimer(timer, player.getCurrentPosition(), player.getDuration());
-                updateWatchNext();
-                handler.postDelayed(this, 1000); // Update
-                                                 // setiap
-                                                 // detik
-                load3ads(mActivity, mActivity, player, playerView);
-            }
-        }
-    };
 
     private void startSeekBarUpdate() {
         handler.post(updateSeekBar);
@@ -607,10 +682,99 @@ public class PlayerFragment extends BaseFragment
         handler.removeCallbacks(updateSeekBar);
     }
 
+    private class PlayerEventListener implements MediaPlayer.EventListener {
+        private boolean initialSeekDone = false;
+
+        @Override
+        public void onEvent(MediaPlayer.Event event) {
+            switch (event.type) {
+                case MediaPlayer.Event.Playing:
+                    isBuffering = false;
+                    customBufferingIndicator.setVisibility(View.GONE);
+                    playPauseButton.setVisibility(View.VISIBLE);
+                    imageView.setVisibility(View.GONE);
+                    playPauseButton.setImageResource(R.drawable.ic_pause);
+                    startSeekBarUpdate();
+
+                    // Handle initial seek from startPosition if provided
+                    if (!initialSeekDone && startPosition > 0) {
+                        player.setTime(startPosition);
+                        initialSeekDone = true;
+                        Log.d(TAG, "PlayerEventListener: Playing, applying startPosition: " + startPosition);
+                    }
+
+                    // Enable controls
+                    playPauseButton.setEnabled(true);
+                    playPauseButton.setAlpha(1.0f);
+                    seekBar.setEnabled(true);
+                    seekBar.setAlpha(1.0f);
+                    ff.setEnabled(true);
+                    ff.setAlpha(1.0f);
+                    bw.setEnabled(true);
+                    bw.setAlpha(1.0f);
+
+                    updateWatchNext();
+                    break;
+                case MediaPlayer.Event.Paused:
+                    playPauseButton.setImageResource(R.drawable.ic_play);
+                    stopSeekBarUpdate();
+                    break;
+                case MediaPlayer.Event.Stopped:
+                case MediaPlayer.Event.EndReached:
+                    isBuffering = false;
+                    stopSeekBarUpdate();
+                    if (isTVDevice(mActivity) && tmdbId != null) {
+                        com.theflexproject.thunder.utils.WatchNextHelper.INSTANCE.removeFromWatchNext(mActivity,
+                                tmdbId);
+                    }
+                    break;
+                case MediaPlayer.Event.Buffering:
+                    float buffering = event.getBuffering();
+                    if (buffering < 100f) {
+                        isBuffering = true;
+                        customBufferingIndicator.setVisibility(View.VISIBLE);
+                    } else {
+                        isBuffering = false;
+                        customBufferingIndicator.setVisibility(View.GONE);
+                        // Also check for initial seek when buffering finishes
+                        if (!initialSeekDone && startPosition > 0) {
+                            player.setTime(startPosition);
+                            initialSeekDone = true;
+                            Log.d(TAG, "PlayerEventListener: Buffering 100%, applying startPosition: " + startPosition);
+                        }
+                    }
+                    break;
+                case MediaPlayer.Event.Vout:
+                    break;
+                case MediaPlayer.Event.EncounteredError:
+                    Log.e("VLCError", "An error occurred");
+                    break;
+            }
+        }
+    }
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable updateSeekBar = new Runnable() {
+        @Override
+        public void run() {
+            if (player != null && player.isPlaying()) {
+                long currentTime = player.getTime();
+                long totalTime = player.getLength();
+                if (totalTime > 0) {
+                    seekBar.setMax((int) totalTime);
+                    seekBar.setProgress((int) currentTime);
+                    updateTimer(timer, currentTime, totalTime);
+                }
+                updateWatchNext();
+                handler.postDelayed(this, 1000);
+                PlayerUtils.load3ads(mActivity, mActivity, player, videoLayout);
+            }
+        }
+    };
+
     @Override
     public void onUserLeaveHint() {
         // handleUserLeaveHint();
-
     }
 
     private void handleUserLeaveHint() {
@@ -626,16 +790,13 @@ public class PlayerFragment extends BaseFragment
             customControls.setVisibility(View.GONE);
         } else {
             if (!isTVDevice(mActivity)) {
-                // Terapkan logika orientasi untuk perangkat non-TV
                 mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             }
             customControls.setVisibility(View.VISIBLE);
         }
         if (!isInPictureInPictureMode && player != null) {
-            // Ketika keluar dari mode PIP, destroy player
             destroyAll();
         }
-
     }
 
     private void setAdsState() {
@@ -648,105 +809,17 @@ public class PlayerFragment extends BaseFragment
         editor.apply();
     }
 
-    private class PlayerEventListener implements Player.Listener {
-        @Override
-        public void onTracksChanged(Tracks tracks) {
-            mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-            cc.setImageResource(subOn(trackSelector) ? R.drawable.ic_cc : R.drawable.ic_cc_filled);
-            Player.Listener.super.onTracksChanged(tracks);
-        }
-
-        @Override
-        public void onIsPlayingChanged(boolean isPlaying) {
-            playPauseButton.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
-            playPauseButton.requestFocus();
-            if (isPlaying) {
-                startSeekBarUpdate(); // Memulai update seekbar
-            } else {
-                stopSeekBarUpdate(); // Menghentikan update seekbar
-            }
-        }
-
-        @Override
-        public void onPlaybackStateChanged(@Player.State int playbackState) {
-            if (playbackState == Player.STATE_READY) {
-                isBuffering = false;
-                mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-                startSeekBarUpdate();
-                imageView.setVisibility(View.GONE);
-                customBufferingIndicator.setVisibility(View.GONE);
-                ff.setOnClickListener(v -> fastForward(player, ff));
-                bw.setOnClickListener(v -> rewind(player, bw));
-
-                // Aktifkan kembali kontrol playback
-                playPauseButton.setEnabled(true);
-                playPauseButton.setAlpha(1.0f);
-                seekBar.setEnabled(true);
-                seekBar.setAlpha(1.0f);
-                ff.setEnabled(true);
-                ff.setAlpha(1.0f);
-                bw.setEnabled(true);
-                bw.setAlpha(1.0f);
-
-                if (isTVDevice(mActivity)) {
-                    movietitle.setVisibility(View.VISIBLE);
-                    if (playPauseButton != null) {
-                        playPauseButton.requestFocus();
-                    }
-                }
-            } else if (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_IDLE) {
-                isBuffering = true;
-                customBufferingIndicator.setVisibility(View.VISIBLE);
-                imageView.setVisibility(View.VISIBLE);
-
-                // Matikan kontrol playback agar tidak mengganggu loading
-                playPauseButton.setEnabled(false);
-                playPauseButton.setAlpha(0.5f);
-                seekBar.setEnabled(false);
-                seekBar.setAlpha(0.5f);
-                ff.setEnabled(false);
-                ff.setAlpha(0.5f);
-                bw.setEnabled(false);
-                bw.setAlpha(0.5f);
-
-                if (isTVDevice(mActivity) && btn_info != null) {
-                    btn_info.requestFocus();
-                }
-            } else if (playbackState == Player.STATE_ENDED) {
-                isBuffering = false;
-                imageView.setVisibility(View.GONE);
-                customBufferingIndicator.setVisibility(View.GONE);
-                if (isTVDevice(mActivity) && tmdbId != null) {
-                    com.theflexproject.thunder.utils.WatchNextHelper.INSTANCE.removeFromWatchNext(mActivity, tmdbId);
-                }
-            }
-        }
-
-        @Override
-        public void onPlayerError(PlaybackException error) {
-            Log.e("ExoPlayerError", error.getMessage());
-            bufferText.setText(error.getMessage());
-            if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
-                player.seekToDefaultPosition();
-                player.prepare();
-            }
-        }
-
-    }
-
     private void showSubtitles() {
-        if (mappedTrackInfo == null)
+        if (player == null)
             return;
 
         if (isTVDevice(mActivity)) {
-            SubtitleSideSheetDialogFragment subtitleSheet = SubtitleSideSheetDialogFragment.Companion.newInstance(
-                    mappedTrackInfo,
-                    trackSelector);
+            SubtitleSideSheetDialogFragment subtitleSheet = SubtitleSideSheetDialogFragment.Companion
+                    .newInstance(player);
             subtitleSheet.show(getChildFragmentManager(), "subtitle_side_sheet");
         } else {
-            SubtitleBottomSheetDialogFragment subtitleSheet = SubtitleBottomSheetDialogFragment.Companion.newInstance(
-                    mappedTrackInfo,
-                    trackSelector);
+            SubtitleBottomSheetDialogFragment subtitleSheet = SubtitleBottomSheetDialogFragment.Companion
+                    .newInstance(player);
             subtitleSheet.show(getChildFragmentManager(), "subtitle_bottom_sheet");
         }
     }
@@ -756,16 +829,12 @@ public class PlayerFragment extends BaseFragment
             return;
 
         if (isTVDevice(mActivity)) {
-            SettingsSideSheetDialogFragment settingsSheet = SettingsSideSheetDialogFragment.Companion.newInstance(
-                    trackSelector,
-                    mappedTrackInfo,
-                    player);
+            SettingsSideSheetDialogFragment settingsSheet = SettingsSideSheetDialogFragment.Companion
+                    .newInstance(player);
             settingsSheet.show(getChildFragmentManager(), "settings_side_sheet");
         } else {
-            SettingsBottomSheetDialogFragment settingsSheet = SettingsBottomSheetDialogFragment.Companion.newInstance(
-                    trackSelector,
-                    mappedTrackInfo,
-                    player);
+            SettingsBottomSheetDialogFragment settingsSheet = SettingsBottomSheetDialogFragment.Companion
+                    .newInstance(player);
             settingsSheet.show(getChildFragmentManager(), "settings_bottom_sheet");
         }
     }
@@ -835,14 +904,24 @@ public class PlayerFragment extends BaseFragment
 
     private void switchSource(String newUrl) {
         if (player != null) {
-            long currentPos = player.getCurrentPosition();
-            boolean wasPlaying = player.getPlayWhenReady();
+            long currentPos = player.getTime();
+            boolean wasPlaying = player.isPlaying();
 
-            MediaItem mediaItem = MediaItem.fromUri(Uri.parse(newUrl));
-            player.setMediaItem(mediaItem, false); // false = don't reset position if possible
-            player.seekTo(currentPos);
-            player.prepare();
-            player.setPlayWhenReady(wasPlaying);
+            Media media = new Media(libVLC, Uri.parse(newUrl));
+            media.setHWDecoderEnabled(true, false);
+            media.addOption(":network-caching=3000");
+            player.setMedia(media);
+            media.release();
+
+            if (currentPos > 0) {
+                player.setTime(currentPos);
+            }
+            if (wasPlaying) {
+                player.play();
+            }
+
+            // Also ensure we sync resume state for new source if needed
+            PlayerUtils.resumePlayerState(player, tmdbId);
 
             customBufferingIndicator.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
@@ -852,10 +931,18 @@ public class PlayerFragment extends BaseFragment
     protected void newSource() {
         if (player != null) {
             setAdsState();
-            saveResume(player, tmdbId);
+            PlayerUtils.saveResume(mActivity, player.getTime(), player.getLength(), tmdbId);
+            player.stop();
+            // We don't necessarily need to release the entire player if we're just
+            // switching source for same item
+            // But if it's a completely new source (e.g. next episode), release and re-init
+            // is safer.
             player.release();
             player = null;
-            playerView.setPlayer(/* player= */ null);
+            if (libVLC != null) {
+                libVLC.release();
+                libVLC = null;
+            }
             stopSeekBarUpdate();
             customBufferingIndicator.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
@@ -864,13 +951,17 @@ public class PlayerFragment extends BaseFragment
 
     private void releasePlayer() {
         if (player != null) {
-            saveResume(player, tmdbId);
+            PlayerUtils.saveResume(mActivity, player.getTime(), player.getLength(), tmdbId);
+            player.stop();
             player.release();
             player = null;
-            playerView.setPlayer(null);
-            stopSeekBarUpdate();
-            destroyAll();
         }
+        if (libVLC != null) {
+            libVLC.release();
+            libVLC = null;
+        }
+        stopSeekBarUpdate();
+        destroyAll();
     }
 
     private void destroyAll() {
@@ -965,10 +1056,21 @@ public class PlayerFragment extends BaseFragment
     @SuppressLint("SetTextI18n")
     private void loadSeriesDetails(Episode episode) {
 
+        if (episode != null) {
+            // Bug 4: Ensure tvShowDetails and season are loaded (essential for navigation
+            // from Home)
+            if (tvShowDetails == null) {
+                tvShowDetails = DetailsUtils.getSeriesDetails(mActivity, (int) episode.getShowId());
+            }
+            if (season == null) {
+                season = DetailsUtils.getSeasonDetails(mActivity, episode.getSeasonId());
+            }
+        }
+
         if (tvShowDetails != null) {
             String title = tvShowDetails.getName();
-            int seasonId = season.getId();
-            TVShowSeasonDetails seasonDetails = DetailsUtils.getSeasonDetails(mActivity, seasonId);
+            TVShowSeasonDetails seasonDetails = season != null ? season
+                    : (episode != null ? DetailsUtils.getSeasonDetails(mActivity, episode.getSeasonId()) : null);
             movietitle.setText(title);
 
             // Load DetailFragment with tvShowId (like movies do)
@@ -982,8 +1084,8 @@ public class PlayerFragment extends BaseFragment
             }
 
             if (episode != null) {
-                epstitle.setText("Season: " + seasonDetails.getSeasonNumber()
-                        + " Episode: " + episode.getName());
+                int seasonNum = (seasonDetails != null) ? seasonDetails.getSeasonNumber() : episode.getSeasonNumber();
+                epstitle.setText("Season: " + seasonNum + " Episode: " + episode.getName());
                 epstitle.setVisibility(View.VISIBLE);
                 tmdbId = String.valueOf(episode.getId());
                 urlString = episode.getUrlString();
@@ -1031,8 +1133,8 @@ public class PlayerFragment extends BaseFragment
                     mActivity,
                     movieDetails,
                     episode,
-                    player.getCurrentPosition(),
-                    player.getDuration());
+                    player.getTime(),
+                    player.getLength());
         }
     }
 
@@ -1041,8 +1143,13 @@ public class PlayerFragment extends BaseFragment
             return;
 
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        int targetWidth = shrink ? (int) (screenWidth * 0.65) : screenWidth;
+        int targetWidth = shrink ? (int) (screenWidth * 0.62) : screenWidth;
         int startWidth = playerFrame.getWidth();
+
+        // Hide controls during resize transition
+        if (shrink) {
+            customControls.setVisibility(View.GONE);
+        }
 
         ValueAnimator animator = ValueAnimator.ofInt(startWidth, targetWidth);
         animator.addUpdateListener(animation -> {
@@ -1053,19 +1160,25 @@ public class PlayerFragment extends BaseFragment
             playerFrame.setLayoutParams(params);
         });
 
-        // Detail container is only for mobile now
-        if (!isTVDevice(mActivity) && detailContainer != null) {
-            if (shrink) {
-                detailContainer.animate().alpha(0f).setDuration(200)
-                        .withEndAction(() -> detailContainer.setVisibility(View.GONE)).start();
-            } else {
-                detailContainer.setVisibility(View.VISIBLE);
-                detailContainer.animate().alpha(1f).setDuration(200).start();
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                // Show controls again when sidesheet is dismissed
+                if (!shrink) {
+                    showControls();
+                }
             }
-        }
+        });
 
-        animator.setDuration(300);
-        animator.setInterpolator(new DecelerateInterpolator());
+        // Cross-fade the player frame alpha for smooth feel
+        playerFrame.animate()
+                .alpha(shrink ? 0.85f : 1.0f)
+                .setDuration(220)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .start();
+
+        animator.setDuration(280);
+        animator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
         animator.start();
     }
 
@@ -1128,9 +1241,27 @@ public class PlayerFragment extends BaseFragment
 
     public void setResizeMode(int mode) {
         this.currentResizeMode = mode;
-        if (playerView != null) {
-            playerView.setResizeMode(mode);
+        if (player != null) {
+            switch (mode) {
+                case 0: // RESIZE_MODE_FIT (Best Fit - letterbox)
+                    player.setVideoScale(MediaPlayer.ScaleType.SURFACE_BEST_FIT);
+                    break;
+                case 1: // RESIZE_MODE_STRETCH (Fill entire screen)
+                    player.setVideoScale(MediaPlayer.ScaleType.SURFACE_FILL);
+                    break;
+                case 3: // RESIZE_MODE_ZOOM (Original size but scaled up)
+                    player.setVideoScale(MediaPlayer.ScaleType.SURFACE_BEST_FIT);
+                    player.setScale(1.3f);
+                    break;
+                case 4: // RESIZE_MODE_CENTER_CROP
+                    player.setVideoScale(MediaPlayer.ScaleType.SURFACE_ORIGINAL);
+                    break;
+            }
         }
+        saveResizeMode(mode);
+    }
+
+    private void saveResizeMode(int mode) {
         SharedPreferences.Editor editor = mActivity.getSharedPreferences("PlayerSettings", Context.MODE_PRIVATE).edit();
         editor.putInt("resize_mode", mode);
         editor.apply();
@@ -1138,10 +1269,8 @@ public class PlayerFragment extends BaseFragment
 
     private void loadResizeMode() {
         SharedPreferences prefs = mActivity.getSharedPreferences("PlayerSettings", Context.MODE_PRIVATE);
-        currentResizeMode = prefs.getInt("resize_mode", androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT);
-        if (playerView != null) {
-            playerView.setResizeMode(currentResizeMode);
-        }
+        currentResizeMode = prefs.getInt("resize_mode", 0); // Default to FIT
+        setResizeMode(currentResizeMode);
     }
 
     public int getCurrentResizeMode() {
@@ -1150,6 +1279,64 @@ public class PlayerFragment extends BaseFragment
 
     public boolean isLocked() {
         return isLocked;
+    }
+
+    /**
+     * Handles key events forwarded from MainActivity.dispatchKeyEvent on TV
+     * devices.
+     * Returns true if the event was consumed (D-pad controls handled here).
+     */
+    public boolean handleKeyEvent(android.view.KeyEvent event) {
+        if (event.getAction() != android.view.KeyEvent.ACTION_DOWN)
+            return false;
+
+        boolean controlsVisible = customControls != null && customControls.getVisibility() == View.VISIBLE;
+
+        // Reset hide timer on any key press if controls are visible
+        if (controlsVisible) {
+            startAutoHideControls();
+        }
+
+        switch (event.getKeyCode()) {
+            case android.view.KeyEvent.KEYCODE_DPAD_CENTER:
+            case android.view.KeyEvent.KEYCODE_ENTER:
+                if (controlsVisible) {
+                    return false; // Let the focused button handle the click
+                } else {
+                    toggleControls();
+                    return true;
+                }
+            case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (controlsVisible)
+                    return false; // Let native focus handle it
+                fastForward(player, ff);
+                showControls();
+                return true;
+            case android.view.KeyEvent.KEYCODE_DPAD_LEFT:
+                if (controlsVisible)
+                    return false; // Let native focus handle it
+                rewind(player, bw);
+                showControls();
+                return true;
+            case android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                fastForward(player, ff);
+                startAutoHideControls();
+                return true;
+            case android.view.KeyEvent.KEYCODE_MEDIA_REWIND:
+                rewind(player, bw);
+                startAutoHideControls();
+                return true;
+            case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case android.view.KeyEvent.KEYCODE_SPACE:
+                togglePlayback(player, playPauseButton);
+                startAutoHideControls();
+                return true;
+            case android.view.KeyEvent.KEYCODE_INFO:
+                showInfoSideSheet();
+                startAutoHideControls();
+                return true;
+        }
+        return false;
     }
 
 }

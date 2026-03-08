@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,18 +27,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.DialogFragment
-import androidx.media3.common.C
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector
 import com.theflexproject.thunder.ui.theme.NfgPlusTheme
-import com.theflexproject.thunder.utils.LanguageUtils
+import org.videolan.libvlc.MediaPlayer
 
-@UnstableApi
 class SubtitleSideSheetDialogFragment : DialogFragment() {
 
-    private var mappedTrackInfo: MappingTrackSelector.MappedTrackInfo? = null
-    private var trackSelector: DefaultTrackSelector? = null
+    var vlcPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,8 +68,7 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
             setContent {
                 NfgPlusTheme {
                     SubtitleSideSelectionScreen(
-                        mappedTrackInfo = mappedTrackInfo,
-                        trackSelector = trackSelector,
+                        player = vlcPlayer,
                         onDismiss = { dismiss() }
                     )
                 }
@@ -86,40 +78,48 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
 
     @Composable
     fun SubtitleSideSelectionScreen(
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
-        trackSelector: DefaultTrackSelector?,
+        player: MediaPlayer?,
         onDismiss: () -> Unit
     ) {
-        val subtitleOptions = remember(mappedTrackInfo, trackSelector) {
-            val options = mutableListOf<SubtitleOption>()
-            mappedTrackInfo?.let { info ->
-                for (rendererIndex in 0 until info.rendererCount) {
-                    if (info.getRendererType(rendererIndex) == C.TRACK_TYPE_TEXT) {
-                        val trackGroups = info.getTrackGroups(rendererIndex)
-                        for (groupIndex in 0 until trackGroups.length) {
-                            val trackGroup = trackGroups.get(groupIndex)
-                            for (trackIndex in 0 until trackGroup.length) {
-                                val format = trackGroup.getFormat(trackIndex)
-                                val language = format.language
-                                val label = language?.let { LanguageUtils.getLanguageName(it) } ?: "Unknown"
-                                
-                                options.add(SubtitleOption(
-                                    label = label,
-                                    override = DefaultTrackSelector.SelectionOverride(groupIndex, trackIndex),
-                                    isActive = isTrackActive(rendererIndex, groupIndex, trackIndex, trackSelector, info)
-                                ))
-                            }
+        var subtitleOptions by remember { mutableStateOf<List<SubtitleOption>>(emptyList()) }
+
+        fun refreshTracks() {
+            player?.let { p ->
+                val options = mutableListOf<SubtitleOption>()
+                val tracks = p.spuTracks
+                val currentTrackId = p.spuTrack
+                
+                tracks?.forEach { track ->
+                    options.add(SubtitleOption(
+                        id = track.id,
+                        label = track.name ?: "Unknown",
+                        isActive = (track.id == currentTrackId)
+                    ))
+                }
+                subtitleOptions = options
+            }
+        }
+
+        DisposableEffect(player) {
+            val listener = object : MediaPlayer.EventListener {
+                override fun onEvent(event: MediaPlayer.Event) {
+                    when (event.type) {
+                        MediaPlayer.Event.ESAdded,
+                        MediaPlayer.Event.ESDeleted -> {
+                            refreshTracks()
                         }
                     }
                 }
             }
-            // Add "Disable Subtitles" option
-            options.add(SubtitleOption(
-                label = "Disable Subtitles",
-                override = null,
-                isActive = isSubtitlesDisabled(trackSelector)
-            ))
-            options
+            player?.setEventListener(listener)
+            refreshTracks() // Initial load
+
+            onDispose {
+                // Fragment or parent will set it back or we just clear if we own it
+                // Since multiple things might set listener, be careful.
+                // For now, we just clear our reference.
+                player?.setEventListener(null)
+            }
         }
 
         val focusRequesters = remember { List(subtitleOptions.size) { FocusRequester() } }
@@ -162,10 +162,20 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
                             isActive = option.isActive,
                             focusRequester = focusRequesters[index],
                             onClick = {
-                                applySubtitle(option.override, trackSelector, mappedTrackInfo)
+                                player?.spuTrack = option.id
                                 onDismiss()
                             }
                         )
+                    }
+                    
+                    if (subtitleOptions.isEmpty()) {
+                        item {
+                            Text(
+                                text = "No subtitles available",
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(24.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -223,7 +233,7 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer 
+                        tint = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer
                                else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -232,60 +242,19 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
         }
     }
 
-    private fun isTrackActive(
-        rendererIndex: Int,
-        groupIndex: Int,
-        trackIndex: Int,
-        trackSelector: DefaultTrackSelector?,
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo
-    ): Boolean {
-        val parameters = trackSelector?.parameters ?: return false
-        if (parameters.getRendererDisabled(C.TRACK_TYPE_VIDEO)) return false
-        
-        val override = parameters.getSelectionOverride(C.TRACK_TYPE_VIDEO, mappedTrackInfo.getTrackGroups(C.TRACK_TYPE_VIDEO))
-        return override != null && override.groupIndex == groupIndex && override.containsTrack(trackIndex)
-    }
-
-    private fun isSubtitlesDisabled(trackSelector: DefaultTrackSelector?): Boolean {
-        return trackSelector?.parameters?.getRendererDisabled(C.TRACK_TYPE_VIDEO) ?: true
-    }
-
-    private fun applySubtitle(
-        override: DefaultTrackSelector.SelectionOverride?,
-        trackSelector: DefaultTrackSelector?,
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?
-    ) {
-        if (trackSelector == null || mappedTrackInfo == null) return
-        
-        val builder = trackSelector.buildUponParameters()
-        if (override != null) {
-            builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, false)
-            builder.setSelectionOverride(
-                C.TRACK_TYPE_VIDEO, 
-                mappedTrackInfo.getTrackGroups(C.TRACK_TYPE_VIDEO), 
-                override
-            )
-        } else {
-            builder.setRendererDisabled(C.TRACK_TYPE_VIDEO, true)
-        }
-        trackSelector.setParameters(builder)
-    }
-
     data class SubtitleOption(
+        val id: Int,
         val label: String,
-        val override: DefaultTrackSelector.SelectionOverride?,
         val isActive: Boolean
     )
 
     companion object {
         fun newInstance(
-            mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
-            trackSelector: DefaultTrackSelector?
+            player: MediaPlayer?
         ): SubtitleSideSheetDialogFragment {
-            return SubtitleSideSheetDialogFragment().apply {
-                this.mappedTrackInfo = mappedTrackInfo
-                this.trackSelector = trackSelector
-            }
+            val fragment = SubtitleSideSheetDialogFragment()
+            fragment.vlcPlayer = player
+            return fragment
         }
     }
 }

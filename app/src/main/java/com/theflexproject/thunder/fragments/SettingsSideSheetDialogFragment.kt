@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,19 +29,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.DialogFragment
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector
-import com.theflexproject.thunder.player.PlayerListener
 import com.theflexproject.thunder.ui.theme.NfgPlusTheme
+import org.videolan.libvlc.MediaPlayer
 
-@UnstableApi
 class SettingsSideSheetDialogFragment : DialogFragment() {
 
-    private var trackSelector: DefaultTrackSelector? = null
-    private var mappedTrackInfo: MappingTrackSelector.MappedTrackInfo? = null
-    private var player: Player? = null
+    private var vlcPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,9 +70,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
             setContent {
                 NfgPlusTheme {
                     SettingsSideSelectionScreen(
-                        player = player,
-                        trackSelector = trackSelector,
-                        mappedTrackInfo = mappedTrackInfo,
+                        player = vlcPlayer,
                         onDismiss = { dismiss() }
                     )
                 }
@@ -90,24 +80,34 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
 
     @Composable
     fun SettingsSideSelectionScreen(
-        player: Player?,
-        trackSelector: DefaultTrackSelector?,
-        mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
+        player: MediaPlayer?,
         onDismiss: () -> Unit
     ) {
         var currentSection by remember { mutableStateOf(SettingsSection.MAIN) }
         
-        val audioTracks = remember(mappedTrackInfo, trackSelector) {
-            PlayerListener.getAudioTracks(mappedTrackInfo, trackSelector)
+        val audioTracks = remember(player) {
+            val options = mutableListOf<AudioOption>()
+            player?.let { p ->
+                val tracks = p.audioTracks
+                val currentTrackId = p.audioTrack
+                tracks?.forEach { track ->
+                    options.add(AudioOption(
+                        id = track.id,
+                        label = track.name ?: "Unknown",
+                        isActive = (track.id == currentTrackId)
+                    ))
+                }
+            }
+            options
         }
         
         val speeds = listOf("0.5x", "1.0x (Normal)", "1.5x", "2.0x")
-        val currentSpeed = remember(player) {
-            val s = player?.playbackParameters?.speed ?: 1.0f
+        val currentSpeedLabel = remember(player) {
+            val rate = player?.rate ?: 1.0f
             when {
-                s == 0.5f -> "0.5x"
-                s == 1.5f -> "1.5x"
-                s == 2.0f -> "2.0x"
+                rate == 0.5f -> "0.5x"
+                rate == 1.5f -> "1.5x"
+                rate == 2.0f -> "2.0x"
                 else -> "1.0x (Normal)"
             }
         }
@@ -148,11 +148,12 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                         }
                         SettingsSection.AUDIO -> {
                             SubSettingsList(
-                                items = audioTracks,
-                                activeItem = null, // Logic for active audio track label is tricky
+                                items = audioTracks.map { it.label },
+                                activeItem = audioTracks.find { it.isActive }?.label,
                                 icon = Icons.Default.Settings,
-                                onItemSelected = { 
-                                    PlayerListener.applyAudioTrack(it, mappedTrackInfo, trackSelector)
+                                onItemSelected = { label ->
+                                    val id = audioTracks.find { it.label == label }?.id ?: -1
+                                    player?.audioTrack = id
                                     onDismiss()
                                 }
                             )
@@ -160,7 +161,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                         SettingsSection.SPEED -> {
                             SubSettingsList(
                                 items = speeds,
-                                activeItem = currentSpeed,
+                                activeItem = currentSpeedLabel,
                                 icon = Icons.Default.PlayArrow,
                                 onItemSelected = {
                                     applyPlaybackSpeed(it, player)
@@ -172,15 +173,13 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                             val playerFragment = parentFragment as? PlayerFragment
                             val currentResizeMode = playerFragment?.getCurrentResizeMode() ?: 0
                             val resizeModes = listOf(
-                                "Original (Fit)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT,
-                                "Stretch" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL,
-                                "Fill (Zoom)" to androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                "Original (Fit)" to 0,
+                                "Stretch" to 1
                             )
                             SubSettingsList(
                                 items = resizeModes.map { it.first },
                                 activeItem = when(currentResizeMode) {
-                                    androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL -> "Stretch"
-                                    androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> "Fill (Zoom)"
+                                    1 -> "Stretch"
                                     else -> "Original (Fit)"
                                 },
                                 icon = Icons.Default.Settings,
@@ -300,7 +299,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
-                    imageVector = Icons.Default.PlayArrow, // Chevron replacement
+                    imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
                     tint = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                     modifier = Modifier.size(20.dp)
@@ -365,7 +364,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
         }
     }
 
-    private fun applyPlaybackSpeed(speed: String, player: Player?) {
+    private fun applyPlaybackSpeed(speed: String, player: MediaPlayer?) {
         if (player == null) return
         val playbackSpeed = when (speed) {
             "0.5x" -> 0.5f
@@ -373,8 +372,14 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
             "2.0x" -> 2.0f
             else -> 1.0f
         }
-        player.setPlaybackParameters(player.playbackParameters.withSpeed(playbackSpeed))
+        player.rate = playbackSpeed
     }
+
+    data class AudioOption(
+        val id: Int,
+        val label: String,
+        val isActive: Boolean
+    )
 
     enum class SettingsSection {
         MAIN, AUDIO, SPEED, RESIZE
@@ -382,14 +387,10 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
 
     companion object {
         fun newInstance(
-            trackSelector: DefaultTrackSelector?,
-            mappedTrackInfo: MappingTrackSelector.MappedTrackInfo?,
-            player: Player?
+            player: MediaPlayer?
         ): SettingsSideSheetDialogFragment {
             return SettingsSideSheetDialogFragment().apply {
-                this.trackSelector = trackSelector
-                this.mappedTrackInfo = mappedTrackInfo
-                this.player = player
+                this.vlcPlayer = player
             }
         }
     }

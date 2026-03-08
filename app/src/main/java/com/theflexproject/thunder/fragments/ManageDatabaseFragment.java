@@ -1,6 +1,6 @@
 package com.theflexproject.thunder.fragments;
 
-import static com.theflexproject.thunder.utils.StorageUtils.verifyStoragePermissions;
+import com.theflexproject.thunder.utils.StorageUtils;
 
 import android.Manifest;
 import android.net.Uri;
@@ -50,15 +50,15 @@ public class ManageDatabaseFragment extends BaseFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater , ViewGroup container ,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_manage_database , container , false);
+        return inflater.inflate(R.layout.fragment_manage_database, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view , @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view , savedInstanceState);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         initWidgets();
 
@@ -118,9 +118,9 @@ public class ManageDatabaseFragment extends BaseFragment {
                             copyFile(databaseFile, appDatabaseFile);
 
                             // Now, build the Room database as usual
-                             AppDatabase appDatabase = Room.databaseBuilder(mActivity, AppDatabase.class, "MyToDos")
+                            AppDatabase appDatabase = Room.databaseBuilder(mActivity, AppDatabase.class, "MyToDos")
                                     .fallbackToDestructiveMigration()
-                                   .build();
+                                    .build();
 
                             Toast.makeText(mActivity, "Restore Successful", Toast.LENGTH_LONG).show();
                         } catch (Exception e) {
@@ -142,22 +142,17 @@ public class ManageDatabaseFragment extends BaseFragment {
         });
     }
 
-// Helper method to copy a file
-        private void copyFile(File sourceFile, File destFile) throws IOException {
-            try (InputStream in = new FileInputStream(sourceFile);
-                 OutputStream out = new FileOutputStream(destFile)) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, length);
-                }
+    // Helper method to copy a file
+    private void copyFile(File sourceFile, File destFile) throws IOException {
+        try (InputStream in = new FileInputStream(sourceFile);
+                OutputStream out = new FileOutputStream(destFile)) {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = in.read(buffer)) > 0) {
+                out.write(buffer, 0, length);
             }
         }
-
-
-
-
-
+    }
 
     private void initWidgets() {
         importDatabase = mActivity.findViewById(R.id.importDatabase);
@@ -167,87 +162,94 @@ public class ManageDatabaseFragment extends BaseFragment {
 
 }
 
-//   private void setMyOnClickListeners() {
-//        importDatabase.setOnClickListener(v -> {
-//            mActivity.deleteDatabase("MyToDos");
+// private void setMyOnClickListeners() {
+// importDatabase.setOnClickListener(v -> {
+// mActivity.deleteDatabase("MyToDos");
 
-//            File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/Thunder");
-//            File[] listOfFiles = folder.listFiles();
+// File folder = new
+// File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+// + "/Thunder");
+// File[] listOfFiles = folder.listFiles();
 //
-//            File database = mActivity.getDatabasePath("MyToDos");
-//            System.out.println("paths" + backup + "\npath2 " + database);
+// File database = mActivity.getDatabasePath("MyToDos");
+// System.out.println("paths" + backup + "\npath2 " + database);
 //
-//            if(listOfFiles!=null)
-//                for (File file : listOfFiles) {
-//                    if (file.exists() && file.isFile()) {
-//                        try {
-//                                System.out.println("backup exists true");
-//                                FileChannel src = new FileInputStream(file).getChannel();
-//                                FileChannel dst = new FileOutputStream(database).getChannel();
-//                                dst.transferFrom(src , 0 , src.size());
-////                            fco.transferFrom(fc2, fc1.size() - 1, fc2.size());
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//                        System.out.println(file.getName());
-//                    }
-//                }
-
-//          File backup = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/Thunder" , "ThunderBackup.db");
-//        File database = mActivity.getDatabasePath("MyToDos");
-//      System.out.println("paths" + backup + "\npath2 " + database);
-
-//    try {
-//      if (backup.exists()) {
-//        System.out.println("backup exists true");
-//
-//                  FileChannel src = new FileInputStream(backup).getChannel();
-//                FileChannel dst = new FileOutputStream(database).getChannel();
-//              dst.transferFrom(src , 0 , src.size());
-//            src.close();
-//          dst.close();
-//        Room.databaseBuilder(mActivity ,
-//                      AppDatabase.class , "MyToDos")
-//            .fallbackToDestructiveMigration()
-//          .createFromFile(database)
-//        .build();
+// if(listOfFiles!=null)
+// for (File file : listOfFiles) {
+// if (file.exists() && file.isFile()) {
+// try {
+// System.out.println("backup exists true");
+// FileChannel src = new FileInputStream(file).getChannel();
+// FileChannel dst = new FileOutputStream(database).getChannel();
+// dst.transferFrom(src , 0 , src.size());
+//// fco.transferFrom(fc2, fc1.size() - 1, fc2.size());
+// } catch (Exception e) {
+// e.printStackTrace();
 // }
-//  } catch (Exception e) {
-//    e.printStackTrace();
+// System.out.println(file.getName());
+// }
+// }
+
+// File backup = new
+// File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+// + "/Thunder" , "ThunderBackup.db");
+// File database = mActivity.getDatabasePath("MyToDos");
+// System.out.println("paths" + backup + "\npath2 " + database);
+
+// try {
+// if (backup.exists()) {
+// System.out.println("backup exists true");
+//
+// FileChannel src = new FileInputStream(backup).getChannel();
+// FileChannel dst = new FileOutputStream(database).getChannel();
+// dst.transferFrom(src , 0 , src.size());
+// src.close();
+// dst.close();
+// Room.databaseBuilder(mActivity ,
+// AppDatabase.class , "MyToDos")
+// .fallbackToDestructiveMigration()
+// .createFromFile(database)
+// .build();
+// }
+// } catch (Exception e) {
+// e.printStackTrace();
 // }
 
 // Toast.makeText(mActivity,"Import Successful",Toast.LENGTH_LONG).show();
 
 // });
 
-//        exportDatabase.setOnClickListener(v -> {
+// exportDatabase.setOnClickListener(v -> {
 
-//          verifyStoragePermissions(mActivity);
+// verifyStoragePermissions(mActivity);
 
-//        int EXTERNAL_STORAGE_PERMISSION_CODE = 23;
+// int EXTERNAL_STORAGE_PERMISSION_CODE = 23;
 // Requesting Permission to access External Storage
-//       ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, EXTERNAL_STORAGE_PERMISSION_CODE);
+// ActivityCompat.requestPermissions(mActivity, new
+// String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+// EXTERNAL_STORAGE_PERMISSION_CODE);
 
-//     File folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+// File folder =
+// Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
-//   File backupDB = new File(folder +"/Thunder", "ThunderBackup.db");
+// File backupDB = new File(folder +"/Thunder", "ThunderBackup.db");
 // File currentDB = new File(mActivity.getDatabasePath("MyToDos").toString());
 
-//try {
+// try {
 
-//  File backupDir = new File(folder+"/Thunder");
-//if(!backupDir.exists()) backupDir.mkdir();
+// File backupDir = new File(folder+"/Thunder");
+// if(!backupDir.exists()) backupDir.mkdir();
 // if (currentDB.exists()) {
-//   FileChannel src = new FileInputStream(currentDB).getChannel();
-//  FileChannel dst = new FileOutputStream(backupDB).getChannel();
+// FileChannel src = new FileInputStream(currentDB).getChannel();
+// FileChannel dst = new FileOutputStream(backupDB).getChannel();
 // dst.transferFrom(src , 0 , src.size());
 // src.close();
-//dst.close();
+// dst.close();
 // }
-//} catch (Exception e) {
-//  e.printStackTrace();
+// } catch (Exception e) {
+// e.printStackTrace();
 // }
 
 // Toast.makeText(mActivity,"Export Successful",Toast.LENGTH_LONG).show();
 
-//        });
+// });

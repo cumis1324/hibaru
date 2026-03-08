@@ -40,19 +40,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.FragmentActivity;
-import androidx.media3.common.C;
-import androidx.media3.common.Format;
-import androidx.media3.common.Player;
-import androidx.media3.common.TrackGroup;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.datasource.DataSource;
-import androidx.media3.exoplayer.drm.DefaultDrmSessionManagerProvider;
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
-import androidx.media3.exoplayer.source.MediaSource;
-import androidx.media3.exoplayer.source.TrackGroupArray;
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
-import androidx.media3.ui.PlayerView;
+import org.videolan.libvlc.MediaPlayer;
+import org.videolan.libvlc.util.VLCVideoLayout;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -166,13 +155,7 @@ public class PlayerUtils {
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    public static boolean subOn(DefaultTrackSelector trackSelector) {
-        DefaultTrackSelector.Parameters builders = trackSelector.getParameters();
-        return builders.getRendererDisabled(C.TRACK_TYPE_VIDEO);
-    }
-
-    public static void resumePlayerState(Player player, String tmdbId) {
+    public static void resumePlayerState(Object player, String tmdbId) {
         if (tmdbId != null && !OFFLINE.equals(tmdbId)) {
             DatabaseReference lastPositionRef = databaseReference.child(userId).child(tmdbId).child(LAST_POSITION);
             lastPositionListener = new ValueEventListener() {
@@ -181,7 +164,9 @@ public class PlayerUtils {
                     if (snapshot.exists()) {
                         Long lastPosition = snapshot.getValue(Long.class);
                         if (lastPosition != null && player != null) {
-                            player.seekTo(lastPosition);
+                            if (player instanceof org.videolan.libvlc.MediaPlayer) {
+                                ((org.videolan.libvlc.MediaPlayer) player).setTime(lastPosition);
+                            }
                         }
                     }
                 }
@@ -195,12 +180,22 @@ public class PlayerUtils {
         }
     }
 
-    public static void saveResume(Player player, String tmdbId) {
-        long startPosition = Math.max(0, player.getContentPosition());
-        long duration = player.getDuration();
+    public static long getResumePosition(Context context, String tmdbId) {
+        if (tmdbId == null || tmdbId.equals(OFFLINE))
+            return 0;
+        SharedPreferences prefs = context.getSharedPreferences("ResumeCache", Context.MODE_PRIVATE);
+        return prefs.getLong(tmdbId, 0);
+    }
+
+    public static void saveResume(Context context, long startPosition, long duration, String tmdbId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
         if (tmdbId != null) {
+            // Local Cache
+            SharedPreferences.Editor editor = context.getSharedPreferences("ResumeCache", Context.MODE_PRIVATE).edit();
+            editor.putLong(tmdbId, startPosition);
+            editor.apply();
+
             if (!tmdbId.equals(OFFLINE)) {
                 DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
                 Map<String, Object> userMap = new HashMap<>();
@@ -208,11 +203,14 @@ public class PlayerUtils {
                 userMap.put("lastPlayed", currentDateTime);
                 userReference.setValue(userMap);
 
-                // Populate Google TV "Continue Watching" row
-                // This is also handled in real-time by PlayerFragment.updateWatchNext()
                 android.util.Log.d("PlayerUtils", "Progress saved for " + tmdbId + " at " + startPosition + "ms");
             }
         }
+    }
+
+    // Overload for backward compatibility if needed, but we should update callers
+    public static void saveResume(long startPosition, long duration, String tmdbId) {
+        // Legacy stub - might not have context, so ideally callers provide it
     }
 
     private static int getStatusBarHeight(Activity mActivity) {
@@ -245,25 +243,15 @@ public class PlayerUtils {
         }
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    public static MediaSource.Factory createMediaSourceFactory(Context mActivity) {
-        DataSource.Factory dataSourceFactory = DemoUtil.getDataSourceFactory(mActivity);
-        DefaultDrmSessionManagerProvider drmProvider = new DefaultDrmSessionManagerProvider();
-        drmProvider.setDrmHttpDataSourceFactory(DemoUtil.getHttpDataSourceFactory(mActivity));
-        return new DefaultMediaSourceFactory(mActivity)
-                .setDataSourceFactory(dataSourceFactory)
-                .setDrmSessionManagerProvider(drmProvider);
-    }
-
-    public static void load3ads(Context mCtx, Activity activity, Player player, PlayerView playerView) {
+    public static void load3ads(Context mCtx, Activity activity, MediaPlayer player, VLCVideoLayout playerView) {
         SharedPreferences prefs = mCtx.getSharedPreferences("load4Ads", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         ad25 = prefs.getBoolean("ad25", false);
         ad50 = prefs.getBoolean("ad50", false);
         ad75 = prefs.getBoolean("ad75", false);
         if (player != null) {
-            long cp = player.getCurrentPosition();
-            long tp = player.getDuration();
+            long cp = player.getTime();
+            long tp = player.getLength();
             if (tp > 0) {
                 if (!ad25 && cp >= tp * 0.25) {
                     AdHelper.loadReward(mCtx, activity, player, playerView);

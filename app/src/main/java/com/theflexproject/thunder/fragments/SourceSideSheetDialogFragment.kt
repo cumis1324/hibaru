@@ -35,9 +35,9 @@ import com.theflexproject.thunder.utils.MovieQualityExtractor
 
 class SourceSideSheetDialogFragment : DialogFragment() {
 
-    private var sourceList: List<MyMedia>? = null
-    private var currentUrl: String? = null
-    private var onSourceSelected: ((MyMedia) -> Unit)? = null
+    var sourceList: List<MyMedia>? = null
+    var currentUrl: String? = null
+    var onSourceSelected: ((MyMedia) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -204,11 +204,11 @@ class SourceSideSheetDialogFragment : DialogFragment() {
             currentUrl: String?,
             onSourceSelected: (MyMedia) -> Unit
         ): SourceSideSheetDialogFragment {
-            return SourceSideSheetDialogFragment().apply {
-                this.sourceList = sources
-                this.currentUrl = currentUrl
-                this.onSourceSelected = onSourceSelected
-            }
+            val fragment = SourceSideSheetDialogFragment()
+            fragment.sourceList = sources
+            fragment.currentUrl = currentUrl
+            fragment.onSourceSelected = onSourceSelected
+            return fragment
         }
     }
 }

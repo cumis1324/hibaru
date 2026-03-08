@@ -174,6 +174,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        // Intercept D-pad keys on TV and forward to PlayerFragment while it's active
+        if (isTVDevice) {
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.container)
+                    as? androidx.navigation.fragment.NavHostFragment
+            val currentFragment = navHostFragment?.childFragmentManager?.primaryNavigationFragment
+            if (currentFragment is com.theflexproject.thunder.fragments.PlayerFragment) {
+                val consumed = currentFragment.handleKeyEvent(event)
+                if (consumed) return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
