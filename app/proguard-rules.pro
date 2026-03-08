@@ -206,3 +206,7 @@
 
 # Apache Commons
 -dontwarn org.apache.commons.**
+
+# Guava / Google Common Reflect (Fix R8 Missing Class AnnotatedType)
+-dontwarn java.lang.reflect.AnnotatedType
+-dontwarn com.google.common.reflect.**
