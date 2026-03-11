@@ -19,6 +19,7 @@ import androidx.annotation.OptIn;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -31,6 +32,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.theflexproject.thunder.data.sync.SyncPrefs;
+import com.theflexproject.thunder.model.HistoryEntry;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.database.DatabaseClient;
 import com.theflexproject.thunder.fragments.PlayerFragment;
@@ -48,13 +53,33 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
     FirebaseManager manager;
     private DatabaseReference databaseReference;
 
-    public BannerRecyclerAdapter(Context context, List<Movie> mediaList, FragmentManager fragmentManager) {
+    private SyncPrefs syncPrefs;
+    private java.util.Map<String, HistoryEntry> historyCache = new java.util.HashMap<>();
+
+    public BannerRecyclerAdapter(Context context, List<Movie> mediaList, FragmentManager fragmentManager,
+            SyncPrefs syncPrefs) {
         this.context = context;
         this.mediaList = mediaList;
         this.fragmentManager = fragmentManager;
         this.manager = new FirebaseManager();
+        this.syncPrefs = syncPrefs;
         databaseReference = FirebaseDatabase.getInstance().getReference("History");
         setHasStableIds(true); // Enable stable IDs
+        updateHistoryCache();
+    }
+
+    private void updateHistoryCache() {
+        String json = syncPrefs.getPlaybackHistoryJson();
+        if (json != null && !json.isEmpty()) {
+            try {
+                Gson gson = new Gson();
+                java.lang.reflect.Type type = new TypeToken<java.util.Map<String, HistoryEntry>>() {
+                }.getType();
+                historyCache = gson.fromJson(json, type);
+            } catch (Exception e) {
+                android.util.Log.e("BannerRecyclerAdapter", "Error parsing history JSON", e);
+            }
+        }
     }
 
     @Override
@@ -105,64 +130,50 @@ public class BannerRecyclerAdapter extends RecyclerView.Adapter<BannerRecyclerAd
 
         }
         holder.itemView.setOnClickListener(v -> {
-            PlayerFragment movieDetailsFragment = new PlayerFragment(movie.getId(), true);
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-            Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
-            if (oldFragment != null) {
-                transaction.hide(oldFragment);
+            try {
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putInt("videoId", movie.getId());
+                bundle.putBoolean("isMovie", true);
+                Navigation.findNavController(v).navigate(R.id.playerFragment, bundle);
+            } catch (Exception e) {
+                android.util.Log.e("BannerRecyclerAdapter", "Navigation failed: " + e.getMessage());
             }
-            transaction.add(R.id.container, movieDetailsFragment).addToBackStack(null);
-            transaction.commit();
         });
 
-        String tmdbId = String.valueOf(mediaList.get(position).getId());
-        String userId = manager.getCurrentUser().getUid();
-        databaseReference = FirebaseDatabase.getInstance().getReference("History/");
-        DatabaseReference p = databaseReference.child(userId).child(tmdbId).child("lastPosition");
-        DatabaseReference lastP = databaseReference.child(userId).child(tmdbId).child("lastPlayed");
+        String tmdbId = String.valueOf(movie.getId());
+        // Optimized Progress from Local Cache
+        HistoryEntry entry = historyCache.get(tmdbId);
+        if (entry != null && entry.lastPosition > 0) {
+            long runtime = (long) movie.getRuntime() * 60 * 1000;
+            if (runtime > 0) {
+                double progress = (double) entry.lastPosition / runtime;
 
-        lastP.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    String lastPlayed = dataSnapshot.getValue(String.class);
-                    if (lastPlayed != null) {
-                        // Update the played field in your local database asynchronously
-                        AsyncTask.execute(() -> {
-                            DatabaseClient.getInstance(context).getAppDatabase().movieDao()
-                                    .updatePlayed(Integer.parseInt(tmdbId), lastPlayed + " added");
-                        });
-                    }
+                // Use ViewTreeObserver to get width if not yet laid out
+                if (holder.poster.getWidth() > 0) {
+                    applyProgress(holder.progressOverlay, progress, holder.poster.getWidth());
+                } else {
+                    holder.poster.getViewTreeObserver()
+                            .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                                @Override
+                                public void onGlobalLayout() {
+                                    holder.poster.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                    applyProgress(holder.progressOverlay, progress, holder.poster.getWidth());
+                                }
+                            });
                 }
+            } else {
+                holder.progressOverlay.setVisibility(View.GONE);
             }
+        } else {
+            holder.progressOverlay.setVisibility(View.GONE);
+        }
+    }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle onCancelled event
-            }
-        });
-
-        p.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    Long lastPosition = dataSnapshot.getValue(Long.class);
-                    if (lastPosition != null) {
-                        long runtime = (long) mediaList.get(position).getRuntime() * 60 * 1000;
-                        double progress = (double) lastPosition / runtime;
-                        int progressWidth = (int) (holder.poster.getWidth() * progress);
-                        holder.progressOverlay.getLayoutParams().width = progressWidth;
-                        holder.progressOverlay.requestLayout();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle onCancelled event
-            }
-        });
+    private void applyProgress(View view, double progress, int fullWidth) {
+        view.setVisibility(View.VISIBLE);
+        ViewGroup.LayoutParams params = view.getLayoutParams();
+        params.width = (int) Math.min(fullWidth, fullWidth * progress);
+        view.setLayoutParams(params);
     }
 
     @Override

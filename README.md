@@ -2,27 +2,17 @@
 
 **NFGPlus** has been modernized to a robust, **Offline-First** streaming application powered by **Cloudflare D1** and **Kotlin**. It allows users to stream movies and TV shows from Google Drive sources with a seamless synchronization experience.
 
-## 🚀 Key Features
+### 📺 **Advanced Media Playback**
+- **LibVLC Engine**: Powered by **LibVLC 3.6.4** for broad codec support and hardware acceleration.
+- **Custom Player UI**: Interactive controls with swipe gestures for volume, brightness, and seeking.
+- **Dynamic Selection**: SideSheets/BottomSheets for real-time subtitle and audio track switching.
+- **Smart Features**: Integrated **Sleep Timer**, **Picture-in-Picture (PiP)**, and **Screen Lock**.
 
 ### 🔄 **Hybrid Synchronization (Smart Sync)**
 - **Offline-First**: Uses pre-populated Room Database (`nfgplus.db`) for instant load times.
-- **Delta Sync**: Only fetches data modified since the last sync timestamp, saving bandwidth.
-- **Background Sync**: `SyncWorker` keeps data fresh automatically every 24 hours.
-
-### 🎭 **Dynamic Demo Mode**
-- **Role-Based Data**: Automatically switches database sources based on the logged-in user.
-- **Admin/Demo User**: Connects to a dedicated `nfgplus-demo-db` for testing without affecting production data.
-- **Auto-Wipe**: Ensures clean state transition when switching between Production and Demo modes.
-
-### 🤖 **Automated Content Indexing**
-- **GitHub Actions**: Scheduled workflows automatically scan GDIndex sources (Google Drive) 4 times a day.
-- **Sequential Scanning**: Prioritizes Movies, then TV Series to ensuring orderly updates.
-- **Manual Trigger**: Admins can trigger specific scans manually via GitHub UI.
-
-### 📺 **Modern Android Experience**
-- **Native Player**: Custom UI on top of Media3/ExoPlayer for high-performance playback.
-- **TV Show Support**: Complete support for Seasons and Episodes with intricate metadata.
-- **Search & Filter**: Fast local search and filtering by genre, year, and popularity.
+- **Centralized History**: Uses a local JSON-based history cache in `SyncPrefs` for instant "Continue Watching" updates.
+- **Google TV Integration**: Syncs movies and TV shows to the home screen via **Google Engage SDK** (Recommendations/Watch Next).
+- **Delta Sync**: Efficiently fetches only modified data using incremental timestamps.
 
 ---
 
@@ -33,18 +23,14 @@
 - **DI**: Hilt (Dagger)
 - **Concurrency**: Coroutines & Flow
 - **Local DB**: Room Database (SQLite)
-- **Network**: Retrofit + OkHttp
+- **Video Engine**: **LibVLC 3.6.4**
+- **UI**: XML ViewSystem + **Jetpack Compose** (Modular integration)
 - **Background**: WorkManager
 
 ### **Backend (Serverless)**
 - **Platform**: Cloudflare Workers
-- **Language**: TypeScript
 - **Database**: Cloudflare D1 (Serverless SQLite)
-- **API**: RESTful endpoints with bearer token authentication.
-
-### **Automation**
-- **Script**: Python (`import_gdindex.py`) using `requests` and `thefuzz` for TMDB matching.
-- **Scheduler**: GitHub Actions Cron Job.
+- **Indexing**: Automated Python scripts via GitHub Actions.
 
 ---
 

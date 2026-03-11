@@ -13,6 +13,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.theflexproject.thunder.model.HistoryEntry
+import com.google.gson.Gson
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 @Singleton
 class SyncManager @Inject constructor(
@@ -55,6 +63,9 @@ class SyncManager @Inject constructor(
             // PRE-CALCULATE TRENDING & GENRES
             syncTrending()
             syncGenres()
+            
+            // SYNC PLAYBACK HISTORY
+            syncHistory()
             
             syncPrefs.lastSyncTime = System.currentTimeMillis()
         } catch (e: Exception) {
@@ -236,5 +247,43 @@ class SyncManager @Inject constructor(
             }
         }
         Log.d(TAG, "<<< Bulk TV Show Sync Finished. Total processed: $totalShowsSaved")
+    }
+
+    private suspend fun syncHistory() {
+        Log.d(TAG, ">>> Start Playback History Sync")
+        val currentUser = auth.currentUser ?: return
+        
+        val historyMap = suspendCancellableCoroutine<Map<String, HistoryEntry>> { continuation ->
+            val databaseReference = FirebaseDatabase.getInstance().getReference("History")
+            val historyRef = databaseReference.child(currentUser.uid)
+
+            historyRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val map = mutableMapOf<String, HistoryEntry>()
+                    snapshot.children.forEach { child ->
+                        val tmdbId = child.key ?: return@forEach
+                        val lastPlayed = child.child("lastPlayed").getValue(String::class.java)
+                        val lastPosition = child.child("lastPosition").getValue(Long::class.java) ?: 0L
+                        if (lastPlayed != null) {
+                            map[tmdbId] = HistoryEntry(lastPlayed, lastPosition)
+                        }
+                    }
+                    continuation.resume(map)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e(TAG, "History sync cancelled: ${error.message}")
+                    continuation.resume(emptyMap())
+                }
+            })
+        }
+
+        if (historyMap.isNotEmpty()) {
+            val json = Gson().toJson(historyMap)
+            syncPrefs.playbackHistoryJson = json
+            Log.d(TAG, "<<< History Sync Finished. Cached ${historyMap.size} entries.")
+        } else {
+            Log.d(TAG, "<<< History Sync Finished. No history found.")
+        }
     }
 }

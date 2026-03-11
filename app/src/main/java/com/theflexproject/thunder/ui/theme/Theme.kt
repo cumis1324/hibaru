@@ -17,7 +17,7 @@ import androidx.core.view.WindowCompat
 import com.theflexproject.thunder.utils.findActivity
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Black,
+    primary = AccentBlue,
     secondary = Black,
     tertiary = AccentBlue,
     background = Black,

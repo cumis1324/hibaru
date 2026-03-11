@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.theflexproject.thunder.R
 import com.theflexproject.thunder.model.MyMedia
 import com.theflexproject.thunder.utils.UnityAdHelper
+import com.theflexproject.thunder.data.sync.SyncPrefs
 
 // Sealed class untuk menggabungkan HomeSection dan AdBanner item
 sealed class HomeSectionItem {
@@ -21,6 +22,7 @@ sealed class HomeSectionItem {
 
 class HomeSectionAdapter(
     private val isTV: Boolean = false,
+    private val syncPrefs: SyncPrefs,
     private val onItemClick: (MyMedia) -> Unit,
     private val onSeeAllClick: (HomeSection) -> Unit,
     private val onLoadMore: (String) -> Unit,
@@ -146,6 +148,7 @@ class HomeSectionAdapter(
                 innerAdapter = MediaCarouselAdapter(
                     isHero = if (isTV) false else section.type == SectionType.HERO,
                     isTV = isTV,
+                    syncPrefs = syncPrefs,
                     onItemClick = onItemClick,
                     onLoadMore = { onLoadMore(section.id) },
                     onFocusChange = onFocusChange

@@ -101,13 +101,16 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
             options
         }
         
-        val speeds = listOf("0.5x", "1.0x (Normal)", "1.5x", "2.0x")
+        val speeds = listOf("0.5x", "0.75x", "1.0x (Normal)", "1.25x", "1.5x", "1.75x", "2.0x")
         val currentSpeedLabel = remember(player) {
             val rate = player?.rate ?: 1.0f
-            when {
-                rate == 0.5f -> "0.5x"
-                rate == 1.5f -> "1.5x"
-                rate == 2.0f -> "2.0x"
+            when (rate) {
+                0.5f -> "0.5x"
+                0.75f -> "0.75x"
+                1.25f -> "1.25x"
+                1.5f -> "1.5x"
+                1.75f -> "1.75x"
+                2.0f -> "2.0x"
                 else -> "1.0x (Normal)"
             }
         }
@@ -127,6 +130,10 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                     SettingsSection.AUDIO -> "Audio Track"
                     SettingsSection.SPEED -> "Playback Speed"
                     SettingsSection.RESIZE -> "Resize Mode"
+                    SettingsSection.AUDIO_CONFIG -> "Audio Configuration"
+                    SettingsSection.AUDIO_SYNC -> "Audio Sync (Delay)"
+                    SettingsSection.SUBTITLE_SYNC -> "Subtitle Sync (Delay)"
+                    SettingsSection.SLEEP_TIMER -> "Sleep Timer"
                 }
 
                 Text(
@@ -143,8 +150,15 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                             MainSettingsMenu(
                                 onAudioClick = { currentSection = SettingsSection.AUDIO },
                                 onSpeedClick = { currentSection = SettingsSection.SPEED },
-                                onResizeClick = { currentSection = SettingsSection.RESIZE }
+                                onResizeClick = { currentSection = SettingsSection.RESIZE },
+                                onAudioConfigClick = { currentSection = SettingsSection.AUDIO_CONFIG },
+                                onAudioSyncClick = { currentSection = SettingsSection.AUDIO_SYNC },
+                                onSubSyncClick = { currentSection = SettingsSection.SUBTITLE_SYNC },
+                                onSleepClick = { currentSection = SettingsSection.SLEEP_TIMER }
                             )
+                        }
+                        SettingsSection.SLEEP_TIMER -> {
+                            SleepTimerSection(onDismiss = { currentSection = SettingsSection.MAIN })
                         }
                         SettingsSection.AUDIO -> {
                             SubSettingsList(
@@ -190,6 +204,37 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                                 }
                             )
                         }
+                        SettingsSection.AUDIO_CONFIG -> {
+                            val prefs = remember { requireContext().getSharedPreferences("PlayerSettings", android.content.Context.MODE_PRIVATE) }
+                            var passthroughEnabled by remember { mutableStateOf(prefs.getBoolean("audio_passthrough", false)) }
+                            
+                            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                                SettingToggleTvItem(
+                                    label = "Digital Audio Passthrough",
+                                    description = "Enable for Atmos/Surround support (Required compatible hardware). Turn OFF if you have NO SOUND.",
+                                    isChecked = passthroughEnabled,
+                                    onCheckedChange = { 
+                                        passthroughEnabled = it
+                                        prefs.edit().putBoolean("audio_passthrough", it).apply()
+                                        (parentFragment as? PlayerFragment)?.reloadPlayback()
+                                    }
+                                )
+                            }
+                        }
+                        SettingsSection.AUDIO_SYNC -> {
+                            SyncControlTvItem(
+                                label = "Audio Delay",
+                                currentOffsetMs = player?.audioDelay ?: 0L,
+                                onOffsetChange = { player?.audioDelay = it }
+                            )
+                        }
+                        SettingsSection.SUBTITLE_SYNC -> {
+                            SyncControlTvItem(
+                                label = "Subtitle Delay",
+                                currentOffsetMs = player?.spuDelay ?: 0L,
+                                onOffsetChange = { player?.spuDelay = it }
+                            )
+                        }
                     }
                 }
             }
@@ -197,31 +242,61 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
     }
 
     @Composable
-    fun MainSettingsMenu(onAudioClick: () -> Unit, onSpeedClick: () -> Unit, onResizeClick: () -> Unit) {
-        val focusRequesters = remember { List(3) { FocusRequester() } }
-        
-        LaunchedEffect(Unit) {
-            focusRequesters[0].requestFocus()
-        }
-
-        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+    fun MainSettingsMenu(
+        onAudioClick: () -> Unit,
+        onSpeedClick: () -> Unit,
+        onResizeClick: () -> Unit,
+        onAudioConfigClick: () -> Unit,
+        onAudioSyncClick: () -> Unit,
+        onSubSyncClick: () -> Unit,
+        onSleepClick: () -> Unit
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp)
+        ) {
             SettingMenuTvItem(
                 label = "Audio Track",
+                description = "Choose between available audio languages",
                 icon = Icons.Default.Settings,
-                focusRequester = focusRequesters[0],
                 onClick = onAudioClick
             )
             SettingMenuTvItem(
                 label = "Playback Speed",
+                description = "Change video playback speed",
                 icon = Icons.Default.PlayArrow,
-                focusRequester = focusRequesters[1],
                 onClick = onSpeedClick
             )
             SettingMenuTvItem(
                 label = "Resize Mode",
+                description = "Adjust video presentation (Fit/Stretch)",
                 icon = Icons.Default.Settings,
-                focusRequester = focusRequesters[2],
                 onClick = onResizeClick
+            )
+            SettingMenuTvItem(
+                label = "Audio Configuration",
+                description = "Configure Audio Passthrough (Atmos/PCM)",
+                icon = Icons.Default.Settings,
+                onClick = onAudioConfigClick
+            )
+            SettingMenuTvItem(
+                label = "Audio Sync",
+                description = "Adjust audio delay (ms)",
+                icon = Icons.Default.Settings,
+                onClick = onAudioSyncClick
+            )
+            SettingMenuTvItem(
+                label = "Subtitle Sync",
+                description = "Adjust subtitle timing (ms)",
+                icon = Icons.Default.Settings,
+                onClick = onSubSyncClick
+            )
+            SettingMenuTvItem(
+                label = "Sleep Timer",
+                description = "Turn off player automatically",
+                icon = Icons.Default.Settings,
+                onClick = onSleepClick
             )
         }
     }
@@ -264,11 +339,12 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
     @Composable
     fun SettingMenuTvItem(
         label: String,
+        description: String? = null, // Added description parameter
         icon: ImageVector,
-        focusRequester: FocusRequester,
         onClick: () -> Unit
     ) {
         var isFocused by remember { mutableStateOf(false) }
+        val focusRequester = remember { FocusRequester() } // Moved focusRequester inside
 
         Surface(
             modifier = Modifier
@@ -278,6 +354,7 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                 .onFocusChanged { isFocused = it.isFocused }
                 .clickable(onClick = onClick),
             color = if (isFocused) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+            contentColor = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
             shape = MaterialTheme.shapes.medium
         ) {
             Row(
@@ -291,13 +368,20 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = label,
-                    color = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.weight(1f))
+                Column(modifier = Modifier.weight(1f)) { // Use Column for label and description
+                    Text(
+                        text = label,
+                        fontSize = 18.sp,
+                        fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium
+                    )
+                    description?.let {
+                        Text(
+                            text = it,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
+                }
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
@@ -325,9 +409,16 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                 .focusRequester(focusRequester)
                 .onFocusChanged { isFocused = it.isFocused }
                 .clickable(onClick = onClick),
-            color = if (isFocused) MaterialTheme.colorScheme.primaryContainer 
-                    else if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    else Color.Transparent,
+            color = when {
+                isFocused -> MaterialTheme.colorScheme.primaryContainer 
+                isActive -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                else -> Color.Transparent
+            },
+            contentColor = when {
+                isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
+                isActive -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
             shape = MaterialTheme.shapes.medium
         ) {
             Row(
@@ -345,11 +436,8 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = label,
-                    color = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer 
-                            else if (isActive) MaterialTheme.colorScheme.primary 
-                            else MaterialTheme.colorScheme.onSurface,
                     fontSize = 18.sp,
-                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    fontWeight = if (isActive || isFocused) FontWeight.Bold else FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
                 if (isActive) {
@@ -364,15 +452,199 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
         }
     }
 
+    @Composable
+    fun SettingToggleTvItem(
+        label: String,
+        description: String? = null,
+        isChecked: Boolean,
+        onCheckedChange: (Boolean) -> Unit
+    ) {
+        var isFocused by remember { mutableStateOf(false) }
+        val focusRequester = remember { FocusRequester() }
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .focusRequester(focusRequester)
+                .onFocusChanged { isFocused = it.isFocused }
+                .clickable { onCheckedChange(!isChecked) },
+            color = if (isFocused) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+            contentColor = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = label,
+                        fontSize = 18.sp,
+                        fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium
+                    )
+                    description?.let {
+                        Text(
+                            text = it,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+                Switch(
+                    checked = isChecked,
+                    onCheckedChange = onCheckedChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        uncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
+                )
+            }
+        }
+    }
+
     private fun applyPlaybackSpeed(speed: String, player: MediaPlayer?) {
         if (player == null) return
         val playbackSpeed = when (speed) {
             "0.5x" -> 0.5f
+            "0.75x" -> 0.75f
+            "1.25x" -> 1.25f
             "1.5x" -> 1.5f
+            "1.75x" -> 1.75f
             "2.0x" -> 2.0f
             else -> 1.0f
         }
         player.rate = playbackSpeed
+    }
+
+    @Composable
+    fun SyncControlTvItem(
+        label: String,
+        currentOffsetMs: Long,
+        onOffsetChange: (Long) -> Unit
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val labelColor = MaterialTheme.colorScheme.onSurface
+            Text(
+                text = label,
+                color = labelColor,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Large step buttons for TV focus
+                IconButton(
+                    onClick = { onOffsetChange(currentOffsetMs - 1000) },
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Text("-1s", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+
+                IconButton(
+                    onClick = { onOffsetChange(currentOffsetMs - 50) },
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Text("-50ms", color = MaterialTheme.colorScheme.primary)
+                }
+
+                Text(
+                    text = "${currentOffsetMs} ms",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+
+                IconButton(
+                    onClick = { onOffsetChange(currentOffsetMs + 50) },
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Text("+50ms", color = MaterialTheme.colorScheme.primary)
+                }
+
+                IconButton(
+                    onClick = { onOffsetChange(currentOffsetMs + 1000) },
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Text("+1s", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Button(
+                onClick = { onOffsetChange(0) },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Text("Reset to 0", color = MaterialTheme.colorScheme.onSecondaryContainer)
+            }
+        }
+    }
+
+    @Composable
+    fun SleepTimerSection(onDismiss: () -> Unit) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val options = listOf(0, 15, 30, 60, 90, 120)
+        val labels = listOf("Off", "15 Minutes", "30 Minutes", "60 Minutes", "90 Minutes", "120 Minutes")
+        
+        val prefs = remember { context.getSharedPreferences("PlayerSettings", android.content.Context.MODE_PRIVATE) }
+        var selectedMinutes by remember { mutableStateOf(prefs.getInt("sleep_timer_minutes", 0)) }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            itemsIndexed(labels) { index, label ->
+                val minutes = options[index]
+                SettingItemTv(
+                    label = label,
+                    isActive = selectedMinutes == minutes,
+                    icon = Icons.Default.Settings,
+                    focusRequester = remember { FocusRequester() },
+                    onClick = {
+                        selectedMinutes = minutes
+                        prefs.edit().putInt("sleep_timer_minutes", minutes).apply()
+                        setSleepTimer(context, minutes)
+                    }
+                )
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Text("Back", color = MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+            }
+        }
+    }
+
+    private fun setSleepTimer(context: android.content.Context, minutes: Int) {
+        val intent = android.content.Intent("com.theflexproject.thunder.ACTION_SLEEP_TIMER")
+        intent.putExtra("minutes", minutes)
+        context.sendBroadcast(intent)
+        
+        if (minutes > 0) {
+            android.widget.Toast.makeText(context, "Sleep timer set for $minutes minutes", android.widget.Toast.LENGTH_SHORT).show()
+        } else {
+            android.widget.Toast.makeText(context, "Sleep timer disabled", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     data class AudioOption(
@@ -381,8 +653,8 @@ class SettingsSideSheetDialogFragment : DialogFragment() {
         val isActive: Boolean
     )
 
-    enum class SettingsSection {
-        MAIN, AUDIO, SPEED, RESIZE
+    private enum class SettingsSection {
+        MAIN, AUDIO, SPEED, RESIZE, AUDIO_CONFIG, AUDIO_SYNC, SUBTITLE_SYNC, SLEEP_TIMER
     }
 
     companion object {

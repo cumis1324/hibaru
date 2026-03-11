@@ -1,28 +1,38 @@
 # NFGPlus Changelog - Detailed
 
-**Version:** Ekasthadasa (v81)  
-**Release Date:** February 19, 2026  
-**Previous Version:** Tapaswini (v80)
+**Version:** Dwinavatih (v92)  
+**Release Date:** March 11, 2026  
+**Previous Version:** Ekasthadasa (v81)
 
 ---
 
-## 🎯 Release Highlights
+## 🎯 Release Highlights (v92)
 
-### Critical Fixes
-- ✅ **FIXED**: Unity Ads permission error in release build
-- ✅ **IMPROVED**: ProGuard rules for comprehensive Unity Ads protection
-- ✅ **REFACTORED**: Permission checking logic moved to MainActivity
+### Major Engine Migration
+- 🚀 **LibVLC Integration**: Fully migrated from Media3/ExoPlayer to **LibVLC 3.6.4**. Provides superior codec support, hardware acceleration, and better subtitle rendering across all Android devices.
+- 🛠️ **Custom Controller**: Re-implemented player controls with a specialized UI layer for VLC, supporting seamless gesture controls for volume, brightness, and seeking.
 
-### Features Added
-- ✅ Runtime permission request handling in MainActivity
-- ✅ Notification permission dialog with settings navigation
-- ✅ Media permissions request (Android 13+)
+### Advanced Player Features
+- 📺 **Resize Modes**: Supports Fit, Stretch, Zoom, 16:9, and 4:3 aspect ratios.
+- 🔒 **Screen Lock**: Added a dedicated lock mode to prevent accidental touches during playback.
+- 📊 **Dynamic Track Discovery**: Real-time detection and selection of audio tracks and internal/external subtitles using BottomSheets (Mobile) and SideSheets (TV).
+- ⏱️ **Sleep Timer**: Integrated sleep timer to automatically pause playback after a set duration.
+- 🖼️ **Picture-in-Picture (PiP)**: Stable PiP mode support for multitasking on compatible devices.
 
-### Performance Improvements
-- ✅ Optimized ProGuard configuration
-- ✅ Reduced obfuscation impact on critical libraries
+### Sync & Performance
+- ⚡ **Centralized History Sync**: Re-engineered playback history using a local-first JSON cache in `SyncPrefs`. Eliminates dozens of Firebase listeners, making the Home screen load almost instantly.
+- 🔄 **Google TV Home Integration**: Full support for Google TV recommendations (Watch Next) and custom channels (Movies & TV Shows) using **Google Engage SDK**.
+- 🛠️ **Robust Resume**: Implemented an event-driven seek mechanism that ensures playback resumes exactly where you left off, even during slow buffering.
+- 💾 **Safe Disk Commit**: Switched to `commit()` for local position caching to prevent data loss during app teardown.
+
+### Bug Fixes
+- ✅ **URL Encoding**: Fixed "input can't be opened" errors by automatically sanitizing URL paths containing spaces.
+- ✅ **TV UX**: Fixed focus management during buffering and centered the player layout for Google TV.
+- ✅ **Release Stability**: Added comprehensive R8/ProGuard rules for Moshi, Hilt, and LibVLC to prevent crashes in production.
 
 ---
+
+## 📝 Historical Changes (v81)
 
 ## 📝 Detailed Changes
 

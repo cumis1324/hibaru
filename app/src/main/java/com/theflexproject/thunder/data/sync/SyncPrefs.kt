@@ -32,4 +32,8 @@ class SyncPrefs @Inject constructor(
     var cachedGenresJson: String?
         get() = prefs.getString("cached_genres_json", null)
         set(value) = prefs.edit().putString("cached_genres_json", value).apply()
+
+    var playbackHistoryJson: String?
+        get() = prefs.getString("playback_history_json", null)
+        set(value) = prefs.edit().putString("playback_history_json", value).apply()
 }

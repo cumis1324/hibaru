@@ -160,6 +160,25 @@ public class PlayerFragment extends BaseFragment
     private final Handler hideControlsHandler = new Handler(Looper.getMainLooper());
     private final Runnable hideControlsRunnable = this::hideControls;
 
+    private final Handler sleepTimerHandler = new Handler(Looper.getMainLooper());
+    private final Runnable sleepTimerRunnable = () -> {
+        if (player != null && player.isPlaying()) {
+            player.pause();
+            Toast.makeText(mActivity, "Sleep timer: Playback paused", Toast.LENGTH_LONG).show();
+        }
+    };
+
+    private final android.content.BroadcastReceiver sleepTimerReceiver = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int minutes = intent.getIntExtra("minutes", 0);
+            sleepTimerHandler.removeCallbacks(sleepTimerRunnable);
+            if (minutes > 0) {
+                sleepTimerHandler.postDelayed(sleepTimerRunnable, minutes * 60 * 1000L);
+            }
+        }
+    };
+
     public PlayerFragment() {
         // Default constructor
     }
@@ -199,6 +218,7 @@ public class PlayerFragment extends BaseFragment
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "PlayerFragment WAKES UP - onCreate called");
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             itemId = getArguments().getInt("videoId");
@@ -248,6 +268,14 @@ public class PlayerFragment extends BaseFragment
             view = inflater.inflate(R.layout.video_tv, container, false);
         } else {
             view = inflater.inflate(R.layout.video_player, container, false);
+        }
+
+        android.content.IntentFilter filter = new android.content.IntentFilter(
+                "com.theflexproject.thunder.ACTION_SLEEP_TIMER");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mActivity.registerReceiver(sleepTimerReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            mActivity.registerReceiver(sleepTimerReceiver, filter);
         }
         loadBalancer = new RandomIndex();
         randomUrl = loadBalancer.getSelectedDomain();
@@ -600,47 +628,60 @@ public class PlayerFragment extends BaseFragment
         startPosition = -1;
     }
 
-    private void initializePlayer(String urlString) {
-        if (player == null) {
-            if (urlString == null || urlString.isEmpty()) {
-                return;
-            }
+    private void initializePlayer(final String urlString) {
+        if (player != null)
+            return;
+        if (urlString == null || urlString.isEmpty())
+            return;
 
-            ArrayList<String> options = new ArrayList<>();
-            options.add("--http-reconnect");
-            options.add("--network-caching=3000");
-            // Add hardware acceleration based on preference if needed
-            options.add("-vvv"); // Verbose logging for debugging
+        // post() ensures the view is fully attached and measured before VLC starts.
+        // video_tv.xml now uses match_parent so the size is guaranteed valid.
+        videoLayout.post(() -> {
+            if (player != null)
+                return; // guard against double-init
+            Log.d(TAG, "initializePlayer: starting VLC, surface=" + videoLayout.getWidth() + "x"
+                    + videoLayout.getHeight());
+            doInitializePlayer(urlString);
+        });
+    }
 
-            libVLC = new LibVLC(mActivity, options);
-            player = new MediaPlayer(libVLC);
-            // Use TextureView and VideoScale for better subtitle compatibility
-            player.attachViews(videoLayout, null, true, true);
+    private void doInitializePlayer(String urlString) {
+        if (player != null)
+            return;
 
-            Media media = new Media(libVLC, Uri.parse(urlString));
-            media.setHWDecoderEnabled(true, false);
-            media.addOption(":network-caching=3000");
-            player.setMedia(media);
-            media.release();
-
-            player.setEventListener(new PlayerEventListener());
-            player.play();
-
-            // Resume position
-            long lastPos = startPosition;
-            if (lastPos <= 0) {
-                lastPos = PlayerUtils.getResumePosition(mActivity, tmdbId);
-            }
-
-            if (lastPos > 0) {
-                player.setTime(lastPos);
-                Log.d(TAG, "initializePlayer: Seeking to " + lastPos);
-            }
-            // Also sync from Firebase (Async)
-            PlayerUtils.resumePlayerState(player, tmdbId);
-
-            btn_info.requestFocus();
+        // Sanitize URL: Replace spaces with %20 for VLC MRL compatibility
+        if (urlString != null) {
+            urlString = urlString.replace(" ", "%20");
         }
+
+        ArrayList<String> options = new ArrayList<>();
+        options.add("--http-reconnect");
+        options.add("--network-caching=3000");
+        options.add("--aout=android_audiotrack");
+        options.add("--audio-time-stretch");
+        options.add("-vvv");
+
+        Log.d(TAG, "doInitializePlayer: " + urlString);
+        libVLC = new LibVLC(mActivity, options);
+        player = new MediaPlayer(libVLC);
+        player.attachViews(videoLayout, null, false, false);
+        Media media = new Media(libVLC, Uri.parse(urlString));
+        applyMediaOptions(media);
+        player.setMedia(media);
+        media.release();
+
+        player.setEventListener(new PlayerEventListener());
+        player.play();
+
+        if (startPosition <= 0) {
+            startPosition = PlayerUtils.getResumePosition(mActivity, tmdbId);
+        }
+        // PlayerEventListener handles the initial seek and Firebase resume check
+        // once the player reaches the Playing state.
+
+        if (btn_info != null)
+            btn_info.requestFocus();
+        Log.d(TAG, "doInitializePlayer: VLC initiated and playing");
     }
 
     @Override
@@ -653,7 +694,9 @@ public class PlayerFragment extends BaseFragment
     public void onPause() {
         super.onPause();
         if (player != null) {
-            PlayerUtils.saveResume(mActivity, player.getTime(), player.getLength(), tmdbId);
+            long currentPos = player.getTime();
+            Log.d(TAG, "onPause: Saving resume position: " + currentPos + " for " + tmdbId);
+            PlayerUtils.saveResume(mActivity, currentPos, player.getLength(), tmdbId);
             player.pause();
         }
     }
@@ -684,6 +727,7 @@ public class PlayerFragment extends BaseFragment
 
     private class PlayerEventListener implements MediaPlayer.EventListener {
         private boolean initialSeekDone = false;
+        private boolean firebaseResumeChecked = false;
 
         @Override
         public void onEvent(MediaPlayer.Event event) {
@@ -701,6 +745,12 @@ public class PlayerFragment extends BaseFragment
                         player.setTime(startPosition);
                         initialSeekDone = true;
                         Log.d(TAG, "PlayerEventListener: Playing, applying startPosition: " + startPosition);
+                    }
+
+                    if (!firebaseResumeChecked) {
+                        PlayerUtils.resumePlayerState(getContext(), player, tmdbId);
+                        firebaseResumeChecked = true;
+                        Log.d(TAG, "PlayerEventListener: Checking Firebase sync for resume");
                     }
 
                     // Enable controls
@@ -727,6 +777,22 @@ public class PlayerFragment extends BaseFragment
                         com.theflexproject.thunder.utils.WatchNextHelper.INSTANCE.removeFromWatchNext(mActivity,
                                 tmdbId);
                     }
+                    // Auto-play Next Episode
+                    if (!isMovie && episode != null && similarOrEpisode != null && !similarOrEpisode.isEmpty()) {
+                        int currentIndex = -1;
+                        for (int i = 0; i < similarOrEpisode.size(); i++) {
+                            if (((Episode) similarOrEpisode.get(i)).getId() == episode.getId()) {
+                                currentIndex = i;
+                                break;
+                            }
+                        }
+                        if (currentIndex != -1 && currentIndex < similarOrEpisode.size() - 1) {
+                            Episode nextEp = (Episode) similarOrEpisode.get(currentIndex + 1);
+                            Toast.makeText(mActivity, "Playing Next Episode: " + nextEp.getName(), Toast.LENGTH_SHORT)
+                                    .show();
+                            updateEpisode(tvShowDetails, season, nextEp.getId());
+                        }
+                    }
                     break;
                 case MediaPlayer.Event.Buffering:
                     float buffering = event.getBuffering();
@@ -741,6 +807,10 @@ public class PlayerFragment extends BaseFragment
                             player.setTime(startPosition);
                             initialSeekDone = true;
                             Log.d(TAG, "PlayerEventListener: Buffering 100%, applying startPosition: " + startPosition);
+                        }
+                        if (!firebaseResumeChecked) {
+                            PlayerUtils.resumePlayerState(getContext(), player, tmdbId);
+                            firebaseResumeChecked = true;
                         }
                     }
                     break;
@@ -766,6 +836,7 @@ public class PlayerFragment extends BaseFragment
                     updateTimer(timer, currentTime, totalTime);
                 }
                 updateWatchNext();
+
                 handler.postDelayed(this, 1000);
                 PlayerUtils.load3ads(mActivity, mActivity, player, videoLayout);
             }
@@ -774,7 +845,7 @@ public class PlayerFragment extends BaseFragment
 
     @Override
     public void onUserLeaveHint() {
-        // handleUserLeaveHint();
+        handleUserLeaveHint();
     }
 
     private void handleUserLeaveHint() {
@@ -786,16 +857,19 @@ public class PlayerFragment extends BaseFragment
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
-        if (isInPictureInPictureMode && player != null) {
-            customControls.setVisibility(View.GONE);
+        if (isInPictureInPictureMode) {
+            if (customControls != null)
+                customControls.setVisibility(View.GONE);
+            if (bottomNavigationView != null)
+                bottomNavigationView.setVisibility(View.GONE);
+            if (topNavigationView != null)
+                topNavigationView.setVisibility(View.GONE);
         } else {
             if (!isTVDevice(mActivity)) {
-                mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
-            customControls.setVisibility(View.VISIBLE);
-        }
-        if (!isInPictureInPictureMode && player != null) {
-            destroyAll();
+            if (customControls != null)
+                customControls.setVisibility(View.VISIBLE);
         }
     }
 
@@ -903,40 +977,59 @@ public class PlayerFragment extends BaseFragment
     }
 
     private void switchSource(String newUrl) {
-        if (player != null) {
+        if (player != null && newUrl != null) {
             long currentPos = player.getTime();
             boolean wasPlaying = player.isPlaying();
 
-            Media media = new Media(libVLC, Uri.parse(newUrl));
-            media.setHWDecoderEnabled(true, false);
-            media.addOption(":network-caching=3000");
+            // Sanitize URL: Replace spaces with %20
+            String sanitizedUrl = newUrl.replace(" ", "%20");
+
+            Media media = new Media(libVLC, Uri.parse(sanitizedUrl));
+            applyMediaOptions(media);
             player.setMedia(media);
             media.release();
+            player.play(); // Start playback immediately after setting new media
 
             if (currentPos > 0) {
+                PlayerUtils.saveResume(mActivity, currentPos, player.getLength(), tmdbId);
                 player.setTime(currentPos);
             }
-            if (wasPlaying) {
-                player.play();
-            }
+        }
 
-            // Also ensure we sync resume state for new source if needed
-            PlayerUtils.resumePlayerState(player, tmdbId);
+        // Also ensure we sync resume state for new source if needed
+        PlayerUtils.resumePlayerState(requireContext(), player, tmdbId);
 
-            customBufferingIndicator.setVisibility(View.VISIBLE);
-            imageView.setVisibility(View.VISIBLE);
+        customBufferingIndicator.setVisibility(View.VISIBLE);
+        imageView.setVisibility(View.VISIBLE);
+    }
+
+    private void applyMediaOptions(Media media) {
+        media.setHWDecoderEnabled(true, false);
+        media.addOption(":network-caching=3000");
+        media.addOption(":file-caching=3000");
+
+        // Improve subtitle detection
+        media.addOption(":sub-autodetect-file");
+        media.addOption(":sub-autodetect-fuzzy=1");
+
+        SharedPreferences settings = mActivity.getSharedPreferences("PlayerSettings", Context.MODE_PRIVATE);
+        boolean passthrough = settings.getBoolean("audio_passthrough", false);
+        if (passthrough) {
+            media.addOption(":audio-passthrough");
+            Log.d(TAG, "applyMediaOptions: Audio Passthrough ENABLED");
+        } else {
+            Log.d(TAG, "applyMediaOptions: Audio Passthrough DISABLED");
         }
     }
 
     protected void newSource() {
         if (player != null) {
             setAdsState();
-            PlayerUtils.saveResume(mActivity, player.getTime(), player.getLength(), tmdbId);
+            long currentPos = player.getTime();
+            Log.d(TAG, "newSource: Saving old position: " + currentPos + " for " + tmdbId);
+            PlayerUtils.saveResume(mActivity, currentPos, player.getLength(), tmdbId);
             player.stop();
-            // We don't necessarily need to release the entire player if we're just
-            // switching source for same item
-            // But if it's a completely new source (e.g. next episode), release and re-init
-            // is safer.
+            player.detachViews();
             player.release();
             player = null;
             if (libVLC != null) {
@@ -944,15 +1037,20 @@ public class PlayerFragment extends BaseFragment
                 libVLC = null;
             }
             stopSeekBarUpdate();
+            clearStartPosition(); // CRITICAL: Reset startPosition for the new movie/episode
             customBufferingIndicator.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
+            Log.d(TAG, "newSource: Old player released, startPosition cleared");
         }
     }
 
     private void releasePlayer() {
         if (player != null) {
-            PlayerUtils.saveResume(mActivity, player.getTime(), player.getLength(), tmdbId);
+            long currentPos = player.getTime();
+            Log.d(TAG, "releasePlayer: Final save for " + tmdbId + " at " + currentPos);
+            PlayerUtils.saveResume(mActivity, currentPos, player.getLength(), tmdbId);
             player.stop();
+            player.detachViews();
             player.release();
             player = null;
         }
@@ -960,8 +1058,38 @@ public class PlayerFragment extends BaseFragment
             libVLC.release();
             libVLC = null;
         }
+        try {
+            mActivity.unregisterReceiver(sleepTimerReceiver);
+        } catch (Exception ignored) {
+        }
         stopSeekBarUpdate();
         destroyAll();
+    }
+
+    public void reloadPlayback() {
+        if (player != null) {
+            long currentPos = player.getTime();
+            PlayerUtils.saveResume(mActivity, currentPos, player.getLength(), tmdbId);
+            // Stop and release everything
+            player.stop();
+            player.release();
+            player = null;
+            if (libVLC != null) {
+                libVLC.release();
+                libVLC = null;
+            }
+            stopSeekBarUpdate();
+
+            // Set startPosition to current so it resumes exactly where it was
+            this.startPosition = currentPos;
+
+            // Re-initialize
+            if (isMovie) {
+                loadMovieDetails(itemId);
+            } else {
+                loadSeriesDetails(episode);
+            }
+        }
     }
 
     private void destroyAll() {
@@ -1100,6 +1228,11 @@ public class PlayerFragment extends BaseFragment
                     initializePlayer(newUrl);
                 }
                 sourceList = (List<MyMedia>) (List<?>) DetailsUtils.getEpisodeSource(mActivity, episode.getId());
+                // Load all episodes of this season for auto-play navigation
+                if (seasonDetails != null) {
+                    similarOrEpisode = (List<MyMedia>) (List<?>) DetailsUtils.getListEpisode(mActivity,
+                            (int) tvShowDetails.getId(), seasonDetails.getSeasonNumber());
+                }
             } else {
                 Toast.makeText(mActivity, "File Not Found", Toast.LENGTH_SHORT).show();
             }

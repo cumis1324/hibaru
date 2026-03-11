@@ -105,6 +105,8 @@ public class PlayerActivity extends AppCompatActivity
         ArrayList<String> options = new ArrayList<>();
         options.add("--no-drop-late-frames");
         options.add("--no-skip-frames");
+        options.add("--aout=android_audiotrack");
+        options.add("--audio-time-stretch");
         options.add("-vv");
         libVLC = new LibVLC(this, options);
 
@@ -323,39 +325,28 @@ public class PlayerActivity extends AppCompatActivity
             Uri uri = Uri.parse(urlString);
             Log.i("Inside Player", uri.toString());
             Media media = new Media(libVLC, uri);
+
+            // Cek setting Passthrough (Consistency with PlayerFragment)
+            android.content.SharedPreferences settings = getSharedPreferences("PlayerSettings",
+                    android.content.Context.MODE_PRIVATE);
+            boolean passthrough = settings.getBoolean("audio_passthrough", false);
+            if (passthrough) {
+                media.addOption(":audio-passthrough");
+                Log.d("PlayerActivity", "Audio Passthrough ENABLED");
+            }
+
             player.setMedia(media);
             media.release();
 
             player.setEventListener(new PlayerEventListener());
         }
 
-        String userId = manager.getCurrentUser().getUid();
         String tmdbId = intent.getStringExtra("tmdbId");
         if (tmdbId != null && !tmdbId.equals(offline)) {
-            DatabaseReference userReference = databaseReference.child(userId).child(tmdbId).child("lastPosition");
-            userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        Long lastPosition = dataSnapshot.getValue(Long.class);
-                        if (lastPosition != null && player != null) {
-                            startPosition = lastPosition;
-                            player.setTime(startPosition);
-                            Toast.makeText(getApplicationContext(),
-                                    "Resuming to your last position " + formatDuration(startPosition),
-                                    Toast.LENGTH_LONG)
-                                    .show();
-                        }
-                    }
-                    if (startAutoPlay) {
-                        player.play();
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                }
-            });
+            PlayerUtils.resumePlayerState(this, player, tmdbId);
+            if (startAutoPlay) {
+                player.play();
+            }
         } else if (startAutoPlay) {
             player.play();
         }
@@ -386,16 +377,9 @@ public class PlayerActivity extends AppCompatActivity
         if (player != null) {
             startAutoPlay = player.isPlaying();
             startPosition = Math.max(0, player.getTime());
-            String userId = manager.getCurrentUser().getUid();
             String tmdbId = intent.getStringExtra("tmdbId");
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-            String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
             if (tmdbId != null && !tmdbId.equals(offline)) {
-                DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
-                Map<String, Object> userMap = new HashMap<>();
-                userMap.put("lastPosition", startPosition);
-                userMap.put("lastPlayed", currentDateTime);
-                userReference.setValue(userMap);
+                PlayerUtils.saveResume(getApplicationContext(), startPosition, player.getLength(), tmdbId);
             }
         }
     }

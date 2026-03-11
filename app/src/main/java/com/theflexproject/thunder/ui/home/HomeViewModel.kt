@@ -15,6 +15,9 @@ import com.theflexproject.thunder.model.Movie
 import com.theflexproject.thunder.model.TVShowInfo.TVShow
 import javax.inject.Inject
 import kotlin.coroutines.resume
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.theflexproject.thunder.model.HistoryEntry
 
 data class HomeUiState(
     val sections: List<HomeSection> = emptyList(),
@@ -116,44 +119,28 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchHistoryFromFirebase(): List<Pair<String, Pair<Long, Long>>> = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
-        val manager = com.theflexproject.thunder.model.FirebaseManager()
-        val user = manager.currentUser
-        if (user == null) {
-            continuation.resume(emptyList())
-            return@suspendCancellableCoroutine
-        }
+    private suspend fun fetchHistoryFromFirebase(): List<Pair<String, Pair<Long, Long>>> {
+        val historyJson = syncPrefs.playbackHistoryJson
+        if (historyJson.isNullOrEmpty()) return emptyList()
 
-        val databaseReference = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("History")
-        val historyRef = databaseReference.child(user.uid)
+        return try {
+            val gson = Gson()
+            val type = object : TypeToken<Map<String, HistoryEntry>>() {}.type
+            val historyMap: Map<String, HistoryEntry> = gson.fromJson(historyJson, type)
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.ENGLISH)
 
-        historyRef.addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                val list = mutableListOf<Pair<String, Pair<Long, Long>>>()
-                val formatter = java.time.format.DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.ENGLISH)
-                
-                snapshot.children.forEach { child ->
-                    val tmdbId = child.key ?: return@forEach
-                    val lastPlayedStr = child.child("lastPlayed").getValue(String::class.java)
-                    
-                    try {
-                        val timestamp = if (!lastPlayedStr.isNullOrEmpty()) {
-                            java.time.ZonedDateTime.parse(lastPlayedStr, formatter).toInstant().toEpochMilli()
-                        } else 0L
-                        val lastPos = child.child("lastPosition").getValue(Long::class.java) ?: 0L
-                        list.add(tmdbId to (lastPos to timestamp))
-                    } catch (e: Exception) {
-                        list.add(tmdbId to (0L to 0L))
-                    }
+            historyMap.map { (tmdbId, entry) ->
+                val timestamp = try {
+                    java.time.ZonedDateTime.parse(entry.lastPlayed, formatter).toInstant().toEpochMilli()
+                } catch (e: Exception) {
+                    0L
                 }
-                // Sort by timestamp desc and take top 20
-                continuation.resume(list.sortedByDescending { it.second.second }.take(20))
-            }
-
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
-                continuation.resume(emptyList())
-            }
-        })
+                tmdbId to (entry.lastPosition to timestamp)
+            }.sortedByDescending { it.second.second }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Error parsing history JSON", e)
+            emptyList()
+        }
     }
 
     fun loadWatchlist() {

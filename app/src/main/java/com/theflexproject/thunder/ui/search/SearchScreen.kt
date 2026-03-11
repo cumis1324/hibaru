@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.theflexproject.thunder.model.MyMedia
 import com.theflexproject.thunder.ui.seeall.MediaGridItem
@@ -65,7 +66,11 @@ fun SearchScreen(
                 shape = MaterialTheme.shapes.extraLarge
             )
 
-            Box(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
                 when {
                     uiState.isLoading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -73,16 +78,20 @@ fun SearchScreen(
                     query.isNotEmpty() && uiState.searchResults.isEmpty() && !uiState.isLoading -> {
                         Text(
                             text = "No results found for \"$query\"",
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.bodyLarge
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(16.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center
                         )
                     }
                     query.isEmpty() -> {
                         Text(
-                            text = "Type to search...",
+                            text = "Type to search content...",
                             modifier = Modifier.align(Alignment.Center),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
                         )
                     }
                     else -> {

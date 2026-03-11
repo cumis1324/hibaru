@@ -23,6 +23,10 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.theflexproject.thunder.model.FirebaseManager
+import com.theflexproject.thunder.data.sync.SyncPrefs
+import com.theflexproject.thunder.model.HistoryEntry
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.text.DecimalFormat
 
 class LoadingMedia : MyMedia
@@ -30,6 +34,7 @@ class LoadingMedia : MyMedia
 class MediaCarouselAdapter(
     private val isHero: Boolean = false,
     private val isTV: Boolean = false,
+    private val syncPrefs: SyncPrefs,
     private val onItemClick: (MyMedia) -> Unit,
     private var onLoadMore: () -> Unit,
     private val onFocusChange: ((MyMedia) -> Unit)? = null
@@ -58,7 +63,12 @@ class MediaCarouselAdapter(
         return ViewHolder(view)
     }
 
+    private var historyCache: Map<String, HistoryEntry> = emptyMap()
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        if (position == 0) {
+            updateHistoryCache()
+        }
         val item = getItem(position)
         if (item is LoadingMedia) {
             onLoadMore()
@@ -68,6 +78,18 @@ class MediaCarouselAdapter(
             // Fallback trigger if bumper isn't reached or not yet shown
             if (position >= itemCount - 3 && itemCount >= 15) {
                 onLoadMore()
+            }
+        }
+    }
+
+    private fun updateHistoryCache() {
+        val json = syncPrefs.playbackHistoryJson
+        if (!json.isNullOrEmpty()) {
+            try {
+                val type = object : TypeToken<Map<String, HistoryEntry>>() {}.type
+                historyCache = Gson().fromJson(json, type)
+            } catch (e: Exception) {
+                android.util.Log.e("MediaCarouselAdapter", "Error parsing history JSON", e)
             }
         }
     }
@@ -192,42 +214,40 @@ class MediaCarouselAdapter(
                 onItemClick(item)
             }
 
-            // Sync Progress from Firebase (Origin Method)
+            // Sync Progress from Local Cache (Optimized)
             val tmdbId = when(item) {
                 is Movie -> item.id.toString()
                 is Episode -> item.id.toString()
                 else -> null
             }
             if (tmdbId != null && progressOverlay != null) {
-                val userId = FirebaseManager().currentUser?.uid
-                if (userId != null) {
-                    val ref = FirebaseDatabase.getInstance().getReference("History")
-                        .child(userId).child(tmdbId).child("lastPosition")
-                    ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            val lastPos = snapshot.getValue(Long::class.java) ?: 0L
-                            if (lastPos > 0) {
-                                val runtime = when(item) {
-                                    is Movie -> item.runtime.toLong() * 60 * 1000
-                                    is Episode -> item.runtime.toLong() * 60 * 1000
-                                    else -> 0L
+                val entry = historyCache[tmdbId]
+                val lastPos = entry?.lastPosition ?: 0L
+                if (lastPos > 0) {
+                    val runtime = when(item) {
+                        is Movie -> item.runtime.toLong() * 60 * 1000
+                        is Episode -> item.runtime.toLong() * 60 * 1000
+                        else -> 0L
+                    }
+                    if (runtime > 0) {
+                        val progress = lastPos.toDouble() / runtime
+                        
+                        // Use ViewTreeObserver to get width if not yet laid out
+                        if ((poster?.width ?: 0) > 0) {
+                            applyProgress(progressOverlay, progress, poster!!.width)
+                        } else {
+                            poster?.viewTreeObserver?.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                                override fun onGlobalLayout() {
+                                    poster.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                                    applyProgress(progressOverlay, progress, poster.width)
                                 }
-                                if (runtime > 0) {
-                                    val progress = lastPos.toDouble() / runtime
-                                    val fullWidth = poster?.width ?: 0
-                                    if (fullWidth > 0) {
-                                        progressOverlay.visibility = View.VISIBLE
-                                        val params = progressOverlay.layoutParams
-                                        params.width = (fullWidth * progress).toInt()
-                                        progressOverlay.layoutParams = params
-                                    }
-                                }
-                            } else {
-                                progressOverlay.visibility = View.GONE
-                            }
+                            })
                         }
-                        override fun onCancelled(error: DatabaseError) {}
-                    })
+                    } else {
+                        progressOverlay.visibility = View.GONE
+                    }
+                } else {
+                    progressOverlay.visibility = View.GONE
                 }
             } else {
                 progressOverlay?.visibility = View.GONE
@@ -244,9 +264,15 @@ class MediaCarouselAdapter(
                     itemView.scaleX = 1.0f
                     itemView.scaleY = 1.0f
                     itemView.z = 0f
-                    focusOverlay?.visibility = View.GONE
                 }
             }
+        }
+
+        private fun applyProgress(view: View, progress: Double, fullWidth: Int) {
+            view.visibility = View.VISIBLE
+            val params = view.layoutParams
+            params.width = (fullWidth * progress).toInt().coerceAtMost(fullWidth)
+            view.layoutParams = params
         }
     }
 

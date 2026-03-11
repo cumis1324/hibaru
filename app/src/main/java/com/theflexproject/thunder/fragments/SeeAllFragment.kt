@@ -38,17 +38,40 @@ class SeeAllFragment : Fragment() {
                     onItemClick = { item ->
                         when (item) {
                             is com.theflexproject.thunder.model.Movie -> {
+                                android.util.Log.d("NavigationClick", "SeeAll -> Player: Movie ID=${item.id}, Title=${item.title}")
                                 val bundle = Bundle().apply {
                                     putInt("videoId", item.id)
                                     putBoolean("isMovie", true)
                                 }
-                                findNavController().navigate(R.id.action_seeAllFragment_to_playerFragment, bundle)
+                                try {
+                                    findNavController().navigate(R.id.action_seeAllFragment_to_playerFragment, bundle)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("NavigationClick", "SeeAll Navigation Failed: ${e.message}")
+                                }
+                            }
+                            is com.theflexproject.thunder.model.TVShowInfo.Episode -> {
+                                android.util.Log.d("NavigationClick", "SeeAll -> Player: Episode ID=${item.id}, Title=${item.name}")
+                                val bundle = Bundle().apply {
+                                    putInt("videoId", item.id)
+                                    putBoolean("isMovie", false)
+                                    putInt("episodeId", item.id)
+                                }
+                                try {
+                                    findNavController().navigate(R.id.action_seeAllFragment_to_playerFragment, bundle)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("NavigationClick", "SeeAll Navigation Failed: ${e.message}")
+                                }
                             }
                             is com.theflexproject.thunder.model.TVShowInfo.TVShow -> {
+                                android.util.Log.d("NavigationClick", "SeeAll -> Detail: TVShow ID=${item.id}, Title=${item.name}")
                                 val bundle = Bundle().apply {
                                     putInt("tvShowId", item.id)
                                 }
-                                findNavController().navigate(R.id.action_seeAllFragment_to_tvShowDetailsFragment, bundle)
+                                try {
+                                    findNavController().navigate(R.id.action_seeAllFragment_to_tvShowDetailsFragment, bundle)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("NavigationClick", "SeeAll Navigation Failed: ${e.message}")
+                                }
                             }
                         }
                     }

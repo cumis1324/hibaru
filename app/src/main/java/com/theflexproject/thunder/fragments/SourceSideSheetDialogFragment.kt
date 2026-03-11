@@ -13,13 +13,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
@@ -90,7 +89,7 @@ class SourceSideSheetDialogFragment : DialogFragment() {
         currentUrl: String,
         onSelected: (MyMedia) -> Unit
     ) {
-        val focusRequesters = remember { List(sources.size) { FocusRequester() } }
+        val focusRequesters = remember(sources.size) { List(sources.size) { FocusRequester() } }
         var activeIndex = -1
 
         Surface(
@@ -156,14 +155,26 @@ class SourceSideSheetDialogFragment : DialogFragment() {
         focusRequester: FocusRequester,
         onClick: () -> Unit
     ) {
+        var isFocused by remember { mutableStateOf(false) }
+
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(vertical = 4.dp)
                 .focusRequester(focusRequester)
+                .onFocusChanged { isFocused = it.isFocused }
                 .clickable(onClick = onClick),
             shape = MaterialTheme.shapes.medium,
-            color = if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent,
-            contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            color = when {
+                isFocused -> MaterialTheme.colorScheme.primaryContainer
+                isActive -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                else -> Color.Transparent
+            },
+            contentColor = when {
+                isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
+                isActive -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            }
         ) {
             Row(
                 modifier = Modifier
@@ -173,7 +184,9 @@ class SourceSideSheetDialogFragment : DialogFragment() {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = null,
-                    tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    tint = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer 
+                           else if (isActive) MaterialTheme.colorScheme.primary 
+                           else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -182,7 +195,7 @@ class SourceSideSheetDialogFragment : DialogFragment() {
                 Text(
                     text = quality,
                     fontSize = 18.sp,
-                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    fontWeight = if (isActive || isFocused) FontWeight.Bold else FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -190,7 +203,7 @@ class SourceSideSheetDialogFragment : DialogFragment() {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }

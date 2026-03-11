@@ -34,97 +34,100 @@ class TvChannelSyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting TV Channel Sync...")
+            Log.d(TAG, "Starting TV Channel Sync (Multi-Channel)...")
             
-            // 1. Get or Create Channel
-            val channelId = getOrCreateChannel()
-            if (channelId == -1L) {
-                Log.e(TAG, "Failed to create/find TV channel")
-                return@withContext Result.failure()
+            // 1. Sync Trending Movies Channel
+            val movieChannelId = getOrCreateChannel("nfgplus Trending Movies", "nfgplus_movies_channel")
+            if (movieChannelId != -1L) {
+                syncMoviesToChannel(movieChannelId)
             }
 
-            // 2. Clear old programs from this channel
-            applicationContext.contentResolver.delete(
-                TvContractCompat.buildPreviewProgramsUriForChannel(channelId),
-                null, 
-                null
-            )
-
-            // 3. Fetch top movies and shows (example: limit to top 10 each)
-            val topMovies = movieRepository.getTrendingMovies(limit = 10)
-            val topShows = tvShowRepository.getTrendingTVShows(limit = 10)
-
-            // 4. Add Movies to Channel
-            android.util.Log.d(TAG, "Adding ${topMovies.size} movies to channel...")
-            topMovies.forEach { movie ->
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("nfgplus://video/${movie.id}?isMovie=true")
-                }
-                
-                val program = PreviewProgram.Builder()
-                    .setChannelId(channelId)
-                    .setType(TvContractCompat.PreviewPrograms.TYPE_MOVIE)
-                    .setTitle(movie.title)
-                    .setDescription(movie.overview)
-                    .setPosterArtUri(Uri.parse("https://image.tmdb.org/t/p/w500${movie.backdrop_path}"))
-                    .setIntentUri(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)))
-                    .setInternalProviderId(movie.id.toString())
-                    .build()
-                
-                val uri = applicationContext.contentResolver.insert(TvContractCompat.PreviewPrograms.CONTENT_URI, program.toContentValues())
-                android.util.Log.d(TAG, "Inserted Movie: ${movie.title}, uri: $uri")
+            // 2. Sync Trending TV Shows Channel
+            val tvChannelId = getOrCreateChannel("nfgplus Trending TV Shows", "nfgplus_tv_channel")
+            if (tvChannelId != -1L) {
+                syncTVShowsToChannel(tvChannelId)
             }
 
-            // 5. Add TV Shows to Channel
-            android.util.Log.d(TAG, "Adding ${topShows.size} TV shows to channel...")
-            topShows.forEach { show ->
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("nfgplus://video/${show.id}?isMovie=false")
-                }
-                
-                val program = PreviewProgram.Builder()
-                    .setChannelId(channelId)
-                    .setType(TvContractCompat.PreviewPrograms.TYPE_TV_SERIES)
-                    .setTitle(show.name)
-                    .setDescription(show.overview)
-                    .setPosterArtUri(Uri.parse("https://image.tmdb.org/t/p/w500${show.backdrop_path}"))
-                    .setIntentUri(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)))
-                    .setInternalProviderId(show.id.toString())
-                    .build()
-                
-                val uri = applicationContext.contentResolver.insert(TvContractCompat.PreviewPrograms.CONTENT_URI, program.toContentValues())
-                android.util.Log.d(TAG, "Inserted TV Show: ${show.name}, uri: $uri")
-            }
-
-            Log.d(TAG, "TV Channel Sync Finished successfully. Added ${topMovies.size} movies and ${topShows.size} shows.")
+            Log.d(TAG, "TV Channel Sync Finished (Multi-Channel)")
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Error syncing TV channel: ${e.message}", e)
+            Log.e(TAG, "Error syncing TV channels: ${e.message}", e)
             Result.retry()
         }
     }
 
-    private fun getOrCreateChannel(): Long {
-        // Check if channel exists
+    private suspend fun syncMoviesToChannel(channelId: Long) {
+        // Clear old programs
+        applicationContext.contentResolver.delete(
+            TvContractCompat.buildPreviewProgramsUriForChannel(channelId),
+            null, null
+        )
+
+        val topMovies = movieRepository.getTrendingMovies(limit = 15)
+        Log.d(TAG, "Adding ${topMovies.size} movies to channel $channelId")
+        
+        topMovies.forEach { movie ->
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("nfgplus://video/${movie.id}?isMovie=true")
+            }
+            
+            val program = PreviewProgram.Builder()
+                .setChannelId(channelId)
+                .setType(TvContractCompat.PreviewPrograms.TYPE_MOVIE)
+                .setTitle(movie.title)
+                .setDescription(movie.overview)
+                .setPosterArtUri(Uri.parse("https://image.tmdb.org/t/p/w500${movie.backdrop_path}"))
+                .setIntentUri(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)))
+                .setInternalProviderId("m_${movie.id}")
+                .build()
+            
+            applicationContext.contentResolver.insert(TvContractCompat.PreviewPrograms.CONTENT_URI, program.toContentValues())
+        }
+    }
+
+    private suspend fun syncTVShowsToChannel(channelId: Long) {
+        // Clear old programs
+        applicationContext.contentResolver.delete(
+            TvContractCompat.buildPreviewProgramsUriForChannel(channelId),
+            null, null
+        )
+
+        val topShows = tvShowRepository.getTrendingTVShows(limit = 15)
+        Log.d(TAG, "Adding ${topShows.size} TV shows to channel $channelId")
+        
+        topShows.forEach { show ->
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("nfgplus://detail/${show.id}?type=tv")
+            }
+            
+            val program = PreviewProgram.Builder()
+                .setChannelId(channelId)
+                .setType(TvContractCompat.PreviewPrograms.TYPE_TV_SERIES)
+                .setTitle(show.name)
+                .setDescription(show.overview)
+                .setPosterArtUri(Uri.parse("https://image.tmdb.org/t/p/w500${show.backdrop_path}"))
+                .setIntentUri(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)))
+                .setInternalProviderId("t_${show.id}")
+                .build()
+            
+            applicationContext.contentResolver.insert(TvContractCompat.PreviewPrograms.CONTENT_URI, program.toContentValues())
+        }
+    }
+
+    private fun getOrCreateChannel(displayName: String, internalId: String): Long {
         val cursor = applicationContext.contentResolver.query(
             TvContractCompat.Channels.CONTENT_URI,
-            arrayOf(
-                TvContractCompat.Channels._ID,
-                TvContractCompat.Channels.COLUMN_INTERNAL_PROVIDER_ID
-            ),
-            null,
-            null,
-            null
+            arrayOf(TvContractCompat.Channels._ID, TvContractCompat.Channels.COLUMN_INTERNAL_PROVIDER_ID),
+            null, null, null
         )
  
         var channelId = cursor?.use {
             val idIndex = it.getColumnIndex(TvContractCompat.Channels._ID)
-            val internalIdIndex = it.getColumnIndex(TvContractCompat.Channels.COLUMN_INTERNAL_PROVIDER_ID)
-            
+            val intIdIndex = it.getColumnIndex(TvContractCompat.Channels.COLUMN_INTERNAL_PROVIDER_ID)
             var foundId = -1L
-            if (idIndex != -1 && internalIdIndex != -1) {
+            if (idIndex != -1 && intIdIndex != -1) {
                 while (it.moveToNext()) {
-                    if (it.getString(internalIdIndex) == CHANNEL_INTERNAL_ID) {
+                    if (it.getString(intIdIndex) == internalId) {
                         foundId = it.getLong(idIndex)
                         break
                     }
@@ -134,12 +137,10 @@ class TvChannelSyncWorker @AssistedInject constructor(
         } ?: -1L
 
         if (channelId == -1L) {
-            // Create channel
             val channel = Channel.Builder()
                 .setType(TvContractCompat.Channels.TYPE_PREVIEW)
-                .setDisplayName("nfgplus Trending")
-                .setDescription("Popular movies and TV shows on nfgplus")
-                .setInternalProviderId(CHANNEL_INTERNAL_ID)
+                .setDisplayName(displayName)
+                .setInternalProviderId(internalId)
                 .setAppLinkIntentUri(Uri.parse("nfgplus://home"))
                 .setSearchable(true)
                 .build()
@@ -147,31 +148,15 @@ class TvChannelSyncWorker @AssistedInject constructor(
             val uri = applicationContext.contentResolver.insert(TvContractCompat.Channels.CONTENT_URI, channel.toContentValues())
             if (uri != null) {
                 channelId = android.content.ContentUris.parseId(uri)
-                // Set channel logo
-                android.util.Log.d(TAG, "Setting channel logo for $channelId")
                 try {
-                    val bitmap = android.graphics.BitmapFactory.decodeResource(applicationContext.resources, com.theflexproject.thunder.R.drawable.ic_nfgplus192)
-                    if (bitmap != null) {
-                        ChannelLogoUtils.storeChannelLogo(applicationContext, channelId, bitmap)
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e(TAG, "Failed to set channel logo", e)
-                }
-                
-                // Request channel to be browsable (visible by default if user permits)
-                android.util.Log.d(TAG, "Requesting channel browsable: $channelId")
+                    val bitmap = android.graphics.BitmapFactory.decodeResource(applicationContext.resources, R.drawable.ic_nfgplus192)
+                    if (bitmap != null) ChannelLogoUtils.storeChannelLogo(applicationContext, channelId, bitmap)
+                } catch (e: Exception) { Log.e(TAG, "Failed logo", e) }
                 TvContractCompat.requestChannelBrowsable(applicationContext, channelId)
             }
         } else {
-            android.util.Log.d(TAG, "Using existing channelId: $channelId")
-        }
-        
-        // Always request browsable to ensure it's visible in "Customise Channels"
-        if (channelId != -1L) {
-            android.util.Log.d(TAG, "Requesting channel browsable (persistent): $channelId")
             TvContractCompat.requestChannelBrowsable(applicationContext, channelId)
         }
-        
         return channelId
     }
 }

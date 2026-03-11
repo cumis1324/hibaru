@@ -129,6 +129,15 @@ class MainActivity : AppCompatActivity() {
 
         // Check permissions
         checkPermissions()
+
+        // Trigger Instant TV/Engage Sync
+        triggerInstantSync()
+    }
+
+    private fun triggerInstantSync() {
+        val workManager = androidx.work.WorkManager.getInstance(this)
+        workManager.enqueue(androidx.work.OneTimeWorkRequestBuilder<com.theflexproject.thunder.data.sync.TvChannelSyncWorker>().build())
+        workManager.enqueue(androidx.work.OneTimeWorkRequestBuilder<com.theflexproject.thunder.data.sync.EngageSyncWorker>().build())
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -143,11 +152,39 @@ class MainActivity : AppCompatActivity() {
             val videoIdStr = data.lastPathSegment ?: return
             val videoId = videoIdStr.toIntOrNull() ?: return
             val isMovie = data.getQueryParameter("isMovie")?.toBoolean() ?: true
+            val isEpisode = data.getQueryParameter("isEpisode")?.toBoolean() ?: false
             
-            navController.navigate(R.id.playerFragment, Bundle().apply {
-                putInt("videoId", videoId)
-                putBoolean("isMovie", isMovie)
-            })
+            if (isMovie || isEpisode) {
+                // Play directly (Movie or explicitly an Episode to resume)
+                navController.navigate(R.id.playerFragment, Bundle().apply {
+                    putInt("videoId", videoId)
+                    putBoolean("isMovie", isMovie)
+                    if (isEpisode) {
+                        putInt("episodeId", videoId)
+                    }
+                })
+            } else {
+                // Likely a TV Show ID from an old Trending/Recommendation link
+                // Redirect to Detail so user can choose episode
+                navController.navigate(R.id.detailFragment, Bundle().apply {
+                    putInt("tv_show_id", videoId)
+                })
+            }
+        } else if (data.scheme == "nfgplus" && data.host == "detail") {
+            val itemIdStr = data.lastPathSegment ?: return
+            val itemId = itemIdStr.toIntOrNull() ?: return
+            val type = data.getQueryParameter("type") ?: "movie"
+            
+            if (type == "movie") {
+                navController.navigate(R.id.detailFragment, Bundle().apply {
+                    putInt("videoId", itemId)
+                    putBoolean("isMovie", true)
+                })
+            } else {
+                navController.navigate(R.id.detailFragment, Bundle().apply {
+                    putInt("tv_show_id", itemId)
+                })
+            }
         } else if (data.scheme == "nfgplus" && data.host == "home") {
             android.util.Log.d("DeepLink", "Home link received")
             // Already at home or handle navigation to home specifically if deep linked from elsewhere

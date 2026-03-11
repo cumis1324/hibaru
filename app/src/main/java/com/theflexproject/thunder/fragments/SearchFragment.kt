@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import com.theflexproject.thunder.R
 import com.theflexproject.thunder.model.Movie
 import com.theflexproject.thunder.model.MyMedia
+import com.theflexproject.thunder.model.TVShowInfo.Episode
 import com.theflexproject.thunder.model.TVShowInfo.TVShow
 import com.theflexproject.thunder.ui.search.SearchScreen
 import com.theflexproject.thunder.ui.search.SearchViewModel
@@ -43,14 +44,30 @@ class SearchFragment : Fragment() {
 
     private fun onMediaClicked(media: MyMedia) {
         when (media) {
-            is Movie -> findNavController().navigate(
-                R.id.playerFragment,
-                bundleOf("videoId" to media.id, "isMovie" to true)
-            )
-            is TVShow -> findNavController().navigate(
-                R.id.tvShowDetailsFragment,
-                bundleOf("tvShowId" to media.id)
-            )
+            is Movie -> {
+                android.util.Log.d("NavigationClick", "Search -> Player: Movie ID=${media.id}, Title=${media.title}")
+                val bundle = Bundle().apply {
+                    putInt("videoId", media.id)
+                    putBoolean("isMovie", true)
+                }
+                findNavController().navigate(R.id.playerFragment, bundle)
+            }
+            is Episode -> {
+                android.util.Log.d("NavigationClick", "Search -> Player: Episode ID=${media.id}, Title=${media.name}")
+                val bundle = Bundle().apply {
+                    putInt("videoId", media.id)
+                    putBoolean("isMovie", false)
+                    putInt("episodeId", media.id)
+                }
+                findNavController().navigate(R.id.playerFragment, bundle)
+            }
+            is TVShow -> {
+                android.util.Log.d("NavigationClick", "Search -> Detail: TVShow ID=${media.id}, Title=${media.name}")
+                val bundle = Bundle().apply {
+                    putInt("tvShowId", media.id)
+                }
+                findNavController().navigate(R.id.tvShowDetailsFragment, bundle)
+            }
             else -> {}
         }
     }

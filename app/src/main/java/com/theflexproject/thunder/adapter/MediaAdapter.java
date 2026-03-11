@@ -21,6 +21,7 @@ import androidx.annotation.OptIn;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -110,7 +111,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
                 if (listener != null) {
                     listener.onClick(v, position);
                 } else {
-                    loadMovie(movie.getId());
+                    loadMovie(movie.getId(), v);
                 }
             });
         }
@@ -142,7 +143,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
                 if (listener != null) {
                     listener.onClick(v, position);
                 } else {
-                    loadSeries(tvShow.getId());
+                    loadSeries(tvShow.getId(), v);
                 }
             });
         }
@@ -171,42 +172,25 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaAdapter
 
     }
 
-    private void loadSeries(int id) {
-        com.theflexproject.thunder.ui.detail.DetailFragment tvShowDetailsFragment = com.theflexproject.thunder.ui.detail.DetailFragment.Companion
-                .newTvInstance(id);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
-        if (oldFragment != null) {
-            transaction.hide(oldFragment);
+    private void loadSeries(int id, android.view.View anchorView) {
+        try {
+            android.os.Bundle bundle = new android.os.Bundle();
+            bundle.putInt("tvShowId", id);
+            Navigation.findNavController(anchorView).navigate(R.id.tvShowDetailsFragment, bundle);
+        } catch (Exception e) {
+            android.util.Log.e("MediaAdapter", "loadSeries navigation failed: " + e.getMessage());
         }
-        transaction.add(R.id.container, tvShowDetailsFragment).addToBackStack(null);
-        transaction.commit();
     }
 
-    private void loadMovie(int id) {
-        PlayerFragment movieDetailsFragment = new PlayerFragment(id, true);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        Fragment currentFragment = fragmentManager.findFragmentById(R.id.container);
-        List<Fragment> fragments = fragmentManager.getFragments();
-        for (Fragment fragment : fragments) {
-            if (fragment instanceof BottomSheetDialogFragment && fragment.isVisible()) {
-                ((BottomSheetDialogFragment) fragment).dismiss(); // Dismiss BottomSheet
-            }
+    private void loadMovie(int id, android.view.View anchorView) {
+        try {
+            android.os.Bundle bundle = new android.os.Bundle();
+            bundle.putInt("videoId", id);
+            bundle.putBoolean("isMovie", true);
+            Navigation.findNavController(anchorView).navigate(R.id.playerFragment, bundle);
+        } catch (Exception e) {
+            android.util.Log.e("MediaAdapter", "loadMovie navigation failed: " + e.getMessage());
         }
-
-        if (currentFragment instanceof PlayerFragment) {
-            ((PlayerFragment) currentFragment).updateMovie(id, true);
-
-        } else {
-            Fragment oldFragment = fragmentManager.findFragmentById(R.id.container);
-            if (oldFragment != null) {
-                transaction.hide(oldFragment);
-            }
-            transaction.add(R.id.container, movieDetailsFragment).addToBackStack(null);
-            transaction.commit();
-        }
-
     }
 
     @Override

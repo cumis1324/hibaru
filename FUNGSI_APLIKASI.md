@@ -13,26 +13,22 @@ Aplikasi ini adalah layanan streaming yang memungkinkan pengguna:
 - Menikmati konten video berkualitas tinggi
 - Akses ke perpustakaan media yang luas
 
-### 2. **Media Player Canggih**
-NFGPlus dilengkapi dengan video player yang dapat:
-- Memutar berbagai format video
-- Mengatur kualitas streaming sesuai koneksi
-- Mendukung subtitle
-- Kontrol playback lengkap (pause, forward, rewind)
-- Mode picture-in-picture
+### 2. **Media Player Canggih (LibVLC Engine)**
+NFGPlus menggunakan engine **LibVLC 3.6.4** yang sangat stabil dan mendukung:
+- **Kompatibilitas Luas**: Memutar hampir semua format video (MKV, MP4, AVI) tanpa hambatan.
+- **Dynamic Track Discovery**: Ganti audio track dan subtitle (internal/external) secara real-time via SideSheets/BottomSheets.
+- **Kontrol Gestur**: Geser layar untuk mengatur volume, kecerahan, dan durasi tontonan.
+- **Fitur Pintar**: Mendukung **Sleep Timer**, **Picture-in-Picture (PiP)**, dan **Screen Lock**.
 
-### 3. **Sistem Manajemen Konten**
-Aplikasi mengelola konten melalui:
-- **Index Management**: Mengintegrasikan berbagai sumber konten dari server index
-- **Database Sync**: Sinkronisasi otomatis dengan database server
-- **Content Organization**: Pengkategorian film dan serial secara otomatis
-- **Metadata Integration**: Informasi lengkap dari TMDB (The Movie Database)
+### 3. **Sistem Sinkronisasi & Riwayat Tonton**
+- **Centralized History Sync**: Mengelola riwayat tontonan menggunakan cache JSON lokal di `SyncPrefs`. Baris "Continue Watching" langsung terupdate instan saat kembali ke Home.
+- **Google TV Ready**: Integrasi penuh dengan **Google Engage SDK**, memunculkan konten rekomendasi langsung di home screen Google TV.
+- **Database Sync**: Sinkronisasi otomatis dengan database server Cloudflare D1.
 
-### 4. **Fitur Sosial dan Personalisasi**
-- **User Authentication**: Sistem login dengan Firebase
-- **Watchlist Personal**: Daftar tontonan pribadi
-- **History Tracking**: Riwayat film yang telah ditonton
-- **Recommendations**: Rekomendasi berdasarkan preferensi
+### 4. **User Experience & Personalisasi**
+- **User Authentication**: Login aman menggunakan Firebase (Google/Email).
+- **History Tracking**: Menyimpan posisi terakhir tonton secara presisi (robust resume) baik lokal maupun ke cloud.
+- **Modern UI**: Perpaduan XML ViewSystem dan **Jetpack Compose** untuk antarmuka yang modern dan responsif.
 
 ### 5. **Monetisasi dan Premium**
 - **Ads Integration**: Sistem iklan terintegrasi

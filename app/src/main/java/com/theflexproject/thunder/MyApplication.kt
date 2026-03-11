@@ -43,5 +43,31 @@ class MyApplication : Application(), Configuration.Provider {
         
         // Initialize Firebase Analytics
         FirebaseAnalytics.getInstance(this)
+
+        scheduleTvSync()
+    }
+
+    private fun scheduleTvSync() {
+        val workManager = WorkManager.getInstance(this)
+        
+        // 1. Legacy TV Provider Sync
+        val legacyRequest = PeriodicWorkRequestBuilder<TvChannelSyncWorker>(24, TimeUnit.HOURS)
+            .addTag("tv_sync")
+            .build()
+        workManager.enqueueUniquePeriodicWork(
+            "tv_channel_sync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            legacyRequest
+        )
+
+        // 2. Google Engage SDK Sync
+        val engageRequest = PeriodicWorkRequestBuilder<EngageSyncWorker>(24, TimeUnit.HOURS)
+            .addTag("engage_sync")
+            .build()
+        workManager.enqueueUniquePeriodicWork(
+            "engage_sdk_sync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            engageRequest
+        )
     }
 }

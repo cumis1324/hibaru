@@ -17,8 +17,8 @@ android {
         applicationId "com.gelaskaca.nfgplus"
         minSdk 24
         targetSdk 36
-        versionCode 88
-        versionName "Sidasitih"
+        versionCode 92
+        versionName "Dwinavatih"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -72,6 +72,7 @@ dependencies {
     
     // Hilt Dependency Injection
     implementation "com.google.dagger:hilt-android:2.50"
+    implementation 'androidx.core:core-i18n:1.0.0'
     kapt "com.google.dagger:hilt-android-compiler:2.50"
     
     // Hilt for ViewModels and Navigation
@@ -164,6 +165,6 @@ dependencies {
 
     // TV Home Screen Integration
     implementation "androidx.tvprovider:tvprovider:1.0.0"
-    implementation "com.google.android.engage:engage-core:1.5.1"
+    implementation "com.google.android.engage:engage-tv:1.0.5"
     implementation 'androidx.leanback:leanback:1.2.0'
 }

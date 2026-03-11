@@ -50,6 +50,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.theflexproject.thunder.data.sync.SyncPrefs;
+import com.theflexproject.thunder.model.HistoryEntry;
 import com.theflexproject.thunder.R;
 import com.theflexproject.thunder.model.DownloadItem;
 import com.theflexproject.thunder.model.FirebaseManager;
@@ -80,7 +84,14 @@ public class PlayerUtils {
     static final String HISTORY_PATH = "History/", LAST_POSITION = "lastPosition", OFFLINE = "offline";
     static FirebaseManager manager = new FirebaseManager();
     static DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(HISTORY_PATH);
-    static String userId = manager.getCurrentUser().getUid();
+
+    private static String getUserId() {
+        if (manager != null && manager.getCurrentUser() != null) {
+            return manager.getCurrentUser().getUid();
+        }
+        return null;
+    }
+
     public static ValueEventListener lastPositionListener;
     private static boolean adStart;
     private static boolean ad25;
@@ -155,8 +166,36 @@ public class PlayerUtils {
         return uiModeManager != null && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-    public static void resumePlayerState(Object player, String tmdbId) {
-        if (tmdbId != null && !OFFLINE.equals(tmdbId)) {
+    public static void resumePlayerState(Context context, Object player, String tmdbId) {
+        if (tmdbId == null || tmdbId.isEmpty() || OFFLINE.equals(tmdbId))
+            return;
+
+        // 1. Try Local Cache First (Instant)
+        SyncPrefs syncPrefs = new SyncPrefs(context);
+        String json = syncPrefs.getPlaybackHistoryJson();
+        if (json != null && !json.isEmpty()) {
+            try {
+                Gson gson = new Gson();
+                java.lang.reflect.Type type = new TypeToken<Map<String, HistoryEntry>>() {
+                }.getType();
+                Map<String, HistoryEntry> historyMap = gson.fromJson(json, type);
+                HistoryEntry entry = historyMap.get(tmdbId);
+                if (entry != null && entry.lastPosition > 0) {
+                    Log.d("PlayerUtils", "Resuming from local cache: " + entry.lastPosition);
+                    if (player instanceof org.videolan.libvlc.MediaPlayer) {
+                        ((org.videolan.libvlc.MediaPlayer) player).setTime(entry.lastPosition);
+                    }
+                    // We still check Firebase below to sync if needed, but local gives instant
+                    // start
+                }
+            } catch (Exception e) {
+                Log.e("PlayerUtils", "Error reading local cache for resume", e);
+            }
+        }
+
+        // 2. Fallback/Sync with Firebase
+        String userId = getUserId();
+        if (userId != null) {
             DatabaseReference lastPositionRef = databaseReference.child(userId).child(tmdbId).child(LAST_POSITION);
             lastPositionListener = new ValueEventListener() {
                 @Override
@@ -190,21 +229,57 @@ public class PlayerUtils {
     public static void saveResume(Context context, long startPosition, long duration, String tmdbId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
         String currentDateTime = ZonedDateTime.now(java.time.ZoneId.of("GMT+07:00")).format(formatter);
-        if (tmdbId != null) {
-            // Local Cache
+        if (tmdbId != null && context != null && !tmdbId.isEmpty()) {
+
+            // Validation: Don't save negative or error positions
+            if (startPosition < 0) {
+                Log.w("PlayerUtils",
+                        "Skipping saveResume for " + tmdbId + " due to negative position: " + startPosition);
+                return;
+            }
+
+            // Local Cache (Use commit to ensure disk write if process is about to die)
             SharedPreferences.Editor editor = context.getSharedPreferences("ResumeCache", Context.MODE_PRIVATE).edit();
             editor.putLong(tmdbId, startPosition);
-            editor.apply();
+            boolean success = editor.commit();
 
-            if (!tmdbId.equals(OFFLINE)) {
+            String userId = getUserId();
+            if (userId != null && !tmdbId.equals(OFFLINE)) {
                 DatabaseReference userReference = databaseReference.child(userId).child(tmdbId);
                 Map<String, Object> userMap = new HashMap<>();
                 userMap.put("lastPosition", startPosition);
                 userMap.put("lastPlayed", currentDateTime);
                 userReference.setValue(userMap);
 
-                android.util.Log.d("PlayerUtils", "Progress saved for " + tmdbId + " at " + startPosition + "ms");
+                // Update Local JSON Cache for instant sync on Home
+                updateLocalHistoryCache(context, tmdbId, currentDateTime, startPosition);
+
+                android.util.Log.d("PlayerUtils",
+                        "Progress saved for " + tmdbId + " at " + startPosition + "ms. Disk commit: " + success);
             }
+        }
+    }
+
+    private static void updateLocalHistoryCache(Context context, String tmdbId, String lastPlayed, long lastPosition) {
+        SyncPrefs syncPrefs = new SyncPrefs(context);
+        String json = syncPrefs.getPlaybackHistoryJson();
+        Gson gson = new Gson();
+        Map<String, HistoryEntry> historyMap;
+
+        try {
+            if (json != null && !json.isEmpty()) {
+                java.lang.reflect.Type type = new TypeToken<Map<String, HistoryEntry>>() {
+                }.getType();
+                historyMap = gson.fromJson(json, type);
+            } else {
+                historyMap = new HashMap<>();
+                if (historyMap == null)
+                    historyMap = new HashMap<>(); // Extra safety
+            }
+            historyMap.put(tmdbId, new HistoryEntry(lastPlayed, lastPosition));
+            syncPrefs.setPlaybackHistoryJson(gson.toJson(historyMap));
+        } catch (Exception e) {
+            Log.e("PlayerUtils", "Error updating local history cache", e);
         }
     }
 

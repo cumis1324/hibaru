@@ -81,55 +81,49 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
         player: MediaPlayer?,
         onDismiss: () -> Unit
     ) {
-        var subtitleOptions by remember { mutableStateOf<List<SubtitleOption>>(emptyList()) }
+        var subtitleOptions by remember { mutableStateOf(emptyList<SubtitleOption>()) }
+        val lazyListState = rememberLazyListState()
 
-        fun refreshTracks() {
-            player?.let { p ->
-                val options = mutableListOf<SubtitleOption>()
-                val tracks = p.spuTracks
-                val currentTrackId = p.spuTrack
+        // Polling for tracks because LibVLC finds them asynchronously
+        LaunchedEffect(player) {
+            if (player == null) return@LaunchedEffect
+            
+            // Poll every 1s for 5 seconds to catch asynchronously discovered tracks
+            for (i in 1..5) {
+                val currentTrackId = try { player.spuTrack } catch (e: Exception) { -1 }
+                val tracks = try { player.spuTracks } catch (e: Exception) { null }
                 
-                tracks?.forEach { track ->
-                    options.add(SubtitleOption(
+                val newOptions = mutableListOf<SubtitleOption>()
+                tracks?.filterNotNull()?.forEach { track ->
+                    newOptions.add(SubtitleOption(
                         id = track.id,
                         label = track.name ?: "Unknown",
                         isActive = (track.id == currentTrackId)
                     ))
                 }
-                subtitleOptions = options
+                
+                // Only update if the list changed (to avoid unnecessary recompositions)
+                if (newOptions != subtitleOptions) {
+                    subtitleOptions = newOptions
+                }
+                
+                kotlinx.coroutines.delay(1000)
             }
         }
 
-        DisposableEffect(player) {
-            val listener = object : MediaPlayer.EventListener {
-                override fun onEvent(event: MediaPlayer.Event) {
-                    when (event.type) {
-                        MediaPlayer.Event.ESAdded,
-                        MediaPlayer.Event.ESDeleted -> {
-                            refreshTracks()
-                        }
+        val focusRequesters = remember(subtitleOptions.size) { List(subtitleOptions.size) { FocusRequester() } }
+
+        LaunchedEffect(subtitleOptions) {
+            if (subtitleOptions.isNotEmpty()) {
+                val activeIndex = subtitleOptions.indexOfFirst { it.isActive }.coerceAtLeast(0)
+                if (activeIndex >= 0 && activeIndex < focusRequesters.size) {
+                    try {
+                        focusRequesters[activeIndex].requestFocus()
+                        lazyListState.scrollToItem(activeIndex)
+                    } catch (e: Exception) {
+                        android.util.Log.w("SubtitleSideSheet", "Focus request failed", e)
                     }
                 }
-            }
-            player?.setEventListener(listener)
-            refreshTracks() // Initial load
-
-            onDispose {
-                // Fragment or parent will set it back or we just clear if we own it
-                // Since multiple things might set listener, be careful.
-                // For now, we just clear our reference.
-                player?.setEventListener(null)
-            }
-        }
-
-        val focusRequesters = remember { List(subtitleOptions.size) { FocusRequester() } }
-        val lazyListState = rememberLazyListState()
-
-        LaunchedEffect(Unit) {
-            val activeIndex = subtitleOptions.indexOfFirst { it.isActive }.coerceAtLeast(0)
-            if (activeIndex < focusRequesters.size) {
-                focusRequesters[activeIndex].requestFocus()
-                lazyListState.scrollToItem(activeIndex)
             }
         }
 
@@ -198,9 +192,16 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
                 .focusRequester(focusRequester)
                 .onFocusChanged { isFocused = it.isFocused }
                 .clickable(onClick = onClick),
-            color = if (isFocused) MaterialTheme.colorScheme.primaryContainer 
-                    else if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    else Color.Transparent,
+            color = when {
+                isFocused -> MaterialTheme.colorScheme.primaryContainer 
+                isActive -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                else -> Color.Transparent
+            },
+            contentColor = when {
+                isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
+                isActive -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
             shape = MaterialTheme.shapes.medium
         ) {
             Row(
@@ -221,11 +222,13 @@ class SubtitleSideSheetDialogFragment : DialogFragment() {
 
                 Text(
                     text = label,
-                    color = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer 
-                            else if (isActive) MaterialTheme.colorScheme.primary 
-                            else MaterialTheme.colorScheme.onSurface,
+                    color = when {
+                        isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
+                        isActive -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
                     fontSize = 18.sp,
-                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    fontWeight = if (isActive || isFocused) FontWeight.Bold else FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
 

@@ -8,13 +8,13 @@ import androidx.work.WorkManager
 
 class TvChannelInitializer : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        android.util.Log.d("TvChannelInitializer", "onReceive: action=${intent.action}")
-        if (intent.action == "android.media.tv.action.INITIALIZE_PROGRAMS") {
-            android.util.Log.d("TvChannelInitializer", "Triggering initial sync (Legacy + Engage)...")
-            
+        val action = intent.action
+        if (action == "android.media.tv.action.INITIALIZE_PROGRAMS" || 
+            action == Intent.ACTION_BOOT_COMPLETED || 
+            action == "android.intent.action.QUICKBOOT_POWERON") {
+            android.util.Log.d("TvChannelInitializer", "Triggering sync from $action...")
             val legacySync = OneTimeWorkRequestBuilder<TvChannelSyncWorker>().build()
             WorkManager.getInstance(context).enqueue(legacySync)
-            
             val engageSync = OneTimeWorkRequestBuilder<EngageSyncWorker>().build()
             WorkManager.getInstance(context).enqueue(engageSync)
         }

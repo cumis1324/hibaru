@@ -66,10 +66,11 @@ class EngageSyncWorker @AssistedInject constructor(
         // Add Movies
         topMovies.forEach { movie ->
             val builder = MovieEntity.Builder()
-                .setEntityId((movie.id ?: 0).toString())
+                .setEntityId("m_${movie.id ?: 0}")
                 .setName(movie.title ?: "Unknown Movie")
                 .setPlayBackUri(Uri.parse("nfgplus://video/${movie.id}?isMovie=true"))
 
+            movie.overview?.let { builder.setDescription(it) }
 
             movie.backdrop_path?.let { path ->
                 builder.addPosterImage(
@@ -86,10 +87,11 @@ class EngageSyncWorker @AssistedInject constructor(
         // Add TV Shows
         topShows.forEach { show ->
             val builder = TvShowEntity.Builder()
-                .setEntityId((show.id ?: 0).toString())
+                .setEntityId("t_${show.id ?: 0}")
                 .setName(show.name ?: "Unknown Show")
-                .setPlayBackUri(Uri.parse("nfgplus://video/${show.id}?isMovie=false"))
+                .setPlayBackUri(Uri.parse("nfgplus://detail/${show.id}?type=tv"))
 
+            show.overview?.let { builder.setDescription(it) }
 
             show.backdrop_path?.let { path ->
                 builder.addPosterImage(

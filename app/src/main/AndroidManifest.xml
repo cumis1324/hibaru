@@ -2,6 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <queries>
+        <intent>
+            <action android:name="com.google.android.engage.service.PUBLISH_DATA" />
+        </intent>
+        <package android:name="com.google.android.gms" />
+        <!-- Launcher visibility for API 33+ (Google TV) -->
+        <package android:name="com.google.android.apps.tv.launcherx" />
+        <package android:name="com.google.android.tvlauncher" />
+    </queries>
+
     <uses-feature
         android:name="android.software.leanback"
         android:required="false" />
@@ -11,6 +21,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"
         tools:ignore="LeanbackUsesWifi" />
     <uses-permission
@@ -49,7 +60,7 @@
         tools:targetApi="34">
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.gelaskaca.nfgplus.fileprovider"
+            android:authorities="com.theflexproject.thunder.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -88,10 +99,6 @@
             android:value="true" />
 
         <meta-data
-            android:name="com.google.android.tv.home.RECOMENDATION_PROVIDER"
-            android:value="true" />
-
-        <meta-data
             android:name="com.google.android.tv.home.RECOMMENDATION_PROVIDER"
             android:value="true" />
 
@@ -104,17 +111,17 @@
             android:value="nfgplus" />
 
         <meta-data
+            android:name="com.google.android.engage.api.DATA_PROVIDER_AUTHORITY"
+            android:value="com.gelaskaca.nfgplus.engage" />
+
+        <meta-data
+            android:name="com.google.android.engage.service.ENV"
+            android:value="PRODUCTION" />
+
+        <meta-data
             android:name="com.google.android.gms.auth.api.signin.default_web_client_id"
             android:value="@string/default_web_client_id" />
 
-        <service
-            android:name="com.google.android.engage.service.AppEngagePublishService"
-            android:permission="com.google.android.gms.permission.BIND_APP_ENGAGE_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.android.engage.service.PUBLISH_DATA" />
-            </intent-filter>
-        </service>
 
         <service
             android:name=".MyFirebaseMessagingService"
@@ -132,6 +139,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.media.tv.action.INITIALIZE_PROGRAMS" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
@@ -184,6 +193,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="nfgplus" android:host="home" />
+            </intent-filter>
+
+            <!-- Intent Filter for nfgplus://detail deep links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="nfgplus" android:host="detail" />
             </intent-filter>
 
             <meta-data

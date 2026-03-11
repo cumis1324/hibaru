@@ -22,9 +22,14 @@ import com.theflexproject.thunder.ui.home.HomeSectionItem
 import com.theflexproject.thunder.ui.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import com.theflexproject.thunder.data.sync.SyncPrefs
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
+
+    @Inject
+    lateinit var syncPrefs: SyncPrefs
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -60,6 +65,12 @@ class HomeFragment : Fragment() {
         observeViewModel()
     }
 
+    override fun onResume() {
+        super.onResume()
+        android.util.Log.d("HomeFragment", "onResume: Refreshing continue watching data")
+        viewModel.loadContinueWatching()
+    }
+
     private val isTVDevice: Boolean by lazy {
         val uiModeManager = requireContext().getSystemService(android.content.Context.UI_MODE_SERVICE) as? android.app.UiModeManager
         val isTelevision = uiModeManager?.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
@@ -72,6 +83,7 @@ class HomeFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = HomeSectionAdapter(
             isTV = isTVDevice,
+            syncPrefs = syncPrefs,
             onItemClick = { item ->
                 when (item) {
                     is Movie -> {

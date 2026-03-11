@@ -25,7 +25,11 @@ object WatchNextHelper {
             // Build intent for deep linking back to the player/detail
             // Note: You should verify the intent filter in AndroidManifest.xml matches this
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("nfgplus://video/$programId?isMovie=${movie != null}")
+                if (movie != null) {
+                    data = Uri.parse("nfgplus://video/$programId?isMovie=true")
+                } else {
+                    data = Uri.parse("nfgplus://video/$programId?isMovie=false&isEpisode=true")
+                }
             }
 
             val builder = WatchNextProgram.Builder()

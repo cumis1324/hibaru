@@ -40,6 +40,47 @@ class GDIndexImporter:
         self.existing_gdids = set()
         self.fetch_existing_gdids()
 
+    def extract_quality(self, name):
+        """
+        Extracts media quality (Resolution & Source) from filename.
+        Replicates MovieQualityExtractor.java logic.
+        """
+        if not name:
+            return ""
+            
+        # Source Patterns
+        is_bluray = re.search(r'Blu-?ray', name, re.IGNORECASE)
+        is_webdl = re.search(r'Web-?dl', name, re.IGNORECASE)
+        is_webrip = re.search(r'Web-?rip', name, re.IGNORECASE)
+        is_cam = re.search(r'CAM', name, re.IGNORECASE)
+        is_dovi = re.search(r'DOVI|Dolby[ .]Vision|DVSUX', name, re.IGNORECASE)
+        is_hdr = re.search(r'HDR', name, re.IGNORECASE)
+        
+        # Resolution Patterns
+        res = ""
+        if "2160" in name or "4K" in name.upper(): res = "4K"
+        elif "1080" in name: res = "1080p"
+        elif "720" in name: res = "720p"
+        elif "540" in name: res = "540p"
+        elif "480" in name: res = "480p"
+        
+        # Build String
+        quality = ""
+        if is_bluray: quality = f"Blu-ray {res}".strip()
+        elif is_webdl: quality = f"WEBDL {res}".strip()
+        elif is_webrip: quality = f"WEBRip {res}".strip()
+        elif is_cam: quality = f"CAM {res}".strip()
+        elif is_dovi: quality = f"{res} Dolby Vision".strip() if res else "Dolby Vision"
+        elif is_hdr: quality = f"{res} HDR".strip() if res else "HDR"
+        else: quality = res
+        
+        # Additional formats
+        if not quality:
+            if re.search(r'XviD', name, re.IGNORECASE): quality = "XVID"
+            elif "ION10" in name: quality = "ION10"
+            
+        return quality.strip()
+
     def fetch_existing_gdids(self):
         # 1. Load from cache if available
         if self.cache_file and os.path.exists(self.cache_file):
@@ -461,7 +502,12 @@ class GDIndexImporter:
         if res.status_code in [200, 201]:
             action = "Updated" if res.status_code == 200 else "Added"
             print(f"    -> {action}: {detail['title']}")
+            
             if res.status_code == 201:
+                # 1. Extract Quality
+                quality = self.extract_quality(file_data['name'])
+                quality_str = f" [{quality}]" if quality else ""
+                
                 # Notify on new addition
                 poster_url = f"https://image.tmdb.org/t/p/w500{detail.get('poster_path')}" if detail.get('poster_path') else None
                 
@@ -469,12 +515,13 @@ class GDIndexImporter:
                 year = release_date[:4] if release_date and len(release_date) >= 4 else 'N/A'
                 
                 deep_link = f"https://www.nfgplus.my.id/reviews.html?id={detail['id']}&type=movie"
-                msg = f"🆕 <b>Movie Added</b>\n\n🎬 <b>{detail['title']}</b> ({year})\n⭐ {detail.get('vote_average', 0.0)}\n\n{detail.get('overview', '')[:200]}...\n\n🔗 <a href='{deep_link}'> Watch Now</a>"
+                msg = f"🆕 <b>Movie Added</b>\n\n🎬 <b>{detail['title']}</b> ({year})<b>{quality_str}</b>\n⭐ {detail.get('vote_average', 0.0)}\n\n{detail.get('overview', '')[:200]}...\n\n🔗 <a href='{deep_link}'> Watch Now</a>"
                 self.send_telegram_notification(msg, image_url=poster_url)
                 
                 # Send FCM Notification
+                fcm_title = detail['title'] + quality_str
                 self.send_fcm_notification(
-                    title=detail['title'],
+                    title=fcm_title,
                     body=detail.get('overview', ''),
                     poster_path=poster_url,
                     deep_link=deep_link,
@@ -602,18 +649,23 @@ class GDIndexImporter:
             print(f"    -> {action} Episode: S{parsed_info['season']}E{parsed_info['episode']}")
             
             if res_ep.status_code == 201:
+                # 1. Extract Quality
+                quality = self.extract_quality(file_data['name'])
+                quality_str = f" [{quality}]" if quality else ""
+
                 # Notify on new addition
                 show_name = tv_detail['name']
                 still_path = ep_detail.get('still_path') or tv_detail.get('backdrop_path')
                 image_url = f"https://image.tmdb.org/t/p/w500{still_path}" if still_path else None
                 
                 deep_link = f"https://www.nfgplus.my.id/reviews.html?id={tv_detail['id']}&type=tv"
-                msg = f"🆕 <b>Episode Added</b>\n\n📺 <b>{show_name}</b>\n🎞️ S{parsed_info['season']}E{parsed_info['episode']} - {ep_detail.get('name', 'N/A')}\n\n{ep_detail.get('overview', '')[:200]}...\n\n🔗 <a href='{deep_link}'>Watch Now</a>"
+                msg = f"🆕 <b>Episode Added</b>\n\n📺 <b>{show_name}</b>{quality_str}\n🎞️ S{parsed_info['season']}E{parsed_info['episode']} - {ep_detail.get('name', 'N/A')}\n\n{ep_detail.get('overview', '')[:200]}...\n\n🔗 <a href='{deep_link}'>Watch Now</a>"
                 self.send_telegram_notification(msg, image_url=image_url)
 
                 # Send FCM Notification
+                fcm_title = f"{show_name} - S{parsed_info['season']}E{parsed_info['episode']}{quality_str}"
                 self.send_fcm_notification(
-                    title=f"{show_name} - S{parsed_info['season']}E{parsed_info['episode']}",
+                    title=fcm_title,
                     body=ep_detail.get('name', 'New Episode Added'),
                     poster_path=image_url,
                     deep_link=deep_link,
